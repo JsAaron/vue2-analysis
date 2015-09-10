@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Vue</title>
+    <style type="text/css">
+    body {
+        font-family: Helvetica Neue, Arial, sans-serif;
+        font-size: 14px;
+        color: #444;
+    }
+    
+    table {
+        border: 2px solid #42b983;
+        border-radius: 3px;
+        background-color: #fff;
+    }
+    
+    th {
+        background-color: #42b983;
+        color: rgba(255, 255, 255, 0.66);
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -user-select: none;
+    }
+    
+    td {
+        background-color: #f9f9f9;
+    }
+    
+    th,
+    td {
+        min-width: 120px;
+        padding: 10px 20px;
+    }
+    
+    th.active {
+        color: #fff;
+    }
+    
+    th.active .arrow {
+        opacity: 1;
+    }
+    
+    .arrow {
+        display: inline-block;
+        vertical-align: middle;
+        width: 0;
+        height: 0;
+        margin-left: 5px;
+        opacity: 0.66;
+    }
+    
+    .arrow.asc {
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-bottom: 4px solid #fff;
+    }
+    
+    .arrow.dsc {
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 4px solid #fff;
+    }
+    
+    #search {
+        margin-bottom: 10px;
+    }
+    </style>
+    <script type="text/javascript" src="firebase.js"></script>
+    <script type="text/javascript" src="vue.min.js"></script>
+</head>
+
+<body>
+    <!-- component template -->
+    <script type="text/x-template" id="grid-template">
+        <table>
+            <thead>
+                <tr>
+                    <th v-repeat="key: columns" v-on="click:sortBy(key)" v-class="active: sortKey == key">
+                        {{key | capitalize}}
+                        <span class="arrow" v-class="reversed[key] ? 'dsc' : 'asc'">
+          </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-repeat="
+        entry: data
+        | filterBy filterKey
+        | orderBy sortKey reversed[sortKey]">
+                    <td v-repeat="key: columns">
+                        {{entry[key]}}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </script>
+
+    <!-- demo root element -->
+    <div id="demo">
+        <form id="search">
+            Search
+            <input name="query" v-model="searchQuery">
+        </form>
+        <demo-grid data="{{gridData}}" columns="{{gridColumns}}" filter-key="{{searchQuery}}">
+        </demo-grid>
+    </div>
+
+    
+    <script type="text/javascript">
+    /**
+     * 这个示例创建了一个可复用的表格组件，并演示了如何用 props *传入外部数据，以及如何用过滤器来过滤显示的数据。
+     */
+
+    // register the grid component
+    Vue.component('demo-grid', {
+        template: '#grid-template',
+        replace: true,
+        props: ['data', 'columns', 'filter-key'],
+        data: function() {
+            return {
+                data: null,
+                columns: null,
+                sortKey: '',
+                filterKey: '',
+                reversed: {}
+            }
+        },
+        compiled: function() {
+            // initialize reverse state
+            var self = this
+            this.columns.forEach(function(key) {
+                self.reversed.$add(key, false)
+            })
+        },
+        methods: {
+            sortBy: function(key) {
+                this.sortKey = key
+                this.reversed[key] = !this.reversed[key]
+            }
+        }
+    })
+
+    // bootstrap the demo
+    var demo = new Vue({
+        el: '#demo',
+        data: {
+            searchQuery: '',
+            gridColumns: ['name', 'power'],
+            gridData: [{
+                name: 'Chuck Norris',
+                power: Infinity
+            }, {
+                name: 'Bruce Lee',
+                power: 9000
+            }, {
+                name: 'Jackie Chan',
+                power: 7000
+            }, {
+                name: 'Jet Li',
+                power: 8000
+            }]
+        }
+    })
+    </script>
+</body>
+
+</html>
