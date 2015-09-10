@@ -24,16 +24,17 @@ var config = {
         files     : [dest + "/*.js", "./index.html"] //监控变化
     },
     sass: {
-        src: src + '*.sass'
+        src: src + '**/*.sass'
     },
     script: {
         entry : src + 'main.js', //入口
         dest  : dest,  //打包后位置
-        watch : src + '*.js', //监控脚本
+        watch : src + '**/*.js', //监控脚本
         name  : 'bundle.js'  
     },
     html: {
-        watch: homepage
+        watchHome : homepage, //主页
+        watchAll  : src + '**/*.html', //所有
     }
 }
 
@@ -60,11 +61,6 @@ function handleErrors() {
 };
 
 
-//===================================
-//  web server
-//===================================
-
-
 // web服务 Server + watching scss/html files
 gulp.task('web-server', function() {
     browserSync.init(config.webServer);
@@ -73,7 +69,8 @@ gulp.task('web-server', function() {
 gulp.task('watch', ["scripts", 'web-server'], function() {
     gulp.watch(config.script.watch, ['scripts']);
     gulp.watch(config.sass.src, ['scripts']);
-    gulp.watch(config.html.watch).on('change', reload);
+    gulp.watch(config.html.watchHome).on('change', reload);
+    gulp.watch(config.html.watchAll).on('change', reload);
 })
 
 gulp.task('default', ['watch'])
