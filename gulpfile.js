@@ -1,0 +1,79 @@
+var gulp = require('gulp');
+var webpack = require('webpack');
+var path = require('path');
+var notify = require('gulp-notify');
+//http://www.browsersync.cn/docs/recipes/
+var browserSync = require('browser-sync').create();
+var reload = browserSync.reload;
+
+
+//config file
+var src      = './develop/';
+var dest     = './release/';
+var homepage = "index.html";
+var config = {
+    src  : src,
+    dest : dest,
+    webServer: {
+        server    : './',
+        index     : homepage,
+        port      : 3000,
+        logLevel  : "debug",
+        logPrefix : "Aaron",
+        open      : true,
+        files     : [dest + "/*.js", "./index.html"] //监控变化
+    },
+    sass: {
+        src: src + '*.sass'
+    },
+    script: {
+        entry : src + 'main.js', //入口
+        dest  : dest,  //打包后位置
+        watch : src + '*.js', //监控脚本
+        name  : 'bundle.js'  
+    },
+    html: {
+        watch: homepage
+    }
+}
+
+
+// Webpack packaging
+var webpackConfig = require('./webpack.config')(config);
+gulp.task('scripts', function() {
+    webpack(webpackConfig, function(err, stats) {
+        if (err) {
+            handleErrors();
+        }
+    });
+});
+
+
+//error prompt
+function handleErrors() {
+    var args = Array.prototype.slice.call(arguments);
+    notify.onError({
+        title: '编译错误',
+        message: '<%= error.message %>'
+    }).apply(this, args);
+    this.emit('end');
+};
+
+
+//===================================
+//  web server
+//===================================
+
+
+// web服务 Server + watching scss/html files
+gulp.task('web-server', function() {
+    browserSync.init(config.webServer);
+});
+
+gulp.task('watch', ["scripts", 'web-server'], function() {
+    gulp.watch(config.script.watch, ['scripts']);
+    gulp.watch(config.sass.src, ['scripts']);
+    gulp.watch(config.html.watch).on('change', reload);
+})
+
+gulp.task('default', ['watch'])
