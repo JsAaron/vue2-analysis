@@ -17,6 +17,7 @@
     "gulp-webpack": "^1.5.0",
     "html-loader": "^0.3.0",
     "html-webpack-plugin": "^1.6.1",
+    "jquery": "^2.1.4",
     "node-libs-browser": "^0.5.2",
     "node-sass": "^3.3.2",
     "sass-loader": "^2.0.1",

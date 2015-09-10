@@ -7,6 +7,7 @@ webpackJsonp([1],[
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
+	
 	module.exports = {
 	    template: __webpack_require__(6),
 	    replace: true,
@@ -28,7 +29,7 @@ webpackJsonp([1],[
 /* 6 */
 /***/ function(module, exports) {
 
-	module.exports = "<div class=\"view\" v-transition>\r\n  <app-header msg=\"{{msg}}\"></app-header>\r\n  <app-pane side=\"left\" name=\"{{leftName}}\"></app-pane>\r\n  <app-pane side=\"right\" name=\"{{rightName}}\"></app-pane>\r\n</div>";
+	module.exports = "<div class=\"view\" v-transition>\r\n    <app-header msg=\"{{msg}}\"></app-header>\r\n    <app-pane side=\"left\" name=\"{{leftName}}\"></app-pane>\r\n    <app-pane side=\"right\" name=\"{{rightName}}\"></app-pane>\r\n</div>\r\n";
 
 /***/ },
 /* 7 */
