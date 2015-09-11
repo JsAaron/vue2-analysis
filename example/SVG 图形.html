@@ -41,7 +41,6 @@
 </head>
 
 <body>
-
     <!-- template for the polygraph component. -->
     <script type="text/x-template" id="polygraph-template">
         <g>
@@ -50,18 +49,18 @@
             <axis-label v-repeat="stats"></axis-label>
         </g>
     </script>
-
     <!-- template for the axis label component. -->
     <script type="text/x-template" id="axis-label-template">
         <text v-attr="x:point.x, y:point.y">{{label}}</text>
     </script>
-
     <!-- demo root element -->
     <div id="demo">
+
         <!-- Use the component -->
         <svg width="200" height="200">
             <polygraph stats="{{stats}}"></polygraph>
         </svg>
+
         <!-- controls -->
         <div v-repeat="stats">
             <label>{{label}}</label>
@@ -69,38 +68,17 @@
             <span>{{value}}</span>
             <button v-on="click:remove(this)">X</button>
         </div>
+
         <form id="add">
             <input name="newlabel" v-model="newLabel">
             <button v-on="click:add">Add a Stat</button>
         </form>
+        
         <pre id="raw">{{stats | json}}</pre>
     </div>
-    
-    <p style="font-size:12px">* input[type="range"] requires IE10 or above.</p>
 
 
     <script type="text/javascript">
-    // The raw data to observe
-    var stats = [{
-        label: 'A',
-        value: 100
-    }, {
-        label: 'B',
-        value: 100
-    }, {
-        label: 'C',
-        value: 100
-    }, {
-        label: 'D',
-        value: 100
-    }, {
-        label: 'E',
-        value: 100
-    }, {
-        label: 'F',
-        value: 100
-    }]
-
     // A resusable polygon graph component
     Vue.component('polygraph', {
         props: ['stats'],
@@ -153,7 +131,25 @@
         el: '#demo',
         data: {
             newLabel: '',
-            stats: stats
+            stats: [{
+                label: 'A',
+                value: 100
+            }, {
+                label: 'B',
+                value: 100
+            }, {
+                label: 'C',
+                value: 100
+            }, {
+                label: 'D',
+                value: 100
+            }, {
+                label: 'E',
+                value: 100
+            }, {
+                label: 'F',
+                value: 100
+            }]
         },
         methods: {
             add: function(e) {
