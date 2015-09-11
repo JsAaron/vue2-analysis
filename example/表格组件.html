@@ -74,23 +74,29 @@
 </head>
 
 <body>
+
+    <!-- demo root element -->
+    <div id="demo">
+        <form id="search"> 搜索
+            <input name="query" v-model="searchQuery">
+        </form>
+        <demo-grid data="{{gridData}}" columns="{{gridColumns}}" filter-key="{{searchQuery}}"></demo-grid>
+    </div>
+
+
     <!-- component template -->
     <script type="text/x-template" id="grid-template">
         <table>
             <thead>
                 <tr>
-                    <th v-repeat="key: columns" v-on="click:sortBy(key)" v-class="active: sortKey == key">
+                    <th v-repeat="key in columns" v-on="click:sortBy(key)" v-class="active: sortKey == key">
                         {{key | capitalize}}
-                        <span class="arrow" v-class="reversed[key] ? 'dsc' : 'asc'">
-          </span>
+                        <span class="arrow" v-class="reversed[key] ? 'dsc' : 'asc'"></span>
                     </th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-repeat="
-        entry: data
-        | filterBy filterKey
-        | orderBy sortKey reversed[sortKey]">
+                <tr v-repeat="entry in data | filterBy filterKey | orderBy sortKey reversed[sortKey]">
                     <td v-repeat="key: columns">
                         {{entry[key]}}
                     </td>
@@ -99,72 +105,72 @@
         </table>
     </script>
 
-    <!-- demo root element -->
-    <div id="demo">
-        <form id="search">
-            Search
-            <input name="query" v-model="searchQuery">
-        </form>
-        <demo-grid data="{{gridData}}" columns="{{gridColumns}}" filter-key="{{searchQuery}}">
-        </demo-grid>
-    </div>
 
-    
     <script type="text/javascript">
-    /**
-     * 这个示例创建了一个可复用的表格组件，并演示了如何用 props *传入外部数据，以及如何用过滤器来过滤显示的数据。
-     */
-
-    // register the grid component
-    Vue.component('demo-grid', {
-        template: '#grid-template',
-        replace: true,
-        props: ['data', 'columns', 'filter-key'],
-        data: function() {
-            return {
-                data: null,
-                columns: null,
-                sortKey: '',
-                filterKey: '',
-                reversed: {}
+        /**
+         * 这个示例创建了一个可复用的表格组件
+         * 并演示了如何用 props *传入外部数据
+         * 以及如何用过滤器来过滤显示的数据。
+         */
+        // register the grid component
+        Vue.component('demo-grid', {
+            template: '#grid-template',
+            replace: true,
+            props: ['data', 'columns', 'filter-key'],
+            data: function() {
+                return {
+                    data: null,
+                    columns: null,
+                    sortKey: '',
+                    filterKey: '',
+                    reversed: {}
+                }
+            },
+            compiled: function() {
+                // initialize reverse state
+                var self = this
+                this.columns.forEach(function(key) {
+                    self.reversed.$add(key, false)
+                })
+            },
+            methods: {
+                sortBy: function(key) {
+                    this.sortKey = key
+                    this.reversed[key] = !this.reversed[key]
+                }
             }
-        },
-        compiled: function() {
-            // initialize reverse state
-            var self = this
-            this.columns.forEach(function(key) {
-                self.reversed.$add(key, false)
-            })
-        },
-        methods: {
-            sortBy: function(key) {
-                this.sortKey = key
-                this.reversed[key] = !this.reversed[key]
-            }
-        }
-    })
+        })
+    </script>
 
-    // bootstrap the demo
-    var demo = new Vue({
-        el: '#demo',
-        data: {
-            searchQuery: '',
-            gridColumns: ['name', 'power'],
-            gridData: [{
-                name: 'Chuck Norris',
-                power: Infinity
-            }, {
-                name: 'Bruce Lee',
-                power: 9000
-            }, {
-                name: 'Jackie Chan',
-                power: 7000
-            }, {
-                name: 'Jet Li',
-                power: 8000
-            }]
-        }
-    })
+
+    <script type="text/javascript">
+        // bootstrap the demo
+        // 父数据结构与数据定义
+        var demo = new Vue({
+            el: '#demo',
+            data: {
+                //为 Vue 是通过递归遍历初始数据中的所有属性，并用 Object.defineProperty 把它们转化为 getter 和 setter 来实现数据观察的。如果一个属性在实例创建时不存在于初始数据中，那么 Vue 就没有办法观察这个属性了
+                searchQuery: '', 
+                gridColumns: ['name', 'power'],
+                gridData: [{
+                    name: 'Chuck Norris',
+                    power: Infinity
+                }, {
+                    name: 'Bruce Lee',
+                    power: 9000
+                }, {
+                    name: 'Jackie Chan',
+                    power: 7000
+                }, {
+                    name: 'Jet Li',
+                    power: 8000
+                },
+                {
+                    name: 'Aaron',
+                    power: 80000
+                }]
+            }
+        })
     </script>
 </body>
 
