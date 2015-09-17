@@ -19,10 +19,7 @@ webpackJsonp([1],[
 	        }
 	    },
 	    compiled: function() {
-	        var self = this;
-	        setTimeout(function() {
-	            self.$emit('data-loaded')
-	        }, 500)
+	        this.$emit('data-loaded')
 	    },
 	    components: {
 	        'app-header': __webpack_require__(7),

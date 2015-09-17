@@ -8,11 +8,19 @@
 
 <body>
     <div id="app">
+
         <div class="nav">
             <a href="#page-a">Go to page A</a>
             <a href="#page-b">Go to page B</a>
         </div>
-        <component is="{{view}}" wait-for="data-loaded"></component>
+
+        <user-profile  v-ref="profile" v-repeat="user in users"></user-profile>
+    
+        <component 
+            is="{{view}}" 
+            transition-mode="out-in" 
+           >
+        </component>
     </div>
     <script type="text/javascript" src="release/vue.min.js"></script>
     <script src="release/bundle.js"></script>

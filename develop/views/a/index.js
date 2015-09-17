@@ -10,10 +10,7 @@ module.exports = {
         }
     },
     compiled: function() {
-        var self = this;
-        setTimeout(function() {
-            self.$emit('data-loaded')
-        }, 500)
+        this.$emit('data-loaded')
     },
     components: {
         'app-header': require('../../components/header'),

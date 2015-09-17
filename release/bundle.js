@@ -100,11 +100,43 @@
 	// See webpack.config.js for details.  
 	__webpack_require__(1)
 
+
+	Vue.component('user-profile', {
+	    template: '<li>{{user.name}} {{user.email}} {{user.msg}} {{parents}}</li>',
+	    props: ['parents'],
+	    data: function() {
+	        return {
+	            msg: '我的测试'
+	        }
+	    },
+	    created: function() {
+	        this.$dispatch('child-created', this)
+	    }
+	})
+
 	var app = new Vue({
 	    el: '#app',
 	    data: {
-	        view: 'page-a'
+	        view: 'page-a',
+	        users: [{
+	            name: 'Chuck Norris',
+	            email: 'chuck@norris.com',
+	            parents: 1
+	        }, {
+	            name: 'Bruce Lee',
+	            email: 'bruce@lee.com'
+	        }, {
+	            name: 'Bruce Lee',
+	            email: 'bruce@lee.com'
+	        }],
+	        parents: 'Aaron'
 	    },
+	    created: function() {
+	        this.$on('child-created', function(child) {
+	            console.log(child)
+	        })
+	    },
+
 	    components: {
 	        // define the main pages as async components.
 	        'page-a': function(resolve) {
@@ -115,6 +147,7 @@
 	        }
 	    }
 	})
+
 
 	/**
 	 * Some really crude routing logic here, just for
