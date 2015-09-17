@@ -3,7 +3,6 @@
 // See webpack.config.js for details.  
 require('./main.styl')
 
-
 Vue.component('user-profile', {
     template: '<li>{{user.name}} {{user.email}} {{user.msg}} {{parents}}</li>',
     props: ['parents'],
@@ -34,9 +33,10 @@ var app = new Vue({
         }],
         parents: 'Aaron'
     },
+
     created: function() {
         this.$on('child-created', function(child) {
-            console.log(child)
+            // console.log(child)
         })
     },
 

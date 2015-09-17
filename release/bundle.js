@@ -100,7 +100,6 @@
 	// See webpack.config.js for details.  
 	__webpack_require__(1)
 
-
 	Vue.component('user-profile', {
 	    template: '<li>{{user.name}} {{user.email}} {{user.msg}} {{parents}}</li>',
 	    props: ['parents'],
@@ -131,9 +130,10 @@
 	        }],
 	        parents: 'Aaron'
 	    },
+
 	    created: function() {
 	        this.$on('child-created', function(child) {
-	            console.log(child)
+	            // console.log(child)
 	        })
 	    },
 
@@ -143,7 +143,7 @@
 	            __webpack_require__.e/* require */(1, function(__webpack_require__) { var __WEBPACK_AMD_REQUIRE_ARRAY__ = [__webpack_require__(5)]; (resolve.apply(null, __WEBPACK_AMD_REQUIRE_ARRAY__));})
 	        },
 	        'page-b': function(resolve) {
-	            __webpack_require__.e/* require */(2, function(__webpack_require__) { var __WEBPACK_AMD_REQUIRE_ARRAY__ = [__webpack_require__(15)]; (resolve.apply(null, __WEBPACK_AMD_REQUIRE_ARRAY__));})
+	            __webpack_require__.e/* require */(2, function(__webpack_require__) { var __WEBPACK_AMD_REQUIRE_ARRAY__ = [__webpack_require__(17)]; (resolve.apply(null, __WEBPACK_AMD_REQUIRE_ARRAY__));})
 	        }
 	    }
 	})
@@ -200,7 +200,7 @@
 
 
 	// module
-	exports.push([module.id, "html,\nbody {\n  font-family: Helvetica, Arial, sans-serif;\n}\n.view {\n  transition: all 0.4s ease;\n  position: absolute;\n}\n.view.v-enter {\n  opacity: 0;\n  -webkit-transform: translate3d(100px, 0, 0);\n  transform: translate3d(100px, 0, 0);\n}\n.view.v-leave {\n  opacity: 0;\n  -webkit-transform: translate3d(-100px, 0, 0);\n  transform: translate3d(-100px, 0, 0);\n}\n", ""]);
+	exports.push([module.id, "html,\nbody {\n  font-family: Helvetica, Arial, sans-serif;\n}\n", ""]);
 
 	// exports
 
