@@ -18,6 +18,12 @@ webpackJsonp([1],[
 	            rightName : 'Chuck Norris'
 	        }
 	    },
+	    compiled: function() {
+	        var self = this;
+	        setTimeout(function() {
+	            self.$emit('data-loaded')
+	        }, 500)
+	    },
 	    components: {
 	        'app-header': __webpack_require__(7),
 	        'app-pane': __webpack_require__(11)

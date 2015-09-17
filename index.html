@@ -12,7 +12,7 @@
             <a href="#page-a">Go to page A</a>
             <a href="#page-b">Go to page B</a>
         </div>
-        <component is="{{view}}" keep-alive></component>
+        <component is="{{view}}" wait-for="data-loaded"></component>
     </div>
     <script type="text/javascript" src="release/vue.min.js"></script>
     <script src="release/bundle.js"></script>

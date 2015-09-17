@@ -4,9 +4,16 @@ webpackJsonp([2],{
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = {
-	  template: __webpack_require__(16),
-	  replace: true
+	    template: __webpack_require__(16),
+	    replace: true,
+	    compiled: function() {
+	        var self = this;
+	        setTimeout(function() {
+	            self.$emit('data-loaded')
+	        }, 1000)
+	    }
 	}
+
 
 /***/ },
 
