@@ -127,8 +127,12 @@
 	        }, {
 	            name: 'Bruce Lee',
 	            email: 'bruce@lee.com'
+	        },
+	         {
+	            name: '111e',
+	            email: '12312312312'
 	        }],
-	        parents: 'Aaron'
+	        parents: 'Aaron1'
 	    },
 
 	    created: function() {

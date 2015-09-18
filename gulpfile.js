@@ -23,8 +23,8 @@ var config = {
         open      : true,
         files     : [dest + "/*.js", "./index.html"] //监控变化
     },
-    sass: {
-        src: src + '**/*.sass'
+    styl: {
+        src: src + '**/*.styl'
     },
     script: {
         entry : src + 'main.js', //入口
@@ -68,7 +68,7 @@ gulp.task('web-server', function() {
 
 gulp.task('watch', ["scripts", 'web-server'], function() {
     gulp.watch(config.script.watch, ['scripts']);
-    gulp.watch(config.sass.src, ['scripts']);
+    gulp.watch(config.styl.src, ['scripts']);
     gulp.watch(config.html.watchHome).on('change', reload);
     gulp.watch(config.html.watchAll).on('change', reload);
 })

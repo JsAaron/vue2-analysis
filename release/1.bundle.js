@@ -109,7 +109,7 @@ webpackJsonp([1],[
 /* 8 */
 /***/ function(module, exports) {
 
-	module.exports = "<div class=\"view\" v-transition=\"expand\">\n    <app-header msg=\"{{msg}}\"></app-header>\n    <app-pane side=\"left\" name=\"{{leftName}}\"></app-pane>\n    <app-pane side=\"right\" name=\"{{rightName}}\"></app-pane>\n</div>\n";
+	module.exports = "<div class=\"view\" v-transition=\"expand\">\r\n    <app-header msg=\"{{msg}}\"></app-header>\r\n    <app-pane side=\"left\" name=\"{{leftName}}\"></app-pane>\r\n    <app-pane side=\"right\" name=\"{{rightName}}\"></app-pane>\r\n</div>\r\n";
 
 /***/ },
 /* 9 */
@@ -224,7 +224,7 @@ webpackJsonp([1],[
 /* 16 */
 /***/ function(module, exports) {
 
-	module.exports = "<div class=\"pane\">\n  <p>This is the {{side}} pane!</p>\n  <p>{{name}}</p>\n</div>";
+	module.exports = "<div class=\"pane\">\r\n  <p>This is the {{side}} pane!</p>\r\n  <p>{{name}}</p>\r\n</div>";
 
 /***/ }
 ]);

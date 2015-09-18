@@ -17,7 +17,7 @@ webpackJsonp([2],{
 /***/ 18:
 /***/ function(module, exports) {
 
-	module.exports = "<div class=\"view\" v-transition>\n  <h1>This is page B.</h1>\n  <p>I'm... a bit less complicated.</p>\n</div>";
+	module.exports = "<div class=\"view\" v-transition>\r\n  <h1>This is page B.</h1>\r\n  <p>I'm... a bit less complicated.</p>\r\n</div>";
 
 /***/ }
 
