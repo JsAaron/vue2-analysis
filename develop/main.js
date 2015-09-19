@@ -3,18 +3,35 @@
 // See webpack.config.js for details.  
 require('./main.styl')
 
-Vue.component('user-profile', {
-    template: '<li>{{user.name}} {{user.email}} {{user.msg}} {{parents}}</li>',
+var a = Vue.component('user-profile', {
+    template: '<li {{view}}>{{user.name}} {{user.email}} {{user.msg}} {{parents}}</li>',
     props: ['parents'],
     data: function() {
         return {
             msg: '我的测试'
         }
     },
+
+    computed: {
+        msg: {
+            set: function() {
+                alert(2)
+            },
+            get: function() {
+                alert(1)
+            }
+        }
+    },
+
+    compiled: function() {
+        this.$log(this)
+    },
     created: function() {
         this.$dispatch('child-created', this)
     }
 })
+
+console.log(a   )
 
 var app = new Vue({
     el: '#app',
@@ -22,20 +39,18 @@ var app = new Vue({
         view: 'page-a',
         users: [{
             name: 'Chuck Norris',
-            email: 'chuck@norris.com',
-            parents: 1
+            email: 'chuck@norris.com'
         }, {
             name: 'Bruce Lee',
             email: 'bruce@lee.com'
         }, {
             name: 'Bruce Lee',
             email: 'bruce@lee.com'
-        },
-         {
+        }, {
             name: '111e',
             email: '12312312312'
         }],
-        parents: 'Aaron1'
+        parents: 'Aaron'
     },
 
     created: function() {
@@ -54,6 +69,9 @@ var app = new Vue({
         }
     }
 })
+
+
+console.log(app)
 
 
 /**

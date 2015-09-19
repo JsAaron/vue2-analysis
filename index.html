@@ -14,7 +14,7 @@
             <a href="#page-b">Go to page B</a>
         </div>
 
-        <user-profile  v-ref="profile" v-repeat="user in users"></user-profile>
+        <user-profile  v-ref="profile" parents='{{parents}}' v-repeat="user in users"></user-profile>
     
         <component 
             is="{{view}}" 
