@@ -33,7 +33,10 @@ var config = {
         src: src + '**/*.styl'
     },
     script: {
-        entry: src + 'main.js',
+        entry: {
+            'entry' :src + 'main.js'
+            // 'vue'   :'./src/vue.js'
+        },
         //输出
         output: {
             path       : dest, //js位置
@@ -90,19 +93,28 @@ gulp.task('default', ['watch'])
 
 
 
-//vue测试
+//vue 测试
 gulp.task('vue', function() {
+
+    browserSync.init({
+        server    : './vue',
+        index     : homepage,
+        port      : 3000,
+        logLevel  : "debug",
+        logPrefix : "Aaron",
+        open      : false,
+        files     : ["vue/**/*.js", "./vue/index.html"] //监控变化
+    });
+
     webpack({
-        watch: true,
-        //页面入口
-        entry: './src/vue.js',
-        //出口文件输出配置
+        watch  : true,
+        entry  : './vue/develop/app.js',
         output: {
-            path     : config.dest, //js位置
-            filename :'vue.js'
-        },
-        //source map 支持
-        devtool: '#source-map',
+            path       : './vue/',
+            publicPath : './vue/',
+            filename   : 'bundle.js'
+        },      
+        devtool : '#source-map'
     }, function(err, stats) {
         if (err) {
             handleErrors();
