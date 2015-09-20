@@ -4,13 +4,9 @@ module.exports = function(config) {
         //页面入口
         entry: config.script.entry,
         //出口文件输出配置
-        output: {
-            path       : config.dest, //js位置
-            publicPath : config.dest, //web打包的资源地址
-            filename   : config.script.name
-        },
+        output: config.script.output,
         //source map 支持
-        devtool: '#source-map',
+        devtool: config.script.sourceMap ? '#source-map' : '',
         //加载器
         module: {
             loaders: [{

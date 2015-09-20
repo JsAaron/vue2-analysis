@@ -34,9 +34,14 @@ var config = {
     },
     script: {
         entry: src + 'main.js',
-        dest: dest, //打包后位置
-        watch: src + '**/*.js', //监控脚本
-        name: 'bundle.js'
+        //输出
+        output: {
+            path       : dest, //js位置
+            publicPath : dest, //web打包的资源地址
+            filename   : 'bundle.js'
+        },
+        sourceMap: true, //源支持
+        watch: src + '**/*.js' //监控脚本
     },
     html: {
         watchHome: homepage, //主页
@@ -73,6 +78,18 @@ gulp.task('web-server', function() {
 });
 
 
+
+gulp.task('watch', ["scripts", 'web-server'], function() {
+    gulp.watch(config.script.watch, ['scripts']);
+    gulp.watch(config.styl.src, ['scripts']);
+    gulp.watch(config.html.watchHome).on('change', reload);
+    gulp.watch(config.html.watchAll).on('change', reload);
+})
+
+gulp.task('default', ['watch'])
+
+
+
 //vue测试
 gulp.task('vue', function() {
     webpack({
@@ -92,13 +109,3 @@ gulp.task('vue', function() {
         }
     });
 })
-
-
-gulp.task('watch', ["vue","scripts", 'web-server'], function() {
-    gulp.watch(config.script.watch, ['scripts']);
-    gulp.watch(config.styl.src, ['scripts']);
-    gulp.watch(config.html.watchHome).on('change', reload);
-    gulp.watch(config.html.watchAll).on('change', reload);
-})
-
-gulp.task('default', ['watch'])
