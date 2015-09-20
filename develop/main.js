@@ -31,7 +31,6 @@ var a = Vue.component('user-profile', {
     }
 })
 
-console.log(a   )
 
 var app = new Vue({
     el: '#app',

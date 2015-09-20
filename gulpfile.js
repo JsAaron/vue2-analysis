@@ -94,30 +94,57 @@ gulp.task('default', ['watch'])
 
 
 //vue 测试
-gulp.task('vue', function() {
+gulp.task('test-vue-js', function() {
+    webpack({
+        // watch  : true,
+        entry: './vue/develop/app.js',
+        output: {
+            path       : './vue/',
+            publicPath : './vue/',
+            filename   : 'bundle.js'
+        },
+        devtool: '#source-map',
+        //加载器
+        module: {
+            loaders: [{
+                test: /\.css$/,
+                loader: 'style!css!sass'
+            }, {
+                test: /\.sass$/,
+                loader: 'style!css!sass'
+            }, {
+                test: /\.scss$/,
+                loader: 'style!css!sass'
+            }, {
+                test: /\.styl$/,
+                loader: "style!css!stylus"
+            }, {
+                test: /\.html$/,
+                loader: "html"
+            }]
+        }
+    }, function(err, stats) {
+        if (err) {
+            handleErrors();
+        }
+    });
+})
 
+gulp.task('test-vue-server', function() {
     browserSync.init({
         server    : './vue',
         index     : homepage,
         port      : 3000,
         logLevel  : "debug",
         logPrefix : "Aaron",
-        open      : false,
+        open      : true,
         files     : ["vue/**/*.js", "./vue/index.html"] //监控变化
     });
+})
 
-    webpack({
-        watch  : true,
-        entry  : './vue/develop/app.js',
-        output: {
-            path       : './vue/',
-            publicPath : './vue/',
-            filename   : 'bundle.js'
-        },      
-        devtool : '#source-map'
-    }, function(err, stats) {
-        if (err) {
-            handleErrors();
-        }
-    });
+
+gulp.task('vue', ['test-vue-server', 'test-vue-js'], function() {
+    gulp.watch('./vue/develop/**/*.js', ['test-vue-js']);
+    gulp.watch('./vue/*.js').on('change', reload);
+    gulp.watch('./vue/index.html').on('change', reload);
 })

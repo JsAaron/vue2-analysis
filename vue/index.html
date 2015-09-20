@@ -7,8 +7,14 @@
 </head>
 
 <body>
-    <div id="app">
-    
+    <div id="demo">
+        <form id="search">
+            搜索
+            <input name="query" v-model="searchQuery">
+        </form>
+        <demo-grid
+            data="gridData"
+        ></demo-grid>
     </div>
     <script type="text/javascript" src="bundle.js"></script>
 </body>
