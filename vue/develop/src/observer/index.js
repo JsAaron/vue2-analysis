@@ -55,7 +55,7 @@ Observer.create = function (value, vm) {
     (_.isArray(value) || _.isPlainObject(value)) &&
     !Object.isFrozen(value) &&
     !value._isVue
-  ) {
+  ) {ei you 
     ob = new Observer(value)
   }
   if (ob && vm) {

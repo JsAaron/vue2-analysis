@@ -13,10 +13,15 @@ var Watcher = require('../watcher')
  */
 
 exports._initScope = function () {
+  //el props
   this._initProps()
+  //元素性 v-repeat创建的 vm.$key vm.$index vm.$value
   this._initMeta()
+  //制作事件的curry的方法,传递this //vm
   this._initMethods()
+  //初始化data
   this._initData()
+  //计算属性
   this._initComputed()
 }
 
@@ -27,6 +32,7 @@ exports._initScope = function () {
 exports._initProps = function () {
   var options = this.$options
   var el = options.el
+  //指定父类数据
   var props = options.props
   if (props && !el) {
     process.env.NODE_ENV !== 'production' && _.warn(
@@ -34,6 +40,7 @@ exports._initProps = function () {
       'provided at instantiation.'
     )
   }
+  //确保选择器字符串转换成现在的元素
   // make sure to convert string selectors into element now
   el = options.el = _.query(el)
   this._propsUnlinkFn = el && el.nodeType === 1 && props
@@ -50,6 +57,19 @@ exports._initProps = function () {
 exports._initData = function () {
   var propsData = this._data
   var optionsDataFn = this.$options.data
+  //求出data
+  //如果是传递的一个字方法，函数包装
+  //optionsDataFn
+  //var MyComponent = Vue.extend({
+  //   data: function () {
+  //     return {
+  //       message: 'some default data.',
+  //       object: {
+  //         fresh: true
+  //       }
+  //     }
+  //   }
+  // })
   var optionsData = optionsDataFn && optionsDataFn()
   if (optionsData) {
     this._data = optionsData
@@ -62,6 +82,7 @@ exports._initData = function () {
       }
     }
   }
+  //模型数据
   var data = this._data
   // proxy data on instance
   var keys = Object.keys(data)
@@ -69,7 +90,11 @@ exports._initData = function () {
   i = keys.length
   while (i--) {
     key = keys[i]
+    //检查$开头
     if (!_.isReserved(key)) {
+      //生成data中数据的defineProperty
+      //this.[data]...set/get
+      //操作this._data的值  
       this._proxy(key)
     }
   }
@@ -131,7 +156,9 @@ exports._setData = function (newData) {
  * vm.prop === vm._data.prop
  *
  * @param {String} key
- */
+ * option.data
+ * 生成this.[...] set/get
+  */
 
 exports._proxy = function (key) {
   // need to store ref to self here

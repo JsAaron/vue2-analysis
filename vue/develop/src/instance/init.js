@@ -74,6 +74,8 @@ exports._init = function (options) {
   this._data = {}
 
   // initialize data observation and scope inheritance.
+  // 填充_data数据
+  // 生成get/set
   this._initScope()
 
   // setup event system and option events.

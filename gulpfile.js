@@ -137,8 +137,8 @@ gulp.task('test-vue-server', function() {
         port      : 3000,
         logLevel  : "debug",
         logPrefix : "Aaron",
-        open      : true,
-        files     : ["vue/**/*.js", "./vue/index.html"] //监控变化
+        open      : true
+        // files     : ["vue/**/*.js", "./vue/index.html"] //监控变化
     });
 })
 
