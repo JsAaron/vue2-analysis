@@ -9,8 +9,8 @@ var componentDef = require('../directives/component')
 
 // terminal directives
 var terminalDirectives = [
-  'repeat',
-  'if'
+    'repeat',
+    'if'
 ]
 
 /**
@@ -30,40 +30,35 @@ var terminalDirectives = [
  * @return {Function}
  */
 
-exports.compile = function (el, options, partial) {
-  // link function for the node itself.
-  var nodeLinkFn = partial || !options._asComponent
-    ? compileNode(el, options)
-    : null
-  // link function for the childNodes
-  var childLinkFn =
-    !(nodeLinkFn && nodeLinkFn.terminal) &&
-    el.tagName !== 'SCRIPT' &&
-    el.hasChildNodes()
-      ? compileNodeList(el.childNodes, options)
-      : null
+exports.compile = function(el, options, partial) {
+    // link function for the node itself.
+    var nodeLinkFn = partial || !options._asComponent ? compileNode(el, options) : null
+        // link function for the childNodes
+    var childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) &&
+        el.tagName !== 'SCRIPT' &&
+        el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null
 
-  /**
-   * A composite linker function to be called on a already
-   * compiled piece of DOM, which instantiates all directive
-   * instances.
-   *
-   * @param {Vue} vm
-   * @param {Element|DocumentFragment} el
-   * @param {Vue} [host] - host vm of transcluded content
-   * @return {Function|undefined}
-   */
+    /**
+     * A composite linker function to be called on a already
+     * compiled piece of DOM, which instantiates all directive
+     * instances.
+     *
+     * @param {Vue} vm
+     * @param {Element|DocumentFragment} el
+     * @param {Vue} [host] - host vm of transcluded content
+     * @return {Function|undefined}
+     */
 
-  return function compositeLinkFn (vm, el, host) {
-    // cache childNodes before linking parent, fix #657
-    var childNodes = _.toArray(el.childNodes)
-    // link
-    var dirs = linkAndCapture(function () {
-      if (nodeLinkFn) nodeLinkFn(vm, el, host)
-      if (childLinkFn) childLinkFn(vm, childNodes, host)
-    }, vm)
-    return makeUnlinkFn(vm, dirs)
-  }
+    return function compositeLinkFn(vm, el, host) {
+        // cache childNodes before linking parent, fix #657
+        var childNodes = _.toArray(el.childNodes)
+            // link
+        var dirs = linkAndCapture(function() {
+            if (nodeLinkFn) nodeLinkFn(vm, el, host)
+            if (childLinkFn) childLinkFn(vm, childNodes, host)
+        }, vm)
+        return makeUnlinkFn(vm, dirs)
+    }
 }
 
 /**
@@ -74,10 +69,10 @@ exports.compile = function (el, options, partial) {
  * @param {Vue} vm
  */
 
-function linkAndCapture (linker, vm) {
-  var originalDirCount = vm._directives.length
-  linker()
-  return vm._directives.slice(originalDirCount)
+function linkAndCapture(linker, vm) {
+    var originalDirCount = vm._directives.length
+    linker()
+    return vm._directives.slice(originalDirCount)
 }
 
 /**
@@ -95,13 +90,13 @@ function linkAndCapture (linker, vm) {
  * @return {Function}
  */
 
-function makeUnlinkFn (vm, dirs, context, contextDirs) {
-  return function unlink (destroying) {
-    teardownDirs(vm, dirs, destroying)
-    if (context && contextDirs) {
-      teardownDirs(context, contextDirs)
+function makeUnlinkFn(vm, dirs, context, contextDirs) {
+    return function unlink(destroying) {
+        teardownDirs(vm, dirs, destroying)
+        if (context && contextDirs) {
+            teardownDirs(context, contextDirs)
+        }
     }
-  }
 }
 
 /**
@@ -112,14 +107,14 @@ function makeUnlinkFn (vm, dirs, context, contextDirs) {
  * @param {Boolean} destroying
  */
 
-function teardownDirs (vm, dirs, destroying) {
-  var i = dirs.length
-  while (i--) {
-    dirs[i]._teardown()
-    if (!destroying) {
-      vm._directives.$remove(dirs[i])
+function teardownDirs(vm, dirs, destroying) {
+    var i = dirs.length
+    while (i--) {
+        dirs[i]._teardown()
+        if (!destroying) {
+            vm._directives.$remove(dirs[i])
+        }
     }
-  }
 }
 
 /**
@@ -131,12 +126,12 @@ function teardownDirs (vm, dirs, destroying) {
  * @return {Function}
  */
 
-exports.compileAndLinkProps = function (vm, el, props) {
-  var propsLinkFn = compileProps(el, props)
-  var propDirs = linkAndCapture(function () {
-    propsLinkFn(vm, null)
-  }, vm)
-  return makeUnlinkFn(vm, propDirs)
+exports.compileAndLinkProps = function(vm, el, props) {
+    var propsLinkFn = compileProps(el, props)
+    var propDirs = linkAndCapture(function() {
+        propsLinkFn(vm, null)
+    }, vm)
+    return makeUnlinkFn(vm, propDirs)
 }
 
 /**
@@ -154,50 +149,50 @@ exports.compileAndLinkProps = function (vm, el, props) {
  * @return {Function}
  */
 
-exports.compileRoot = function (el, options) {
-  var containerAttrs = options._containerAttrs
-  var replacerAttrs = options._replacerAttrs
-  var contextLinkFn, replacerLinkFn
+exports.compileRoot = function(el, options) {
+    var containerAttrs = options._containerAttrs
+    var replacerAttrs = options._replacerAttrs
+    var contextLinkFn, replacerLinkFn
 
-  // only need to compile other attributes for
-  // non-fragment instances
-  if (el.nodeType !== 11) {
-    // for components, container and replacer need to be
-    // compiled separately and linked in different scopes.
-    if (options._asComponent) {
-      // 2. container attributes
-      if (containerAttrs) {
-        contextLinkFn = compileDirectives(containerAttrs, options)
-      }
-      if (replacerAttrs) {
-        // 3. replacer attributes
-        replacerLinkFn = compileDirectives(replacerAttrs, options)
-      }
-    } else {
-      // non-component, just compile as a normal element.
-      replacerLinkFn = compileDirectives(el.attributes, options)
-    }
-  }
-
-  return function rootLinkFn (vm, el) {
-    // link context scope dirs
-    var context = vm._context
-    var contextDirs
-    if (context && contextLinkFn) {
-      contextDirs = linkAndCapture(function () {
-        contextLinkFn(context, el)
-      }, context)
+    // only need to compile other attributes for
+    // non-fragment instances
+    if (el.nodeType !== 11) {
+        // for components, container and replacer need to be
+        // compiled separately and linked in different scopes.
+        if (options._asComponent) {
+            // 2. container attributes
+            if (containerAttrs) {
+                contextLinkFn = compileDirectives(containerAttrs, options)
+            }
+            if (replacerAttrs) {
+                // 3. replacer attributes
+                replacerLinkFn = compileDirectives(replacerAttrs, options)
+            }
+        } else {
+            // non-component, just compile as a normal element.
+            replacerLinkFn = compileDirectives(el.attributes, options)
+        }
     }
 
-    // link self
-    var selfDirs = linkAndCapture(function () {
-      if (replacerLinkFn) replacerLinkFn(vm, el)
-    }, vm)
+    return function rootLinkFn(vm, el) {
+        // link context scope dirs
+        var context = vm._context
+        var contextDirs
+        if (context && contextLinkFn) {
+            contextDirs = linkAndCapture(function() {
+                contextLinkFn(context, el)
+            }, context)
+        }
 
-    // return the unlink function that tearsdown context
-    // container directives.
-    return makeUnlinkFn(vm, selfDirs, context, contextDirs)
-  }
+        // link self
+        var selfDirs = linkAndCapture(function() {
+            if (replacerLinkFn) replacerLinkFn(vm, el)
+        }, vm)
+
+        // return the unlink function that tearsdown context
+        // container directives.
+        return makeUnlinkFn(vm, selfDirs, context, contextDirs)
+    }
 }
 
 /**
@@ -209,15 +204,15 @@ exports.compileRoot = function (el, options) {
  * @return {Function|null}
  */
 
-function compileNode (node, options) {
-  var type = node.nodeType
-  if (type === 1 && node.tagName !== 'SCRIPT') {
-    return compileElement(node, options)
-  } else if (type === 3 && config.interpolate && node.data.trim()) {
-    return compileTextNode(node, options)
-  } else {
-    return null
-  }
+function compileNode(node, options) {
+    var type = node.nodeType
+    if (type === 1 && node.tagName !== 'SCRIPT') {
+        return compileElement(node, options)
+    } else if (type === 3 && config.interpolate && node.data.trim()) {
+        return compileTextNode(node, options)
+    } else {
+        return null
+    }
 }
 
 /**
@@ -228,34 +223,34 @@ function compileNode (node, options) {
  * @return {Function|null}
  */
 
-function compileElement (el, options) {
-  // preprocess textareas.
-  // textarea treats its text content as the initial value.
-  // just bind it as a v-attr directive for value.
-  if (el.tagName === 'TEXTAREA') {
-    if (textParser.parse(el.value)) {
-      el.setAttribute('value', el.value)
+function compileElement(el, options) {
+    // preprocess textareas.
+    // textarea treats its text content as the initial value.
+    // just bind it as a v-attr directive for value.
+    if (el.tagName === 'TEXTAREA') {
+        if (textParser.parse(el.value)) {
+            el.setAttribute('value', el.value)
+        }
     }
-  }
-  var linkFn
-  var hasAttrs = el.hasAttributes()
-  // check terminal directives (repeat & if)
-  if (hasAttrs) {
-    linkFn = checkTerminalDirectives(el, options)
-  }
-  // check element directives
-  if (!linkFn) {
-    linkFn = checkElementDirectives(el, options)
-  }
-  // check component
-  if (!linkFn) {
-    linkFn = checkComponent(el, options)
-  }
-  // normal directives
-  if (!linkFn && hasAttrs) {
-    linkFn = compileDirectives(el.attributes, options)
-  }
-  return linkFn
+    var linkFn
+    var hasAttrs = el.hasAttributes()
+        // check terminal directives (repeat & if)
+    if (hasAttrs) {
+        linkFn = checkTerminalDirectives(el, options)
+    }
+    // check element directives
+    if (!linkFn) {
+        linkFn = checkElementDirectives(el, options)
+    }
+    // check component
+    if (!linkFn) {
+        linkFn = checkComponent(el, options)
+    }
+    // normal directives
+    if (!linkFn && hasAttrs) {
+        linkFn = compileDirectives(el.attributes, options)
+    }
+    return linkFn
 }
 
 /**
@@ -266,21 +261,19 @@ function compileElement (el, options) {
  * @return {Function|null} textNodeLinkFn
  */
 
-function compileTextNode (node, options) {
-  var tokens = textParser.parse(node.data)
-  if (!tokens) {
-    return null
-  }
-  var frag = document.createDocumentFragment()
-  var el, token
-  for (var i = 0, l = tokens.length; i < l; i++) {
-    token = tokens[i]
-    el = token.tag
-      ? processTextToken(token, options)
-      : document.createTextNode(token.value)
-    frag.appendChild(el)
-  }
-  return makeTextNodeLinkFn(tokens, frag, options)
+function compileTextNode(node, options) {
+    var tokens = textParser.parse(node.data)
+    if (!tokens) {
+        return null
+    }
+    var frag = document.createDocumentFragment()
+    var el, token
+    for (var i = 0, l = tokens.length; i < l; i++) {
+        token = tokens[i]
+        el = token.tag ? processTextToken(token, options) : document.createTextNode(token.value)
+        frag.appendChild(el)
+    }
+    return makeTextNodeLinkFn(tokens, frag, options)
 }
 
 /**
@@ -291,28 +284,29 @@ function compileTextNode (node, options) {
  * @return {Node}
  */
 
-function processTextToken (token, options) {
-  var el
-  if (token.oneTime) {
-    el = document.createTextNode(token.value)
-  } else {
-    if (token.html) {
-      el = document.createComment('v-html')
-      setTokenType('html')
+function processTextToken(token, options) {
+    var el
+    if (token.oneTime) {
+        el = document.createTextNode(token.value)
     } else {
-      // IE will clean up empty textNodes during
-      // frag.cloneNode(true), so we have to give it
-      // something here...
-      el = document.createTextNode(' ')
-      setTokenType('text')
+        if (token.html) {
+            el = document.createComment('v-html')
+            setTokenType('html')
+        } else {
+            // IE will clean up empty textNodes during
+            // frag.cloneNode(true), so we have to give it
+            // something here...
+            el = document.createTextNode(' ')
+            setTokenType('text')
+        }
     }
-  }
-  function setTokenType (type) {
-    token.type = type
-    token.def = resolveAsset(options, 'directives', type)
-    token.descriptor = dirParser.parse(token.value)[0]
-  }
-  return el
+
+    function setTokenType(type) {
+        token.type = type
+        token.def = resolveAsset(options, 'directives', type)
+        token.descriptor = dirParser.parse(token.value)[0]
+    }
+    return el
 }
 
 /**
@@ -322,31 +316,31 @@ function processTextToken (token, options) {
  * @param {DocumentFragment} frag
  */
 
-function makeTextNodeLinkFn (tokens, frag) {
-  return function textNodeLinkFn (vm, el) {
-    var fragClone = frag.cloneNode(true)
-    var childNodes = _.toArray(fragClone.childNodes)
-    var token, value, node
-    for (var i = 0, l = tokens.length; i < l; i++) {
-      token = tokens[i]
-      value = token.value
-      if (token.tag) {
-        node = childNodes[i]
-        if (token.oneTime) {
-          value = vm.$eval(value)
-          if (token.html) {
-            _.replace(node, templateParser.parse(value, true))
-          } else {
-            node.data = value
-          }
-        } else {
-          vm._bindDir(token.type, node,
-                      token.descriptor, token.def)
+function makeTextNodeLinkFn(tokens, frag) {
+    return function textNodeLinkFn(vm, el) {
+        var fragClone = frag.cloneNode(true)
+        var childNodes = _.toArray(fragClone.childNodes)
+        var token, value, node
+        for (var i = 0, l = tokens.length; i < l; i++) {
+            token = tokens[i]
+            value = token.value
+            if (token.tag) {
+                node = childNodes[i]
+                if (token.oneTime) {
+                    value = vm.$eval(value)
+                    if (token.html) {
+                        _.replace(node, templateParser.parse(value, true))
+                    } else {
+                        node.data = value
+                    }
+                } else {
+                    vm._bindDir(token.type, node,
+                        token.descriptor, token.def)
+                }
+            }
         }
-      }
+        _.replace(el, fragClone)
     }
-    _.replace(el, fragClone)
-  }
 }
 
 /**
@@ -357,23 +351,18 @@ function makeTextNodeLinkFn (tokens, frag) {
  * @return {Function|undefined}
  */
 
-function compileNodeList (nodeList, options) {
-  var linkFns = []
-  var nodeLinkFn, childLinkFn, node
-  for (var i = 0, l = nodeList.length; i < l; i++) {
-    node = nodeList[i]
-    nodeLinkFn = compileNode(node, options)
-    childLinkFn =
-      !(nodeLinkFn && nodeLinkFn.terminal) &&
-      node.tagName !== 'SCRIPT' &&
-      node.hasChildNodes()
-        ? compileNodeList(node.childNodes, options)
-        : null
-    linkFns.push(nodeLinkFn, childLinkFn)
-  }
-  return linkFns.length
-    ? makeChildLinkFn(linkFns)
-    : null
+function compileNodeList(nodeList, options) {
+    var linkFns = []
+    var nodeLinkFn, childLinkFn, node
+    for (var i = 0, l = nodeList.length; i < l; i++) {
+        node = nodeList[i]
+        nodeLinkFn = compileNode(node, options)
+        childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) &&
+            node.tagName !== 'SCRIPT' &&
+            node.hasChildNodes() ? compileNodeList(node.childNodes, options) : null
+        linkFns.push(nodeLinkFn, childLinkFn)
+    }
+    return linkFns.length ? makeChildLinkFn(linkFns) : null
 }
 
 /**
@@ -383,23 +372,23 @@ function compileNodeList (nodeList, options) {
  * @return {Function} childLinkFn
  */
 
-function makeChildLinkFn (linkFns) {
-  return function childLinkFn (vm, nodes, host) {
-    var node, nodeLinkFn, childrenLinkFn
-    for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
-      node = nodes[n]
-      nodeLinkFn = linkFns[i++]
-      childrenLinkFn = linkFns[i++]
-      // cache childNodes before linking parent, fix #657
-      var childNodes = _.toArray(node.childNodes)
-      if (nodeLinkFn) {
-        nodeLinkFn(vm, node, host)
-      }
-      if (childrenLinkFn) {
-        childrenLinkFn(vm, childNodes, host)
-      }
+function makeChildLinkFn(linkFns) {
+    return function childLinkFn(vm, nodes, host) {
+        var node, nodeLinkFn, childrenLinkFn
+        for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
+            node = nodes[n]
+            nodeLinkFn = linkFns[i++]
+            childrenLinkFn = linkFns[i++]
+                // cache childNodes before linking parent, fix #657
+            var childNodes = _.toArray(node.childNodes)
+            if (nodeLinkFn) {
+                nodeLinkFn(vm, node, host)
+            }
+            if (childrenLinkFn) {
+                childrenLinkFn(vm, childNodes, host)
+            }
+        }
     }
-  }
 }
 
 /**
@@ -410,13 +399,13 @@ function makeChildLinkFn (linkFns) {
  * @param {Object} options
  */
 
-function checkElementDirectives (el, options) {
-  var tag = el.tagName.toLowerCase()
-  if (_.commonTagRE.test(tag)) return
-  var def = resolveAsset(options, 'elementDirectives', tag)
-  if (def) {
-    return makeTerminalNodeLinkFn(el, tag, '', options, def)
-  }
+function checkElementDirectives(el, options) {
+    var tag = el.tagName.toLowerCase()
+    if (_.commonTagRE.test(tag)) return
+    var def = resolveAsset(options, 'elementDirectives', tag)
+    if (def) {
+        return makeTerminalNodeLinkFn(el, tag, '', options, def)
+    }
 }
 
 /**
@@ -429,17 +418,17 @@ function checkElementDirectives (el, options) {
  * @return {Function|undefined}
  */
 
-function checkComponent (el, options, hasAttrs) {
-  var componentId = _.checkComponent(el, options, hasAttrs)
-  if (componentId) {
-    var componentLinkFn = function (vm, el, host) {
-      vm._bindDir('component', el, {
-        expression: componentId
-      }, componentDef, host)
+function checkComponent(el, options, hasAttrs) {
+    var componentId = _.checkComponent(el, options, hasAttrs)
+    if (componentId) {
+        var componentLinkFn = function(vm, el, host) {
+            vm._bindDir('component', el, {
+                expression: componentId
+            }, componentDef, host)
+        }
+        componentLinkFn.terminal = true
+        return componentLinkFn
     }
-    componentLinkFn.terminal = true
-    return componentLinkFn
-  }
 }
 
 /**
@@ -451,20 +440,20 @@ function checkComponent (el, options, hasAttrs) {
  * @return {Function} terminalLinkFn
  */
 
-function checkTerminalDirectives (el, options) {
-  if (_.attr(el, 'pre') !== null) {
-    return skip
-  }
-  var value, dirName
-  for (var i = 0, l = terminalDirectives.length; i < l; i++) {
-    dirName = terminalDirectives[i]
-    if ((value = _.attr(el, dirName)) !== null) {
-      return makeTerminalNodeLinkFn(el, dirName, value, options)
+function checkTerminalDirectives(el, options) {
+    if (_.attr(el, 'pre') !== null) {
+        return skip
     }
-  }
+    var value, dirName
+    for (var i = 0, l = terminalDirectives.length; i < l; i++) {
+        dirName = terminalDirectives[i]
+        if ((value = _.attr(el, dirName)) !== null) {
+            return makeTerminalNodeLinkFn(el, dirName, value, options)
+        }
+    }
 }
 
-function skip () {}
+function skip() {}
 skip.terminal = true
 
 /**
@@ -481,16 +470,16 @@ skip.terminal = true
  * @return {Function} terminalLinkFn
  */
 
-function makeTerminalNodeLinkFn (el, dirName, value, options, def) {
-  var descriptor = dirParser.parse(value)[0]
-  // no need to call resolveAsset since terminal directives
-  // are always internal
-  def = def || options.directives[dirName]
-  var fn = function terminalNodeLinkFn (vm, el, host) {
-    vm._bindDir(dirName, el, descriptor, def, host)
-  }
-  fn.terminal = true
-  return fn
+function makeTerminalNodeLinkFn(el, dirName, value, options, def) {
+    var descriptor = dirParser.parse(value)[0]
+        // no need to call resolveAsset since terminal directives
+        // are always internal
+    def = def || options.directives[dirName]
+    var fn = function terminalNodeLinkFn(vm, el, host) {
+        vm._bindDir(dirName, el, descriptor, def, host)
+    }
+    fn.terminal = true
+    return fn
 }
 
 /**
@@ -501,39 +490,39 @@ function makeTerminalNodeLinkFn (el, dirName, value, options, def) {
  * @return {Function}
  */
 
-function compileDirectives (attrs, options) {
-  var i = attrs.length
-  var dirs = []
-  var attr, name, value, dir, dirName, dirDef
-  while (i--) {
-    attr = attrs[i]
-    name = attr.name
-    value = attr.value
-    if (name.indexOf(config.prefix) === 0) {
-      dirName = name.slice(config.prefix.length)
-      dirDef = resolveAsset(options, 'directives', dirName)
-      if (process.env.NODE_ENV !== 'production') {
-        _.assertAsset(dirDef, 'directive', dirName)
-      }
-      if (dirDef) {
-        dirs.push({
-          name: dirName,
-          descriptors: dirParser.parse(value),
-          def: dirDef
-        })
-      }
-    } else if (config.interpolate) {
-      dir = collectAttrDirective(name, value, options)
-      if (dir) {
-        dirs.push(dir)
-      }
+function compileDirectives(attrs, options) {
+    var i = attrs.length
+    var dirs = []
+    var attr, name, value, dir, dirName, dirDef
+    while (i--) {
+        attr = attrs[i]
+        name = attr.name
+        value = attr.value
+        if (name.indexOf(config.prefix) === 0) {
+            dirName = name.slice(config.prefix.length)
+            dirDef = resolveAsset(options, 'directives', dirName)
+            if (process.env.NODE_ENV !== 'production') {
+                _.assertAsset(dirDef, 'directive', dirName)
+            }
+            if (dirDef) {
+                dirs.push({
+                    name: dirName,
+                    descriptors: dirParser.parse(value),
+                    def: dirDef
+                })
+            }
+        } else if (config.interpolate) {
+            dir = collectAttrDirective(name, value, options)
+            if (dir) {
+                dirs.push(dir)
+            }
+        }
     }
-  }
-  // sort by priority, LOW to HIGH
-  if (dirs.length) {
-    dirs.sort(directiveComparator)
-    return makeNodeLinkFn(dirs)
-  }
+    // sort by priority, LOW to HIGH
+    if (dirs.length) {
+        dirs.sort(directiveComparator)
+        return makeNodeLinkFn(dirs)
+    }
 }
 
 /**
@@ -543,25 +532,25 @@ function compileDirectives (attrs, options) {
  * @return {Function} directivesLinkFn
  */
 
-function makeNodeLinkFn (directives) {
-  return function nodeLinkFn (vm, el, host) {
-    // reverse apply because it's sorted low to high
-    var i = directives.length
-    var dir, j, k
-    while (i--) {
-      dir = directives[i]
-      if (dir._link) {
-        // custom link fn
-        dir._link(vm, el)
-      } else {
-        k = dir.descriptors.length
-        for (j = 0; j < k; j++) {
-          vm._bindDir(dir.name, el,
-            dir.descriptors[j], dir.def, host)
+function makeNodeLinkFn(directives) {
+    return function nodeLinkFn(vm, el, host) {
+        // reverse apply because it's sorted low to high
+        var i = directives.length
+        var dir, j, k
+        while (i--) {
+            dir = directives[i]
+            if (dir._link) {
+                // custom link fn
+                dir._link(vm, el)
+            } else {
+                k = dir.descriptors.length
+                for (j = 0; j < k; j++) {
+                    vm._bindDir(dir.name, el,
+                        dir.descriptors[j], dir.def, host)
+                }
+            }
         }
-      }
     }
-  }
 }
 
 /**
@@ -578,38 +567,34 @@ function makeNodeLinkFn (directives) {
  * @return {Object}
  */
 
-function collectAttrDirective (name, value, options) {
-  var tokens = textParser.parse(value)
-  var isClass = name === 'class'
-  if (tokens) {
-    var dirName = isClass ? 'class' : 'attr'
-    var def = options.directives[dirName]
-    var i = tokens.length
-    var allOneTime = true
-    while (i--) {
-      var token = tokens[i]
-      if (token.tag && !token.oneTime) {
-        allOneTime = false
-      }
-    }
-    return {
-      def: def,
-      _link: allOneTime
-        ? function (vm, el) {
-            el.setAttribute(name, vm.$interpolate(value))
-          }
-        : function (vm, el) {
-            var exp = textParser.tokensToExp(tokens, vm)
-            var desc = isClass
-              ? dirParser.parse(exp)[0]
-              : dirParser.parse(name + ':' + exp)[0]
-            if (isClass) {
-              desc._rawClass = value
+function collectAttrDirective(name, value, options) {
+    var tokens = textParser.parse(value)
+    var isClass = name === 'class'
+    if (tokens) {
+        var dirName = isClass ? 'class' : 'attr'
+        var def = options.directives[dirName]
+        var i = tokens.length
+        var allOneTime = true
+        while (i--) {
+            var token = tokens[i]
+            if (token.tag && !token.oneTime) {
+                allOneTime = false
             }
-            vm._bindDir(dirName, el, desc, def)
-          }
+        }
+        return {
+            def: def,
+            _link: allOneTime ? function(vm, el) {
+                el.setAttribute(name, vm.$interpolate(value))
+            } : function(vm, el) {
+                var exp = textParser.tokensToExp(tokens, vm)
+                var desc = isClass ? dirParser.parse(exp)[0] : dirParser.parse(name + ':' + exp)[0]
+                if (isClass) {
+                    desc._rawClass = value
+                }
+                vm._bindDir(dirName, el, desc, def)
+            }
+        }
     }
-  }
 }
 
 /**
@@ -619,8 +604,8 @@ function collectAttrDirective (name, value, options) {
  * @param {Object} b
  */
 
-function directiveComparator (a, b) {
-  a = a.def.priority || 0
-  b = b.def.priority || 0
-  return a > b ? 1 : -1
+function directiveComparator(a, b) {
+    a = a.def.priority || 0
+    b = b.def.priority || 0
+    return a > b ? 1 : -1
 }

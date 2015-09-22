@@ -18,6 +18,7 @@ require('./object')
 function Observer (value) {
   this.value = value
   this.dep = new Dep()
+  //定义个内部观察东东
   _.define(value, '__ob__', this)
   if (_.isArray(value)) {
     var augment = config.proto && _.hasProto
@@ -55,7 +56,9 @@ Observer.create = function (value, vm) {
     (_.isArray(value) || _.isPlainObject(value)) &&
     !Object.isFrozen(value) &&
     !value._isVue
-  ) {ei you 
+  ) {
+    //观察
+    //data
     ob = new Observer(value)
   }
   if (ob && vm) {
