@@ -82,7 +82,7 @@ exports._initData = function() {
     }
     //模型数据
     var data = this._data
-    // proxy data on instance
+        // proxy data on instance
     var keys = Object.keys(data)
     var i, key
     i = keys.length
@@ -220,6 +220,8 @@ exports._initComputed = function() {
                 configurable: true
             }
             if (typeof userDef === 'function') {
+                //制作一个计算属性get
+                //return curry function
                 def.get = makeComputedGetter(userDef, this)
                 def.set = noop
             } else {
@@ -232,6 +234,7 @@ exports._initComputed = function() {
 }
 
 function makeComputedGetter(getter, owner) {
+
     var watcher = new Watcher(owner, getter, null, {
         lazy: true
     })

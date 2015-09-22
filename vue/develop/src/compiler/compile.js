@@ -498,7 +498,7 @@ function compileDirectives(attrs, options) {
         attr = attrs[i]
         name = attr.name
         value = attr.value
-        if (name.indexOf(config.prefix) === 0) {
+        if (name.indexOf(config.prefix) === 0) { //如果是v开头
             dirName = name.slice(config.prefix.length)
             dirDef = resolveAsset(options, 'directives', dirName)
             if (process.env.NODE_ENV !== 'production') {
