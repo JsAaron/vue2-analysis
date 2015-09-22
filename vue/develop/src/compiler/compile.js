@@ -500,15 +500,16 @@ function compileDirectives(attrs, options) {
         value = attr.value
         if (name.indexOf(config.prefix) === 0) { //如果是v开头
             dirName = name.slice(config.prefix.length)
+            //找到对应的指定解释器
             dirDef = resolveAsset(options, 'directives', dirName)
             if (process.env.NODE_ENV !== 'production') {
                 _.assertAsset(dirDef, 'directive', dirName)
             }
             if (dirDef) {
                 dirs.push({
-                    name: dirName,
-                    descriptors: dirParser.parse(value),
-                    def: dirDef
+                    name        : dirName,
+                    descriptors : dirParser.parse(value),
+                    def         : dirDef
                 })
             }
         } else if (config.interpolate) {
