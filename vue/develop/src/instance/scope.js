@@ -82,7 +82,7 @@ exports._initData = function() {
     }
     //模型数据
     var data = this._data
-        // proxy data on instance
+    // proxy data on instance
     var keys = Object.keys(data)
     var i, key
     i = keys.length

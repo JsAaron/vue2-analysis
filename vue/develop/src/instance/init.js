@@ -75,6 +75,20 @@ exports._init = function (options) {
 
   // initialize data as empty object.
   // it will be filled up in _initScope().
+  // 
+  // data = {
+  //   __ob__ {
+  //      dep
+  //      parent 
+  //      vms [vm合集]
+  //   }
+  //   
+  //   属性：{
+  //     set
+  //     get
+  //   }   
+  // }
+  // 
   this._data = {}
 
   // initialize data observation and scope inheritance.

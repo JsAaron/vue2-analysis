@@ -15,20 +15,18 @@ require('./object')
  * @constructor
  */
 
-function Observer (value) {
-  this.value = value
-  this.dep = new Dep()
-  //定义个内部观察东东
-  _.define(value, '__ob__', this)
-  if (_.isArray(value)) {
-    var augment = config.proto && _.hasProto
-      ? protoAugment
-      : copyAugment
-    augment(value, arrayMethods, arrayKeys)
-    this.observeArray(value)
-  } else {
-    this.walk(value)
-  }
+function Observer(value) {
+    this.value = value
+    this.dep = new Dep()
+        //定义个内部观察东东
+    _.define(value, '__ob__', this)
+    if (_.isArray(value)) {
+        var augment = config.proto && _.hasProto ? protoAugment : copyAugment
+        augment(value, arrayMethods, arrayKeys)
+        this.observeArray(value)
+    } else {
+        this.walk(value)
+    }
 }
 
 // Static methods
@@ -44,27 +42,31 @@ function Observer (value) {
  * @static
  */
 
-Observer.create = function (value, vm) {
-  var ob
-  if (
-    value &&
-    value.hasOwnProperty('__ob__') &&
-    value.__ob__ instanceof Observer
-  ) {
-    ob = value.__ob__
-  } else if (
-    (_.isArray(value) || _.isPlainObject(value)) &&
-    !Object.isFrozen(value) &&
-    !value._isVue
-  ) {
-    //观察
-    //data
-    ob = new Observer(value)
-  }
-  if (ob && vm) {
-    ob.addVm(vm)
-  }
-  return ob
+//Vue.js 会在被观测的数据对象上创建一个隐藏属性 __ob__， 
+//然后通过递归遍历
+//将所有可枚举的属性转化为 getters 和 setters，从而实现依赖收集。
+Observer.create = function(value, vm) {
+    var ob
+    if ( //如果已经创建了__ob__
+        value &&
+        value.hasOwnProperty('__ob__') &&
+        value.__ob__ instanceof Observer
+    ) {
+        ob = value.__ob__
+    } else if (
+        (_.isArray(value) || _.isPlainObject(value)) &&
+        !Object.isFrozen(value) &&
+        !value._isVue
+    ) {
+        //观察
+        //data
+        ob = new Observer(value)
+    }
+    //__ob__与属性数据创建完毕
+    if (ob && vm) {
+        ob.addVm(vm)
+    }
+    return ob //__ob__
 }
 
 // Instance methods
@@ -78,12 +80,12 @@ Observer.create = function (value, vm) {
  * @param {Object} obj
  */
 
-Observer.prototype.walk = function (obj) {
-  var keys = Object.keys(obj)
-  var i = keys.length
-  while (i--) {
-    this.convert(keys[i], obj[keys[i]])
-  }
+Observer.prototype.walk = function(obj) {
+    var keys = Object.keys(obj)
+    var i = keys.length
+    while (i--) {
+        this.convert(keys[i], obj[keys[i]])
+    }
 }
 
 /**
@@ -94,8 +96,8 @@ Observer.prototype.walk = function (obj) {
  * @return {Dep|undefined}
  */
 
-Observer.prototype.observe = function (val) {
-  return Observer.create(val)
+Observer.prototype.observe = function(val) {
+    return Observer.create(val)
 }
 
 /**
@@ -104,14 +106,14 @@ Observer.prototype.observe = function (val) {
  * @param {Array} items
  */
 
-Observer.prototype.observeArray = function (items) {
-  var i = items.length
-  while (i--) {
-    var ob = this.observe(items[i])
-    if (ob) {
-      (ob.parents || (ob.parents = [])).push(this)
+Observer.prototype.observeArray = function(items) {
+    var i = items.length
+    while (i--) {
+        var ob = this.observe(items[i])
+        if (ob) {
+            (ob.parents || (ob.parents = [])).push(this)
+        }
     }
-  }
 }
 
 /**
@@ -120,14 +122,14 @@ Observer.prototype.observeArray = function (items) {
  * @param {Array} items
  */
 
-Observer.prototype.unobserveArray = function (items) {
-  var i = items.length
-  while (i--) {
-    var ob = items[i] && items[i].__ob__
-    if (ob) {
-      ob.parents.$remove(this)
+Observer.prototype.unobserveArray = function(items) {
+    var i = items.length
+    while (i--) {
+        var ob = items[i] && items[i].__ob__
+        if (ob) {
+            ob.parents.$remove(this)
+        }
     }
-  }
 }
 
 /**
@@ -135,15 +137,15 @@ Observer.prototype.unobserveArray = function (items) {
  * if any.
  */
 
-Observer.prototype.notify = function () {
-  this.dep.notify()
-  var parents = this.parents
-  if (parents) {
-    var i = parents.length
-    while (i--) {
-      parents[i].notify()
+Observer.prototype.notify = function() {
+    this.dep.notify()
+    var parents = this.parents
+    if (parents) {
+        var i = parents.length
+        while (i--) {
+            parents[i].notify()
+        }
     }
-  }
 }
 
 /**
@@ -153,30 +155,31 @@ Observer.prototype.notify = function () {
  * @param {String} key
  * @param {*} val
  */
-
-Observer.prototype.convert = function (key, val) {
-  var ob = this
-  var childOb = ob.observe(val)
-  var dep = new Dep()
-  Object.defineProperty(ob.value, key, {
-    enumerable: true,
-    configurable: true,
-    get: function () {
-      if (Dep.target) {
-        dep.depend()
-        if (childOb) {
-          childOb.dep.depend()
+//给所有的属性都转化set与get
+//所以当属性在边改的时候能触发这些事件
+Observer.prototype.convert = function(key, val) {
+    var ob = this
+    var childOb = ob.observe(val)
+    var dep = new Dep()
+    Object.defineProperty(ob.value, key, {
+        enumerable: true,
+        configurable: true,
+        get: function() {
+            if (Dep.target) {
+                dep.depend()
+                if (childOb) {
+                    childOb.dep.depend()
+                }
+            }
+            return val
+        },
+        set: function(newVal) {
+            if (newVal === val) return
+            val = newVal
+            childOb = ob.observe(newVal)
+            dep.notify()
         }
-      }
-      return val
-    },
-    set: function (newVal) {
-      if (newVal === val) return
-      val = newVal
-      childOb = ob.observe(newVal)
-      dep.notify()
-    }
-  })
+    })
 }
 
 /**
@@ -188,8 +191,8 @@ Observer.prototype.convert = function (key, val) {
  * @param {Vue} vm
  */
 
-Observer.prototype.addVm = function (vm) {
-  (this.vms || (this.vms = [])).push(vm)
+Observer.prototype.addVm = function(vm) {
+    (this.vms || (this.vms = [])).push(vm)
 }
 
 /**
@@ -199,8 +202,8 @@ Observer.prototype.addVm = function (vm) {
  * @param {Vue} vm
  */
 
-Observer.prototype.removeVm = function (vm) {
-  this.vms.$remove(vm)
+Observer.prototype.removeVm = function(vm) {
+    this.vms.$remove(vm)
 }
 
 // helpers
@@ -213,8 +216,8 @@ Observer.prototype.removeVm = function (vm) {
  * @param {Object} proto
  */
 
-function protoAugment (target, src) {
-  target.__proto__ = src
+function protoAugment(target, src) {
+    target.__proto__ = src
 }
 
 /**
@@ -225,13 +228,13 @@ function protoAugment (target, src) {
  * @param {Object} proto
  */
 
-function copyAugment (target, src, keys) {
-  var i = keys.length
-  var key
-  while (i--) {
-    key = keys[i]
-    _.define(target, key, src[key])
-  }
+function copyAugment(target, src, keys) {
+    var i = keys.length
+    var key
+    while (i--) {
+        key = keys[i]
+        _.define(target, key, src[key])
+    }
 }
 
 module.exports = Observer
