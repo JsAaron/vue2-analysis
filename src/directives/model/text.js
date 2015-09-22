@@ -32,11 +32,7 @@ module.exports = {
         // in IE11 the "compositionend" event fires AFTER
         // the "input" event, so the input handler is blocked
         // at the end... have to call it here.
-        //
-        // #1327: in lazy mode this is unecessary.
-        if (!lazy) {
-          self.listener()
-        }
+        self.listener()
       })
     }
 

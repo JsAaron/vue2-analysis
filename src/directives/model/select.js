@@ -98,13 +98,7 @@ function initOptions (expression) {
       while (i--) {
         var option = el.options[i]
         if (option !== defaultOption) {
-          var parentNode = option.parentNode
-          if (parentNode === el) {
-            parentNode.removeChild(option)
-          } else {
-            el.removeChild(parentNode)
-            i = el.options.length
-          }
+          el.removeChild(option)
         }
       }
       buildOptions(el, value)
@@ -143,7 +137,7 @@ function buildOptions (parent, options) {
     op = options[i]
     if (!op.options) {
       el = document.createElement('option')
-      if (typeof op === 'string' || typeof op === 'number') {
+      if (typeof op === 'string') {
         el.text = el.value = op
       } else {
         if (op.value != null && !_.isObject(op.value)) {

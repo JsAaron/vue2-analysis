@@ -15,8 +15,8 @@ var extend = _.extend
  * @public
  */
 
-function Vue(options) {
-    this._init(options)
+function Vue (options) {
+  this._init(options)
 }
 
 /**
@@ -35,13 +35,13 @@ extend(Vue, require('./api/global'))
  */
 
 Vue.options = {
-    replace: true,
-    directives: require('./directives'),
-    elementDirectives: require('./element-directives'),
-    filters: require('./filters'),
-    transitions: {},
-    components: {},
-    partials: {}
+  replace: true,
+  directives: require('./directives'),
+  elementDirectives: require('./element-directives'),
+  filters: require('./filters'),
+  transitions: {},
+  components: {},
+  partials: {}
 }
 
 /**
@@ -56,14 +56,14 @@ var p = Vue.prototype
  */
 
 Object.defineProperty(p, '$data', {
-    get: function() {
-        return this._data
-    },
-    set: function(newData) {
-        if (newData !== this._data) {
-            this._setData(newData)
-        }
+  get: function () {
+    return this._data
+  },
+  set: function (newData) {
+    if (newData !== this._data) {
+      this._setData(newData)
     }
+  }
 })
 
 /**

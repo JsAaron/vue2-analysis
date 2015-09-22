@@ -4,6 +4,9 @@ var path = require('path');
 var notify = require('gulp-notify');
 var concat = require('gulp-concat'); //合并文件
 
+var jshint = require('gulp-jshint');
+var map = require('map-stream');
+
 //http://csspod.com/using-browserify-with-gulp/
 var browserify = require('browserify');
 var source = require('vinyl-source-stream');
@@ -103,7 +106,7 @@ gulp.task('test-vue-js', function() {
             publicPath: './vue/',
             filename: 'bundle.js'
         },
-        // devtool: '#source-map',
+        devtool: '#source-map',
         //加载器
         module: {
 
@@ -132,25 +135,25 @@ gulp.task('test-vue-js', function() {
                 exclude: /node_modules/, // exclude any and all files in the node_modules folder
                 loader: "jshint-loader"
             }]
-        },
-        // more options in the optional jshint object
-        jshint: {
-            asi:true, //省略分号
-            // any jshint option http://www.jshint.com/docs/options/
-            // i. e.
-            camelcase: false,
-            // jshint errors are displayed by default as warnings
-            // set emitErrors to true to display them as errors
-            emitErrors: false,
-            // jshint to not interrupt the compilation
-            // if you want any file with jshint errors to fail
-            // set failOnHint to true
-            failOnHint: true,
-            // custom reporter function
-            reporter: function(errors) {
-                  console.log(errors);
-            }
         }
+        // // more options in the optional jshint object
+        // jshint: {
+        //     asi:true, //省略分号
+        //     // any jshint option http://www.jshint.com/docs/options/
+        //     // i. e.
+        //     camelcase: false,
+        //     // jshint errors are displayed by default as warnings
+        //     // set emitErrors to true to display them as errors
+        //     emitErrors: false,
+        //     // jshint to not interrupt the compilation
+        //     // if you want any file with jshint errors to fail
+        //     // set failOnHint to true
+        //     failOnHint: true,
+        //     // custom reporter function
+        //     reporter: function(errors) {
+        //           console.log(errors);
+        //     }
+        // }
 
     }, function(err, stats) {
         if (err) {
@@ -159,14 +162,34 @@ gulp.task('test-vue-js', function() {
     });
 })
 
+var myReporter = map(function(file, cb) {
+    if (!file.jshint.success) {
+        console.log('JSHINT fail in ' + file.path);
+        file.jshint.results.forEach(function(err) {
+            if (err) {
+                console.log(' ' + file.path + ': line ' + err.line + ', col ' + err.character + ', code ' + err.code + ', ' + err.reason);
+            }
+        });
+    }
+    cb(null, file);
+});
+
+gulp.task('test-jslint', function() {
+    return gulp.src('./vue/bundle.js')
+        .pipe(jshint())
+         .pipe(jshint.reporter('default'))
+        // .pipe(myReporter)
+
+});
+
 gulp.task('test-vue-server', function() {
     browserSync.init({
-        server: './vue',
-        index: homepage,
-        port: 3000,
-        // logLevel: "debug",
-        logPrefix: "Aaron",
-        open: false
+        server      : './vue',
+        index       : homepage,
+        port        : 3000,
+        // logLevel : "debug",
+        logPrefix   : "Aaron",
+        open        : true
             // files     : ["vue/**/*.js", "./vue/index.html"] //监控变化
     });
 })
@@ -174,6 +197,8 @@ gulp.task('test-vue-server', function() {
 
 gulp.task('vue', ['test-vue-server', 'test-vue-js'], function() {
     gulp.watch('./vue/develop/**/*.js', ['test-vue-js']);
-    gulp.watch('./vue/*.js').on('change', reload);
+    gulp.watch('./vue/*.js').on('change', function(){
+         reload();
+    });
     gulp.watch('./vue/index.html').on('change', reload);
 })

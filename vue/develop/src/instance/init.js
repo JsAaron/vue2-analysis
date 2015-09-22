@@ -30,6 +30,10 @@ exports._init = function (options) {
 
   // events bookkeeping
   this._events = {}            // registered callbacks
+
+  //避免不必要的深度遍历：
+  //在有广播事件到来时，如果当前 vm 的 _eventsCount 为 0，
+  //则不必向其子 vm 继续传播该事件
   this._eventsCount = {}       // for $broadcast optimization
   this._eventCancelled = false // for event cancellation
 

@@ -24,6 +24,7 @@
     "jquery": "^2.1.4",
     "jshint": "^2.8.0",
     "jshint-loader": "^0.8.3",
+    "map-stream": "0.0.6",
     "node-libs-browser": "^0.5.2",
     "node-sass": "^3.3.2",
     "sass-loader": "^2.0.1",

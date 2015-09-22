@@ -1,29 +1,25 @@
- // var Vue = require('./src/vue.js')
+var Vue = require('./src/vue.js');
 
-a = 1
+var vm = new Vue({
+	el:"#demo",
+    data: {
+        firstName : 'Foo',
+        lastName  : 'Bar'
+    },
+    computed: {
+        fullName: function() {
+            return this.firstName + ' ' + this.lastName
+        }
+    },
+    methods:{
+        onClick:function(){
+            this.firstName = "Aaron"
+            this.lastName  = "慕课网"
+        }
+    }
+})
+  
 
- 
-// var vm = new Vue({
-// 	el:"#demo",
-//     data: {
-//         firstName : 'Foo',
-//         lastName  : 'Bar',
-//         fullName  :'ahahh'
-//     },
-//     // computed: {
-//     //     fullName: function() {
-//     //         return this.firstName + ' ' + this.lastName
-//     //     }
-//     // },
-//     methods:{
-//         onClick:function(){
-//             this.firstName = "Aaron"
-//             this.lastName  = "慕课网"
-//             this.fullName = this.firstName + this.lastName
-//         }
-//     }
-// })
- 
 // // Vue.config.debug = true;
 
 // // require('./style.css');

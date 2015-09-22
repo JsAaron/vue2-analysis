@@ -288,9 +288,7 @@ p.getCssTransitionType = function (className) {
     // CSS transitions.
     document.hidden ||
     // explicit js-only transition
-    (this.hooks && this.hooks.css === false) ||
-    // element is hidden
-    isHidden(this.el)
+    (this.hooks && this.hooks.css === false)
   ) {
     return
   }
@@ -338,20 +336,6 @@ p.setupCssCb = function (event, cb) {
     }
   }
   _.on(el, event, onEnd)
-}
-
-/**
- * Check if an element is hidden - in that case we can just
- * skip the transition alltogether.
- *
- * @param {Element} el
- * @return {Boolean}
- */
-
-function isHidden (el) {
-  return el.style.display === 'none' ||
-    el.style.visibility === 'hidden' ||
-    el.hidden
 }
 
 module.exports = Transition
