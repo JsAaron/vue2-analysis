@@ -1,7 +1,5 @@
-
-vue+gulp+webpack 单页面全组件开发测试案例
-
-网络问题,全部上传了node_modules文件夹了
+##vue+gulp+webpack 单页面全组件开发测试案例
+######个人网络问题,上传了node_modules文件夹
 -----------------------------------
 
 ##node环境
