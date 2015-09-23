@@ -11,38 +11,38 @@ var compiler = require('../compiler')
  * @public
  */
 
-exports.$mount = function (el) {
-  if (this._isCompiled) {
-    process.env.NODE_ENV !== 'production' && _.warn(
-      '$mount() should be called only once.'
-    )
-    return
-  }
-  el = _.query(el)
-  if (!el) {
-    el = document.createElement('div')
-  }
-  this._compile(el)
-  this._isCompiled = true
-  this._callHook('compiled')
-  this._initDOMHooks()
-  if (_.inDoc(this.$el)) {
-    this._callHook('attached')
-    ready.call(this)
-  } else {
-    this.$once('hook:attached', ready)
-  }
-  return this
+exports.$mount = function(el) {
+    if (this._isCompiled) {
+        process.env.NODE_ENV !== 'production' && _.warn(
+            '$mount() should be called only once.'
+        )
+        return
+    }
+    el = _.query(el)
+    if (!el) {
+        el = document.createElement('div')
+    }
+    this._compile(el)
+    this._isCompiled = true
+    this._callHook('compiled')
+    this._initDOMHooks()
+    if (_.inDoc(this.$el)) {
+        this._callHook('attached')
+        ready.call(this)
+    } else {
+        this.$once('hook:attached', ready)
+    }
+    return this
 }
 
 /**
  * Mark an instance as ready.
  */
 
-function ready () {
-  this._isAttached = true
-  this._isReady = true
-  this._callHook('ready')
+function ready() {
+    this._isAttached = true
+    this._isReady = true
+    this._callHook('ready')
 }
 
 /**
@@ -50,8 +50,8 @@ function ready () {
  * _destroy.
  */
 
-exports.$destroy = function (remove, deferCleanup) {
-  this._destroy(remove, deferCleanup)
+exports.$destroy = function(remove, deferCleanup) {
+    this._destroy(remove, deferCleanup)
 }
 
 /**
@@ -63,6 +63,6 @@ exports.$destroy = function (remove, deferCleanup) {
  * @return {Function}
  */
 
-exports.$compile = function (el, host) {
-  return compiler.compile(el, this.$options, true)(this, el, host)
+exports.$compile = function(el, host) {
+    return compiler.compile(el, this.$options, true)(this, el, host)
 }

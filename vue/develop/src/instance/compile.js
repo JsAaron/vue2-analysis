@@ -28,6 +28,8 @@ exports._compile = function(el) {
         // so we need to keep reference; this step also injects
         // the template and caches the original attributes
         // on the container node and replacer node.
+        // 提出el的attr属性出来
+        // 如果遇到script的模版，处理
         var original = el
         el = compiler.transclude(el, options)
         this._initElement(el)

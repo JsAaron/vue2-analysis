@@ -1154,88 +1154,82 @@
 	 * Helper that recursively merges two data objects together.
 	 */
 	
-	function mergeData (to, from) {
-	  var key, toVal, fromVal
-	  for (key in from) {
-	    toVal = to[key]
-	    fromVal = from[key]
-	    if (!to.hasOwnProperty(key)) {
-	      to.$add(key, fromVal)
-	    } else if (_.isObject(toVal) && _.isObject(fromVal)) {
-	      mergeData(toVal, fromVal)
+	function mergeData(to, from) {
+	    var key, toVal, fromVal
+	    for (key in from) {
+	        toVal = to[key]
+	        fromVal = from[key]
+	        if (!to.hasOwnProperty(key)) {
+	            to.$add(key, fromVal)
+	        } else if (_.isObject(toVal) && _.isObject(fromVal)) {
+	            mergeData(toVal, fromVal)
+	        }
 	    }
-	  }
-	  return to
+	    return to
 	}
 	
 	/**
 	 * Data
 	 */
 	
-	strats.data = function (parentVal, childVal, vm) {
-	  if (!vm) {
-	    // in a Vue.extend merge, both should be functions
-	    if (!childVal) {
-	      return parentVal
+	strats.data = function(parentVal, childVal, vm) {
+	    if (!vm) {
+	        // in a Vue.extend merge, both should be functions
+	        if (!childVal) {
+	            return parentVal
+	        }
+	        if (typeof childVal !== 'function') {
+	            process.env.NODE_ENV !== 'production' && _.warn(
+	                'The "data" option should be a function ' +
+	                'that returns a per-instance value in component ' +
+	                'definitions.'
+	            )
+	            return parentVal
+	        }
+	        if (!parentVal) {
+	            return childVal
+	        }
+	        // when parentVal & childVal are both present,
+	        // we need to return a function that returns the
+	        // merged result of both functions... no need to
+	        // check if parentVal is a function here because
+	        // it has to be a function to pass previous merges.
+	        return function mergedDataFn() {
+	            return mergeData(
+	                childVal.call(this),
+	                parentVal.call(this)
+	            )
+	        }
+	    } else if (parentVal || childVal) {
+	        return function mergedInstanceDataFn() {
+	            // instance merge
+	            var instanceData = typeof childVal === 'function' ? childVal.call(vm) : childVal
+	            var defaultData = typeof parentVal === 'function' ? parentVal.call(vm) : undefined
+	            if (instanceData) {
+	                return mergeData(instanceData, defaultData)
+	            } else {
+	                return defaultData
+	            }
+	        }
 	    }
-	    if (typeof childVal !== 'function') {
-	      process.env.NODE_ENV !== 'production' && _.warn(
-	        'The "data" option should be a function ' +
-	        'that returns a per-instance value in component ' +
-	        'definitions.'
-	      )
-	      return parentVal
-	    }
-	    if (!parentVal) {
-	      return childVal
-	    }
-	    // when parentVal & childVal are both present,
-	    // we need to return a function that returns the
-	    // merged result of both functions... no need to
-	    // check if parentVal is a function here because
-	    // it has to be a function to pass previous merges.
-	    return function mergedDataFn () {
-	      return mergeData(
-	        childVal.call(this),
-	        parentVal.call(this)
-	      )
-	    }
-	  } else if (parentVal || childVal) {
-	    return function mergedInstanceDataFn () {
-	      // instance merge
-	      var instanceData = typeof childVal === 'function'
-	        ? childVal.call(vm)
-	        : childVal
-	      var defaultData = typeof parentVal === 'function'
-	        ? parentVal.call(vm)
-	        : undefined
-	      if (instanceData) {
-	        return mergeData(instanceData, defaultData)
-	      } else {
-	        return defaultData
-	      }
-	    }
-	  }
 	}
 	
 	/**
 	 * El
 	 */
 	
-	strats.el = function (parentVal, childVal, vm) {
-	  if (!vm && childVal && typeof childVal !== 'function') {
-	    process.env.NODE_ENV !== 'production' && _.warn(
-	      'The "el" option should be a function ' +
-	      'that returns a per-instance value in component ' +
-	      'definitions.'
-	    )
-	    return
-	  }
-	  var ret = childVal || parentVal
-	  // invoke the element factory if this is instance merge
-	  return vm && typeof ret === 'function'
-	    ? ret.call(vm)
-	    : ret
+	strats.el = function(parentVal, childVal, vm) {
+	    if (!vm && childVal && typeof childVal !== 'function') {
+	        process.env.NODE_ENV !== 'production' && _.warn(
+	            'The "el" option should be a function ' +
+	            'that returns a per-instance value in component ' +
+	            'definitions.'
+	        )
+	        return
+	    }
+	    var ret = childVal || parentVal
+	        // invoke the element factory if this is instance merge
+	    return vm && typeof ret === 'function' ? ret.call(vm) : ret
 	}
 	
 	/**
@@ -1243,33 +1237,27 @@
 	 */
 	
 	strats.created =
-	strats.ready =
-	strats.attached =
-	strats.detached =
-	strats.beforeCompile =
-	strats.compiled =
-	strats.beforeDestroy =
-	strats.destroyed =
-	strats.props = function (parentVal, childVal) {
-	  return childVal
-	    ? parentVal
-	      ? parentVal.concat(childVal)
-	      : _.isArray(childVal)
-	        ? childVal
-	        : [childVal]
-	    : parentVal
-	}
+	    strats.ready =
+	    strats.attached =
+	    strats.detached =
+	    strats.beforeCompile =
+	    strats.compiled =
+	    strats.beforeDestroy =
+	    strats.destroyed =
+	    strats.props = function(parentVal, childVal) {
+	        return childVal ? parentVal ? parentVal.concat(childVal) : _.isArray(childVal) ? childVal : [childVal] : parentVal
+	    }
 	
 	/**
 	 * 0.11 deprecation warning
 	 */
 	
-	strats.paramAttributes = function () {
-	  /* istanbul ignore next */
-	  process.env.NODE_ENV !== 'production' && _.warn(
-	    '"paramAttributes" option has been deprecated in 0.12. ' +
-	    'Use "props" instead.'
-	  )
+	strats.paramAttributes = function() {
+	    /* istanbul ignore next */
+	    process.env.NODE_ENV !== 'production' && _.warn(
+	        '"paramAttributes" option has been deprecated in 0.12. ' +
+	        'Use "props" instead.'
+	    )
 	}
 	
 	/**
@@ -1280,15 +1268,13 @@
 	 * options and parent options.
 	 */
 	
-	function mergeAssets (parentVal, childVal) {
-	  var res = Object.create(parentVal)
-	  return childVal
-	    ? extend(res, guardArrayAssets(childVal))
-	    : res
+	function mergeAssets(parentVal, childVal) {
+	    var res = Object.create(parentVal)
+	    return childVal ? extend(res, guardArrayAssets(childVal)) : res
 	}
 	
-	config._assetTypes.forEach(function (type) {
-	  strats[type + 's'] = mergeAssets
+	config._assetTypes.forEach(function(type) {
+	    strats[type + 's'] = mergeAssets
 	})
 	
 	/**
@@ -1299,45 +1285,41 @@
 	 */
 	
 	strats.watch =
-	strats.events = function (parentVal, childVal) {
-	  if (!childVal) return parentVal
-	  if (!parentVal) return childVal
-	  var ret = {}
-	  extend(ret, parentVal)
-	  for (var key in childVal) {
-	    var parent = ret[key]
-	    var child = childVal[key]
-	    if (parent && !_.isArray(parent)) {
-	      parent = [parent]
+	    strats.events = function(parentVal, childVal) {
+	        if (!childVal) return parentVal
+	        if (!parentVal) return childVal
+	        var ret = {}
+	        extend(ret, parentVal)
+	        for (var key in childVal) {
+	            var parent = ret[key]
+	            var child = childVal[key]
+	            if (parent && !_.isArray(parent)) {
+	                parent = [parent]
+	            }
+	            ret[key] = parent ? parent.concat(child) : [child]
+	        }
+	        return ret
 	    }
-	    ret[key] = parent
-	      ? parent.concat(child)
-	      : [child]
-	  }
-	  return ret
-	}
 	
 	/**
 	 * Other object hashes.
 	 */
 	
 	strats.methods =
-	strats.computed = function (parentVal, childVal) {
-	  if (!childVal) return parentVal
-	  if (!parentVal) return childVal
-	  var ret = Object.create(parentVal)
-	  extend(ret, childVal)
-	  return ret
-	}
+	    strats.computed = function(parentVal, childVal) {
+	        if (!childVal) return parentVal
+	        if (!parentVal) return childVal
+	        var ret = Object.create(parentVal)
+	        extend(ret, childVal)
+	        return ret
+	    }
 	
 	/**
 	 * Default strategy.
 	 */
 	
-	var defaultStrat = function (parentVal, childVal) {
-	  return childVal === undefined
-	    ? parentVal
-	    : childVal
+	var defaultStrat = function(parentVal, childVal) {
+	    return childVal === undefined ? parentVal : childVal
 	}
 	
 	/**
@@ -1347,28 +1329,28 @@
 	 * @param {Object} options
 	 */
 	
-	function guardComponents (options) {
-	  if (options.components) {
-	    var components = options.components =
-	      guardArrayAssets(options.components)
-	    var def
-	    var ids = Object.keys(components)
-	    for (var i = 0, l = ids.length; i < l; i++) {
-	      var key = ids[i]
-	      if (_.commonTagRE.test(key)) {
-	        process.env.NODE_ENV !== 'production' && _.warn(
-	          'Do not use built-in HTML elements as component ' +
-	          'id: ' + key
-	        )
-	        continue
-	      }
-	      def = components[key]
-	      if (_.isPlainObject(def)) {
-	        def.id = def.id || key
-	        components[key] = def._Ctor || (def._Ctor = _.Vue.extend(def))
-	      }
+	function guardComponents(options) {
+	    if (options.components) {
+	        var components = options.components =
+	            guardArrayAssets(options.components)
+	        var def
+	        var ids = Object.keys(components)
+	        for (var i = 0, l = ids.length; i < l; i++) {
+	            var key = ids[i]
+	            if (_.commonTagRE.test(key)) {
+	                process.env.NODE_ENV !== 'production' && _.warn(
+	                    'Do not use built-in HTML elements as component ' +
+	                    'id: ' + key
+	                )
+	                continue
+	            }
+	            def = components[key]
+	            if (_.isPlainObject(def)) {
+	                def.id = def.id || key
+	                components[key] = def._Ctor || (def._Ctor = _.Vue.extend(def))
+	            }
+	        }
 	    }
-	  }
 	}
 	
 	/**
@@ -1378,24 +1360,26 @@
 	 * @param {Object} options
 	 */
 	
-	function guardProps (options) {
-	  var props = options.props
-	  if (_.isPlainObject(props)) {
-	    options.props = Object.keys(props).map(function (key) {
-	      var val = props[key]
-	      if (!_.isPlainObject(val)) {
-	        val = { type: val }
-	      }
-	      val.name = key
-	      return val
-	    })
-	  } else if (_.isArray(props)) {
-	    options.props = props.map(function (prop) {
-	      return typeof prop === 'string'
-	        ? { name: prop }
-	        : prop
-	    })
-	  }
+	function guardProps(options) {
+	    var props = options.props
+	    if (_.isPlainObject(props)) {
+	        options.props = Object.keys(props).map(function(key) {
+	            var val = props[key]
+	            if (!_.isPlainObject(val)) {
+	                val = {
+	                    type: val
+	                }
+	            }
+	            val.name = key
+	            return val
+	        })
+	    } else if (_.isArray(props)) {
+	        options.props = props.map(function(prop) {
+	            return typeof prop === 'string' ? {
+	                name: prop
+	            } : prop
+	        })
+	    }
 	}
 	
 	/**
@@ -1406,25 +1390,25 @@
 	 * @return {Object}
 	 */
 	
-	function guardArrayAssets (assets) {
-	  if (_.isArray(assets)) {
-	    var res = {}
-	    var i = assets.length
-	    var asset
-	    while (i--) {
-	      asset = assets[i]
-	      var id = asset.id || (asset.options && asset.options.id)
-	      if (!id) {
-	        process.env.NODE_ENV !== 'production' && _.warn(
-	          'Array-syntax assets must provide an id field.'
-	        )
-	      } else {
-	        res[id] = asset
-	      }
+	function guardArrayAssets(assets) {
+	    if (_.isArray(assets)) {
+	        var res = {}
+	        var i = assets.length
+	        var asset
+	        while (i--) {
+	            asset = assets[i]
+	            var id = asset.id || (asset.options && asset.options.id)
+	            if (!id) {
+	                process.env.NODE_ENV !== 'production' && _.warn(
+	                    'Array-syntax assets must provide an id field.'
+	                )
+	            } else {
+	                res[id] = asset
+	            }
+	        }
+	        return res
 	    }
-	    return res
-	  }
-	  return assets
+	    return assets
 	}
 	
 	/**
@@ -1437,29 +1421,30 @@
 	 *                     an instantiation merge.
 	 */
 	
-	exports.mergeOptions = function merge (parent, child, vm) {
-	  guardComponents(child)
-	  guardProps(child)
-	  var options = {}
-	  var key
-	  if (child.mixins) {
-	    for (var i = 0, l = child.mixins.length; i < l; i++) {
-	      parent = merge(parent, child.mixins[i], vm)
+	exports.mergeOptions = function merge(parent, child, vm) {
+	    guardComponents(child)
+	    guardProps(child)
+	    var options = {}
+	    var key
+	    if (child.mixins) {
+	        for (var i = 0, l = child.mixins.length; i < l; i++) {
+	            parent = merge(parent, child.mixins[i], vm)
+	        }
 	    }
-	  }
-	  for (key in parent) {
-	    mergeField(key)
-	  }
-	  for (key in child) {
-	    if (!(parent.hasOwnProperty(key))) {
-	      mergeField(key)
+	    for (key in parent) {
+	        mergeField(key)
 	    }
-	  }
-	  function mergeField (key) {
-	    var strat = strats[key] || defaultStrat
-	    options[key] = strat(parent[key], child[key], vm, key)
-	  }
-	  return options
+	    for (key in child) {
+	        if (!(parent.hasOwnProperty(key))) {
+	            mergeField(key)
+	        }
+	    }
+	
+	    function mergeField(key) {
+	        var strat = strats[key] || defaultStrat
+	        options[key] = strat(parent[key], child[key], vm, key)
+	    }
+	    return options
 	}
 	
 	/**
@@ -1473,21 +1458,22 @@
 	 * @return {Object|Function}
 	 */
 	
-	exports.resolveAsset = function resolve (options, type, id) {
-	  var camelizedId = _.camelize(id)
-	  var pascalizedId = camelizedId.charAt(0).toUpperCase() + camelizedId.slice(1)
-	  var assets = options[type]
-	  var asset = assets[id] || assets[camelizedId] || assets[pascalizedId]
-	  while (
-	    !asset &&
-	    options._parent &&
-	    (!config.strict || options._repeat)
-	  ) {
-	    options = (options._context || options._parent).$options
-	    assets = options[type]
-	    asset = assets[id] || assets[camelizedId] || assets[pascalizedId]
-	  }
-	  return asset
+	exports.resolveAsset = function resolve(options, type, id) {
+	    var camelizedId = _.camelize(id)
+	    var pascalizedId = camelizedId.charAt(0).toUpperCase() + camelizedId.slice(1)
+	    var assets = options[type]
+	    //指令解析器
+	    var asset = assets[id] || assets[camelizedId] || assets[pascalizedId]
+	    //如果没找到对应的指令解释器
+	    while (!asset &&
+	        options._parent &&
+	        (!config.strict || options._repeat)
+	    ) {
+	        options = (options._context || options._parent).$options
+	        assets = options[type]
+	        asset = assets[id] || assets[camelizedId] || assets[pascalizedId]
+	    }
+	    return asset
 	}
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
@@ -2070,6 +2056,7 @@
 	    var linkFn
 	    var hasAttrs = el.hasAttributes()
 	        // check terminal directives (repeat & if)
+	        // 检查是不是repeat或者if指令
 	    if (hasAttrs) {
 	        linkFn = checkTerminalDirectives(el, options)
 	    }
@@ -2078,6 +2065,7 @@
 	        linkFn = checkElementDirectives(el, options)
 	    }
 	    // check component
+	    // 组件
 	    if (!linkFn) {
 	        linkFn = checkComponent(el, options)
 	    }
@@ -2333,17 +2321,18 @@
 	        attr = attrs[i]
 	        name = attr.name
 	        value = attr.value
-	        if (name.indexOf(config.prefix) === 0) {
+	        if (name.indexOf(config.prefix) === 0) { //如果是v开头
 	            dirName = name.slice(config.prefix.length)
+	            //找到对应的指定解释器
 	            dirDef = resolveAsset(options, 'directives', dirName)
 	            if (process.env.NODE_ENV !== 'production') {
 	                _.assertAsset(dirDef, 'directive', dirName)
 	            }
 	            if (dirDef) {
 	                dirs.push({
-	                    name: dirName,
-	                    descriptors: dirParser.parse(value),
-	                    def: dirDef
+	                    name        : dirName,
+	                    descriptors : dirParser.parse(value),
+	                    def         : dirDef
 	                })
 	            }
 	        } else if (config.interpolate) {
@@ -3221,37 +3210,35 @@
 	 * @constructor
 	 */
 	
-	function Watcher (vm, expOrFn, cb, options) {
-	  // mix in options
-	  if (options) {
-	    _.extend(this, options)
-	  }
-	  var isFn = typeof expOrFn === 'function'
-	  this.vm = vm
-	  vm._watchers.push(this)
-	  this.expression = isFn ? expOrFn.toString() : expOrFn
-	  this.cb = cb
-	  this.id = ++uid // uid for batching
-	  this.active = true
-	  this.dirty = this.lazy // for lazy watchers
-	  this.deps = []
-	  this.newDeps = null
-	  this.prevError = null // for async error stacks
-	  // parse expression for getter/setter
-	  if (isFn) {
-	    this.getter = expOrFn
-	    this.setter = undefined
-	  } else {
-	    var res = expParser.parse(expOrFn, this.twoWay)
-	    this.getter = res.get
-	    this.setter = res.set
-	  }
-	  this.value = this.lazy
-	    ? undefined
-	    : this.get()
-	  // state for avoiding false triggers for deep and Array
-	  // watchers during vm._digest()
-	  this.queued = this.shallow = false
+	function Watcher(vm, expOrFn, cb, options) {
+	    // mix in options
+	    if (options) {
+	        _.extend(this, options)
+	    }
+	    var isFn = typeof expOrFn === 'function'
+	    this.vm = vm
+	    vm._watchers.push(this)
+	    this.expression = isFn ? expOrFn.toString() : expOrFn
+	    this.cb = cb
+	    this.id = ++uid // uid for batching
+	    this.active = true
+	    this.dirty = this.lazy // for lazy watchers
+	    this.deps = []
+	    this.newDeps = null
+	    this.prevError = null // for async error stacks
+	        // parse expression for getter/setter
+	    if (isFn) {
+	        this.getter = expOrFn
+	        this.setter = undefined
+	    } else {
+	        var res = expParser.parse(expOrFn, this.twoWay)
+	        this.getter = res.get
+	        this.setter = res.set
+	    }
+	    this.value = this.lazy ? undefined : this.get()
+	        // state for avoiding false triggers for deep and Array
+	        // watchers during vm._digest()
+	    this.queued = this.shallow = false
 	}
 	
 	/**
@@ -3260,58 +3247,55 @@
 	 * @param {Dep} dep
 	 */
 	
-	Watcher.prototype.addDep = function (dep) {
-	  var newDeps = this.newDeps
-	  var old = this.deps
-	  if (_.indexOf(newDeps, dep) < 0) {
-	    newDeps.push(dep)
-	    var i = _.indexOf(old, dep)
-	    if (i < 0) {
-	      dep.addSub(this)
-	    } else {
-	      old[i] = null
+	Watcher.prototype.addDep = function(dep) {
+	    var newDeps = this.newDeps
+	    var old = this.deps
+	    if (_.indexOf(newDeps, dep) < 0) {
+	        newDeps.push(dep)
+	        var i = _.indexOf(old, dep)
+	        if (i < 0) {
+	            dep.addSub(this)
+	        } else {
+	            old[i] = null
+	        }
 	    }
-	  }
 	}
 	
 	/**
 	 * Evaluate the getter, and re-collect dependencies.
 	 */
 	
-	Watcher.prototype.get = function () {
-	  this.beforeGet()
-	  var vm = this.vm
-	  var value
-	  try {
-	    value = this.getter.call(vm, vm)
-	  } catch (e) {
-	    if (
-	      process.env.NODE_ENV !== 'production' &&
-	      config.warnExpressionErrors
-	    ) {
-	      _.warn(
-	        'Error when evaluating expression "' +
-	        this.expression + '". ' +
-	        (config.debug
-	          ? ''
-	          : 'Turn on debug mode to see stack trace.'
-	        ), e
-	      )
+	Watcher.prototype.get = function() {
+	    this.beforeGet()
+	    var vm = this.vm
+	    var value
+	    try {
+	        value = this.getter.call(vm, vm)
+	    } catch (e) {
+	        if (
+	            process.env.NODE_ENV !== 'production' &&
+	            config.warnExpressionErrors
+	        ) {
+	            _.warn(
+	                'Error when evaluating expression "' +
+	                this.expression + '". ' +
+	                (config.debug ? '' : 'Turn on debug mode to see stack trace.'), e
+	            )
+	        }
 	    }
-	  }
-	  // "touch" every property so they are all tracked as
-	  // dependencies for deep watching
-	  if (this.deep) {
-	    traverse(value)
-	  }
-	  if (this.preProcess) {
-	    value = this.preProcess(value)
-	  }
-	  if (this.filters) {
-	    value = vm._applyFilters(value, null, this.filters, false)
-	  }
-	  this.afterGet()
-	  return value
+	    // "touch" every property so they are all tracked as
+	    // dependencies for deep watching
+	    if (this.deep) {
+	        traverse(value)
+	    }
+	    if (this.preProcess) {
+	        value = this.preProcess(value)
+	    }
+	    if (this.filters) {
+	        value = vm._applyFilters(value, null, this.filters, false)
+	    }
+	    this.afterGet()
+	    return value
 	}
 	
 	/**
@@ -3320,51 +3304,51 @@
 	 * @param {*} value
 	 */
 	
-	Watcher.prototype.set = function (value) {
-	  var vm = this.vm
-	  if (this.filters) {
-	    value = vm._applyFilters(
-	      value, this.value, this.filters, true)
-	  }
-	  try {
-	    this.setter.call(vm, vm, value)
-	  } catch (e) {
-	    if (
-	      process.env.NODE_ENV !== 'production' &&
-	      config.warnExpressionErrors
-	    ) {
-	      _.warn(
-	        'Error when evaluating setter "' +
-	        this.expression + '"', e
-	      )
+	Watcher.prototype.set = function(value) {
+	    var vm = this.vm
+	    if (this.filters) {
+	        value = vm._applyFilters(
+	            value, this.value, this.filters, true)
 	    }
-	  }
+	    try {
+	        this.setter.call(vm, vm, value)
+	    } catch (e) {
+	        if (
+	            process.env.NODE_ENV !== 'production' &&
+	            config.warnExpressionErrors
+	        ) {
+	            _.warn(
+	                'Error when evaluating setter "' +
+	                this.expression + '"', e
+	            )
+	        }
+	    }
 	}
 	
 	/**
 	 * Prepare for dependency collection.
 	 */
 	
-	Watcher.prototype.beforeGet = function () {
-	  Dep.target = this
-	  this.newDeps = []
+	Watcher.prototype.beforeGet = function() {
+	    Dep.target = this
+	    this.newDeps = []
 	}
 	
 	/**
 	 * Clean up for dependency collection.
 	 */
 	
-	Watcher.prototype.afterGet = function () {
-	  Dep.target = null
-	  var i = this.deps.length
-	  while (i--) {
-	    var dep = this.deps[i]
-	    if (dep) {
-	      dep.removeSub(this)
+	Watcher.prototype.afterGet = function() {
+	    Dep.target = null
+	    var i = this.deps.length
+	    while (i--) {
+	        var dep = this.deps[i]
+	        if (dep) {
+	            dep.removeSub(this)
+	        }
 	    }
-	  }
-	  this.deps = this.newDeps
-	  this.newDeps = null
+	    this.deps = this.newDeps
+	    this.newDeps = null
 	}
 	
 	/**
@@ -3374,27 +3358,23 @@
 	 * @param {Boolean} shallow
 	 */
 	
-	Watcher.prototype.update = function (shallow) {
-	  if (this.lazy) {
-	    this.dirty = true
-	  } else if (this.sync || !config.async) {
-	    this.run()
-	  } else {
-	    // if queued, only overwrite shallow with non-shallow,
-	    // but not the other way around.
-	    this.shallow = this.queued
-	      ? shallow
-	        ? this.shallow
-	        : false
-	      : !!shallow
-	    this.queued = true
-	    // record before-push error stack in debug mode
-	    /* istanbul ignore if */
-	    if (process.env.NODE_ENV !== 'production' && config.debug) {
-	      this.prevError = new Error('[vue] async stack trace')
+	Watcher.prototype.update = function(shallow) {
+	    if (this.lazy) {
+	        this.dirty = true
+	    } else if (this.sync || !config.async) {
+	        this.run()
+	    } else {
+	        // if queued, only overwrite shallow with non-shallow,
+	        // but not the other way around.
+	        this.shallow = this.queued ? shallow ? this.shallow : false : !!shallow
+	        this.queued = true
+	            // record before-push error stack in debug mode
+	            /* istanbul ignore if */
+	        if (process.env.NODE_ENV !== 'production' && config.debug) {
+	            this.prevError = new Error('[vue] async stack trace')
+	        }
+	        batcher.push(this)
 	    }
-	    batcher.push(this)
-	  }
 	}
 	
 	/**
@@ -3402,42 +3382,42 @@
 	 * Will be called by the batcher.
 	 */
 	
-	Watcher.prototype.run = function () {
-	  if (this.active) {
-	    var value = this.get()
-	    if (
-	      value !== this.value ||
-	      // Deep watchers and Array watchers should fire even
-	      // when the value is the same, because the value may
-	      // have mutated; but only do so if this is a
-	      // non-shallow update (caused by a vm digest).
-	      ((_.isArray(value) || this.deep) && !this.shallow)
-	    ) {
-	      // set new value
-	      var oldValue = this.value
-	      this.value = value
-	      // in debug + async mode, when a watcher callbacks
-	      // throws, we also throw the saved before-push error
-	      // so the full cross-tick stack trace is available.
-	      var prevError = this.prevError
-	      /* istanbul ignore if */
-	      if (process.env.NODE_ENV !== 'production' &&
-	          config.debug && prevError) {
-	        this.prevError = null
-	        try {
-	          this.cb.call(this.vm, value, oldValue)
-	        } catch (e) {
-	          _.nextTick(function () {
-	            throw prevError
-	          }, 0)
-	          throw e
+	Watcher.prototype.run = function() {
+	    if (this.active) {
+	        var value = this.get()
+	        if (
+	            value !== this.value ||
+	            // Deep watchers and Array watchers should fire even
+	            // when the value is the same, because the value may
+	            // have mutated; but only do so if this is a
+	            // non-shallow update (caused by a vm digest).
+	            ((_.isArray(value) || this.deep) && !this.shallow)
+	        ) {
+	            // set new value
+	            var oldValue = this.value
+	            this.value = value
+	                // in debug + async mode, when a watcher callbacks
+	                // throws, we also throw the saved before-push error
+	                // so the full cross-tick stack trace is available.
+	            var prevError = this.prevError
+	                /* istanbul ignore if */
+	            if (process.env.NODE_ENV !== 'production' &&
+	                config.debug && prevError) {
+	                this.prevError = null
+	                try {
+	                    this.cb.call(this.vm, value, oldValue)
+	                } catch (e) {
+	                    _.nextTick(function() {
+	                        throw prevError
+	                    }, 0)
+	                    throw e
+	                }
+	            } else {
+	                this.cb.call(this.vm, value, oldValue)
+	            }
 	        }
-	      } else {
-	        this.cb.call(this.vm, value, oldValue)
-	      }
+	        this.queued = this.shallow = false
 	    }
-	    this.queued = this.shallow = false
-	  }
 	}
 	
 	/**
@@ -3445,45 +3425,45 @@
 	 * This only gets called for lazy watchers.
 	 */
 	
-	Watcher.prototype.evaluate = function () {
-	  // avoid overwriting another watcher that is being
-	  // collected.
-	  var current = Dep.target
-	  this.value = this.get()
-	  this.dirty = false
-	  Dep.target = current
+	Watcher.prototype.evaluate = function() {
+	    // avoid overwriting another watcher that is being
+	    // collected.
+	    var current = Dep.target
+	    this.value = this.get()
+	    this.dirty = false
+	    Dep.target = current
 	}
 	
 	/**
 	 * Depend on all deps collected by this watcher.
 	 */
 	
-	Watcher.prototype.depend = function () {
-	  var i = this.deps.length
-	  while (i--) {
-	    this.deps[i].depend()
-	  }
+	Watcher.prototype.depend = function() {
+	    var i = this.deps.length
+	    while (i--) {
+	        this.deps[i].depend()
+	    }
 	}
 	
 	/**
 	 * Remove self from all dependencies' subcriber list.
 	 */
 	
-	Watcher.prototype.teardown = function () {
-	  if (this.active) {
-	    // remove self from vm's watcher list
-	    // we can skip this if the vm if being destroyed
-	    // which can improve teardown performance.
-	    if (!this.vm._isBeingDestroyed) {
-	      this.vm._watchers.$remove(this)
+	Watcher.prototype.teardown = function() {
+	    if (this.active) {
+	        // remove self from vm's watcher list
+	        // we can skip this if the vm if being destroyed
+	        // which can improve teardown performance.
+	        if (!this.vm._isBeingDestroyed) {
+	            this.vm._watchers.$remove(this)
+	        }
+	        var i = this.deps.length
+	        while (i--) {
+	            this.deps[i].removeSub(this)
+	        }
+	        this.active = false
+	        this.vm = this.cb = this.value = null
 	    }
-	    var i = this.deps.length
-	    while (i--) {
-	      this.deps[i].removeSub(this)
-	    }
-	    this.active = false
-	    this.vm = this.cb = this.value = null
-	  }
 	}
 	
 	/**
@@ -3494,17 +3474,17 @@
 	 * @param {Object} obj
 	 */
 	
-	function traverse (obj) {
-	  var key, val, i
-	  for (key in obj) {
-	    val = obj[key]
-	    if (_.isArray(val)) {
-	      i = val.length
-	      while (i--) traverse(val[i])
-	    } else if (_.isObject(val)) {
-	      traverse(val)
+	function traverse(obj) {
+	    var key, val, i
+	    for (key in obj) {
+	        val = obj[key]
+	        if (_.isArray(val)) {
+	            i = val.length
+	            while (i--) traverse(val[i])
+	        } else if (_.isObject(val)) {
+	            traverse(val)
+	        }
 	    }
-	  }
 	}
 	
 	module.exports = Watcher
@@ -4966,37 +4946,39 @@
 	 * @return {Element|DocumentFragment}
 	 */
 	
-	exports.transclude = function (el, options) {
-	  // extract container attributes to pass them down
-	  // to compiler, because they need to be compiled in
-	  // parent scope. we are mutating the options object here
-	  // assuming the same object will be used for compile
-	  // right after this.
-	  if (options) {
-	    options._containerAttrs = extractAttrs(el)
-	  }
-	  // for template tags, what we want is its content as
-	  // a documentFragment (for fragment instances)
-	  if (_.isTemplate(el)) {
-	    el = templateParser.parse(el)
-	  }
-	  if (options) {
-	    if (options._asComponent && !options.template) {
-	      options.template = '<content></content>'
+	exports.transclude = function(el, options) {
+	    // extract container attributes to pass them down
+	    // to compiler, because they need to be compiled in
+	    // parent scope. we are mutating the options object here
+	    // assuming the same object will be used for compile
+	    // right after this.
+	    // 抽取属性，编译
+	    if (options) {
+	        options._containerAttrs = extractAttrs(el)
 	    }
-	    if (options.template) {
-	      options._content = _.extractContent(el)
-	      el = transcludeTemplate(el, options)
+	    // for template tags, what we want is its content as
+	    // a documentFragment (for fragment instances)
+	    // 如果是script模版
+	    if (_.isTemplate(el)) {
+	        el = templateParser.parse(el)
 	    }
-	  }
-	  if (el instanceof DocumentFragment) {
-	    // anchors for fragment instance
-	    // passing in `persist: true` to avoid them being
-	    // discarded by IE during template cloning
-	    _.prepend(_.createAnchor('v-start', true), el)
-	    el.appendChild(_.createAnchor('v-end', true))
-	  }
-	  return el
+	    if (options) {
+	        if (options._asComponent && !options.template) {
+	            options.template = '<content></content>'
+	        }
+	        if (options.template) {
+	            options._content = _.extractContent(el)
+	            el = transcludeTemplate(el, options)
+	        }
+	    }
+	    if (el instanceof DocumentFragment) {
+	        // anchors for fragment instance
+	        // passing in `persist: true` to avoid them being
+	        // discarded by IE during template cloning
+	        _.prepend(_.createAnchor('v-start', true), el)
+	        el.appendChild(_.createAnchor('v-end', true))
+	    }
+	    return el
 	}
 	
 	/**
@@ -5008,53 +4990,53 @@
 	 * @return {Element|DocumentFragment}
 	 */
 	
-	function transcludeTemplate (el, options) {
-	  var template = options.template
-	  var frag = templateParser.parse(template, true)
-	  if (frag) {
-	    var replacer = frag.firstChild
-	    var tag = replacer.tagName && replacer.tagName.toLowerCase()
-	    if (options.replace) {
-	      /* istanbul ignore if */
-	      if (el === document.body) {
-	        process.env.NODE_ENV !== 'production' && _.warn(
-	          'You are mounting an instance with a template to ' +
-	          '<body>. This will replace <body> entirely. You ' +
-	          'should probably use `replace: false` here.'
-	        )
-	      }
-	      // there are many cases where the instance must
-	      // become a fragment instance: basically anything that
-	      // can create more than 1 root nodes.
-	      if (
-	        // multi-children template
-	        frag.childNodes.length > 1 ||
-	        // non-element template
-	        replacer.nodeType !== 1 ||
-	        // single nested component
-	        tag === 'component' ||
-	        _.resolveAsset(options, 'components', tag) ||
-	        replacer.hasAttribute(config.prefix + 'component') ||
-	        // element directive
-	        _.resolveAsset(options, 'elementDirectives', tag) ||
-	        // repeat block
-	        replacer.hasAttribute(config.prefix + 'repeat')
-	      ) {
-	        return frag
-	      } else {
-	        options._replacerAttrs = extractAttrs(replacer)
-	        mergeAttrs(el, replacer)
-	        return replacer
-	      }
+	function transcludeTemplate(el, options) {
+	    var template = options.template
+	    var frag = templateParser.parse(template, true)
+	    if (frag) {
+	        var replacer = frag.firstChild
+	        var tag = replacer.tagName && replacer.tagName.toLowerCase()
+	        if (options.replace) {
+	            /* istanbul ignore if */
+	            if (el === document.body) {
+	                process.env.NODE_ENV !== 'production' && _.warn(
+	                    'You are mounting an instance with a template to ' +
+	                    '<body>. This will replace <body> entirely. You ' +
+	                    'should probably use `replace: false` here.'
+	                )
+	            }
+	            // there are many cases where the instance must
+	            // become a fragment instance: basically anything that
+	            // can create more than 1 root nodes.
+	            if (
+	                // multi-children template
+	                frag.childNodes.length > 1 ||
+	                // non-element template
+	                replacer.nodeType !== 1 ||
+	                // single nested component
+	                tag === 'component' ||
+	                _.resolveAsset(options, 'components', tag) ||
+	                replacer.hasAttribute(config.prefix + 'component') ||
+	                // element directive
+	                _.resolveAsset(options, 'elementDirectives', tag) ||
+	                // repeat block
+	                replacer.hasAttribute(config.prefix + 'repeat')
+	            ) {
+	                return frag
+	            } else {
+	                options._replacerAttrs = extractAttrs(replacer)
+	                mergeAttrs(el, replacer)
+	                return replacer
+	            }
+	        } else {
+	            el.appendChild(frag)
+	            return el
+	        }
 	    } else {
-	      el.appendChild(frag)
-	      return el
+	        process.env.NODE_ENV !== 'production' && _.warn(
+	            'Invalid template option: ' + template
+	        )
 	    }
-	  } else {
-	    process.env.NODE_ENV !== 'production' && _.warn(
-	      'Invalid template option: ' + template
-	    )
-	  }
 	}
 	
 	/**
@@ -5065,10 +5047,10 @@
 	 * @return {Array}
 	 */
 	
-	function extractAttrs (el) {
-	  if (el.nodeType === 1 && el.hasAttributes()) {
-	    return _.toArray(el.attributes)
-	  }
+	function extractAttrs(el) {
+	    if (el.nodeType === 1 && el.hasAttributes()) {
+	        return _.toArray(el.attributes)
+	    }
 	}
 	
 	/**
@@ -5079,20 +5061,20 @@
 	 * @param {Element} to
 	 */
 	
-	function mergeAttrs (from, to) {
-	  var attrs = from.attributes
-	  var i = attrs.length
-	  var name, value
-	  while (i--) {
-	    name = attrs[i].name
-	    value = attrs[i].value
-	    if (!to.hasAttribute(name)) {
-	      to.setAttribute(name, value)
-	    } else if (name === 'class') {
-	      value = to.getAttribute(name) + ' ' + value
-	      to.setAttribute(name, value)
+	function mergeAttrs(from, to) {
+	    var attrs = from.attributes
+	    var i = attrs.length
+	    var name, value
+	    while (i--) {
+	        name = attrs[i].name
+	        value = attrs[i].value
+	        if (!to.hasAttribute(name)) {
+	            to.setAttribute(name, value)
+	        } else if (name === 'class') {
+	            value = to.getAttribute(name) + ' ' + value
+	            to.setAttribute(name, value)
+	        }
 	    }
-	  }
 	}
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
@@ -8082,87 +8064,107 @@
 	 *                           in to the constructor.
 	 */
 	
-	exports._init = function (options) {
+	exports._init = function(options) {
 	
-	  options = options || {}
+	    options = options || {}
 	
-	  this.$el = null
-	  this.$parent = options._parent
-	  this.$root = options._root || this
-	  this.$children = []
-	  this.$ = {}           // child vm references
-	  this.$$ = {}          // element references
-	  this._watchers = []   // all watchers as an array
-	  this._directives = [] // all directives
-	  this._childCtors = {} // inherit:true constructors
+	    this.$el = null
+	    this.$parent = options._parent
+	    this.$root = options._root || this
+	    this.$children = []
+	    this.$ = {} // child vm references
+	    this.$$ = {} // element references
+	    this._watchers = [] // all watchers as an array
+	    this._directives = [] // all directives
+	    this._childCtors = {} // inherit:true constructors
 	
-	  // a flag to avoid this being observed
-	  this._isVue = true
+	    // a flag to avoid this being observed
+	    this._isVue = true
 	
-	  // events bookkeeping
-	  this._events = {}            // registered callbacks
+	    // events bookkeeping
+	    this._events = {} // registered callbacks
 	
-	  //避免不必要的深度遍历：
-	  //在有广播事件到来时，如果当前 vm 的 _eventsCount 为 0，
-	  //则不必向其子 vm 继续传播该事件
-	  this._eventsCount = {}       // for $broadcast optimization
-	  this._eventCancelled = false // for event cancellation
+	    //避免不必要的深度遍历：
+	    //在有广播事件到来时，如果当前 vm 的 _eventsCount 为 0，
+	    //则不必向其子 vm 继续传播该事件
+	    this._eventsCount = {} // for $broadcast optimization
+	    this._eventCancelled = false // for event cancellation
 	
-	  // fragment instance properties
-	  this._isFragment = false
-	  this._fragmentStart =    // @type {CommentNode}
-	  this._fragmentEnd = null // @type {CommentNode}
+	    // fragment instance properties
+	    this._isFragment = false
+	    this._fragmentStart = // @type {CommentNode}
+	        this._fragmentEnd = null // @type {CommentNode}
 	
-	  // lifecycle state
-	  this._isCompiled =
-	  this._isDestroyed =
-	  this._isReady =
-	  this._isAttached =
-	  this._isBeingDestroyed = false
-	  this._unlinkFn = null
+	    // lifecycle state
+	    this._isCompiled =
+	        this._isDestroyed =
+	        this._isReady =
+	        this._isAttached =
+	        this._isBeingDestroyed = false
+	    this._unlinkFn = null
 	
-	  // context: the scope in which the component was used,
-	  // and the scope in which props and contents of this
-	  // instance should be compiled in.
-	  this._context =
-	    options._context ||
-	    options._parent
+	    // context: the scope in which the component was used,
+	    // and the scope in which props and contents of this
+	    // instance should be compiled in.
+	    this._context =
+	        options._context ||
+	        options._parent
 	
-	  // push self into parent / transclusion host
-	  if (this.$parent) {
-	    this.$parent.$children.push(this)
-	  }
+	    // push self into parent / transclusion host
+	    if (this.$parent) {
+	        this.$parent.$children.push(this)
+	    }
 	
-	  // props used in v-repeat diffing
-	  this._reused = false
-	  this._staggerOp = null
+	    // props used in v-repeat diffing
+	    this._reused = false
+	    this._staggerOp = null
 	
-	  // merge options.
-	  options = this.$options = mergeOptions(
-	    this.constructor.options,
-	    options,
-	    this
-	  )
+	    // merge options.
+	    options = this.$options = mergeOptions(
+	        this.constructor.options,
+	        options,
+	        this
+	    )
 	
-	  // initialize data as empty object.
-	  // it will be filled up in _initScope().
-	  this._data = {}
+	    // initialize data as empty object.
+	    // it will be filled up in _initScope().
+	    // 
+	    // data = {
+	    //   __ob__ {
+	    //      dep
+	    //      parent 
+	    //      vms [vm合集]
+	    //   }
+	    //   
+	    //   属性：{
+	    //     set
+	    //     get
+	    //   }   
+	    // }
+	    // 
+	    this._data = {}
 	
-	  // initialize data observation and scope inheritance.
-	  // 填充_data数据
-	  // 生成get/set
-	  this._initScope()
+	    // initialize data observation and scope inheritance.
+	    // 填充_data数据
+	    // 生成get/set
+	    this._initScope()
 	
-	  // setup event system and option events.
-	  this._initEvents()
+	    // setup event system and option events.
+	    // event
+	    // watch
+	    this._initEvents()
 	
-	  // call created hook
-	  this._callHook('created')
+	    // call created hook
+	    this._callHook('created')
 	
-	  // if `el` option is passed, start compilation.
-	  if (options.el) {
-	    this.$mount(options.el)
-	  }
+	    // if `el` option is passed, start compilation.
+	    if (options.el) {
+	        // 递归遍历模板中的 DOM 节点并收集其中的指令，
+	        // 将其数据和这些指令所对应的 DOM 节点 “链接” 起来。
+	        // 一旦链接完毕，这些 DOM 节点就算是被 Vue 实例正式接管了。
+	        // 一个 DOM 节点只能被一个 Vue 实例管理，并且不能被多次编译。
+	        this.$mount(options.el)
+	    }
 	}
 
 
@@ -8538,6 +8540,8 @@
 	                configurable: true
 	            }
 	            if (typeof userDef === 'function') {
+	                //制作一个计算属性get
+	                //return curry function
 	                def.get = makeComputedGetter(userDef, this)
 	                def.set = noop
 	            } else {
@@ -8550,6 +8554,7 @@
 	}
 	
 	function makeComputedGetter(getter, owner) {
+	
 	    var watcher = new Watcher(owner, getter, null, {
 	        lazy: true
 	    })
@@ -8641,20 +8646,18 @@
 	 * @constructor
 	 */
 	
-	function Observer (value) {
-	  this.value = value
-	  this.dep = new Dep()
-	  //定义个内部观察东东
-	  _.define(value, '__ob__', this)
-	  if (_.isArray(value)) {
-	    var augment = config.proto && _.hasProto
-	      ? protoAugment
-	      : copyAugment
-	    augment(value, arrayMethods, arrayKeys)
-	    this.observeArray(value)
-	  } else {
-	    this.walk(value)
-	  }
+	function Observer(value) {
+	    this.value = value
+	    this.dep = new Dep()
+	        //定义个内部观察东东
+	    _.define(value, '__ob__', this)
+	    if (_.isArray(value)) {
+	        var augment = config.proto && _.hasProto ? protoAugment : copyAugment
+	        augment(value, arrayMethods, arrayKeys)
+	        this.observeArray(value)
+	    } else {
+	        this.walk(value)
+	    }
 	}
 	
 	// Static methods
@@ -8670,27 +8673,31 @@
 	 * @static
 	 */
 	
-	Observer.create = function (value, vm) {
-	  var ob
-	  if (
-	    value &&
-	    value.hasOwnProperty('__ob__') &&
-	    value.__ob__ instanceof Observer
-	  ) {
-	    ob = value.__ob__
-	  } else if (
-	    (_.isArray(value) || _.isPlainObject(value)) &&
-	    !Object.isFrozen(value) &&
-	    !value._isVue
-	  ) {
-	    //观察
-	    //data
-	    ob = new Observer(value)
-	  }
-	  if (ob && vm) {
-	    ob.addVm(vm)
-	  }
-	  return ob
+	//Vue.js 会在被观测的数据对象上创建一个隐藏属性 __ob__， 
+	//然后通过递归遍历
+	//将所有可枚举的属性转化为 getters 和 setters，从而实现依赖收集。
+	Observer.create = function(value, vm) {
+	    var ob
+	    if ( //如果已经创建了__ob__
+	        value &&
+	        value.hasOwnProperty('__ob__') &&
+	        value.__ob__ instanceof Observer
+	    ) {
+	        ob = value.__ob__
+	    } else if (
+	        (_.isArray(value) || _.isPlainObject(value)) &&
+	        !Object.isFrozen(value) &&
+	        !value._isVue
+	    ) {
+	        //观察
+	        //data
+	        ob = new Observer(value)
+	    }
+	    //__ob__与属性数据创建完毕
+	    if (ob && vm) {
+	        ob.addVm(vm)
+	    }
+	    return ob //__ob__
 	}
 	
 	// Instance methods
@@ -8704,12 +8711,12 @@
 	 * @param {Object} obj
 	 */
 	
-	Observer.prototype.walk = function (obj) {
-	  var keys = Object.keys(obj)
-	  var i = keys.length
-	  while (i--) {
-	    this.convert(keys[i], obj[keys[i]])
-	  }
+	Observer.prototype.walk = function(obj) {
+	    var keys = Object.keys(obj)
+	    var i = keys.length
+	    while (i--) {
+	        this.convert(keys[i], obj[keys[i]])
+	    }
 	}
 	
 	/**
@@ -8720,8 +8727,8 @@
 	 * @return {Dep|undefined}
 	 */
 	
-	Observer.prototype.observe = function (val) {
-	  return Observer.create(val)
+	Observer.prototype.observe = function(val) {
+	    return Observer.create(val)
 	}
 	
 	/**
@@ -8730,14 +8737,14 @@
 	 * @param {Array} items
 	 */
 	
-	Observer.prototype.observeArray = function (items) {
-	  var i = items.length
-	  while (i--) {
-	    var ob = this.observe(items[i])
-	    if (ob) {
-	      (ob.parents || (ob.parents = [])).push(this)
+	Observer.prototype.observeArray = function(items) {
+	    var i = items.length
+	    while (i--) {
+	        var ob = this.observe(items[i])
+	        if (ob) {
+	            (ob.parents || (ob.parents = [])).push(this)
+	        }
 	    }
-	  }
 	}
 	
 	/**
@@ -8746,14 +8753,14 @@
 	 * @param {Array} items
 	 */
 	
-	Observer.prototype.unobserveArray = function (items) {
-	  var i = items.length
-	  while (i--) {
-	    var ob = items[i] && items[i].__ob__
-	    if (ob) {
-	      ob.parents.$remove(this)
+	Observer.prototype.unobserveArray = function(items) {
+	    var i = items.length
+	    while (i--) {
+	        var ob = items[i] && items[i].__ob__
+	        if (ob) {
+	            ob.parents.$remove(this)
+	        }
 	    }
-	  }
 	}
 	
 	/**
@@ -8761,15 +8768,15 @@
 	 * if any.
 	 */
 	
-	Observer.prototype.notify = function () {
-	  this.dep.notify()
-	  var parents = this.parents
-	  if (parents) {
-	    var i = parents.length
-	    while (i--) {
-	      parents[i].notify()
+	Observer.prototype.notify = function() {
+	    this.dep.notify()
+	    var parents = this.parents
+	    if (parents) {
+	        var i = parents.length
+	        while (i--) {
+	            parents[i].notify()
+	        }
 	    }
-	  }
 	}
 	
 	/**
@@ -8779,30 +8786,31 @@
 	 * @param {String} key
 	 * @param {*} val
 	 */
-	
-	Observer.prototype.convert = function (key, val) {
-	  var ob = this
-	  var childOb = ob.observe(val)
-	  var dep = new Dep()
-	  Object.defineProperty(ob.value, key, {
-	    enumerable: true,
-	    configurable: true,
-	    get: function () {
-	      if (Dep.target) {
-	        dep.depend()
-	        if (childOb) {
-	          childOb.dep.depend()
+	//给所有的属性都转化set与get
+	//所以当属性在边改的时候能触发这些事件
+	Observer.prototype.convert = function(key, val) {
+	    var ob = this
+	    var childOb = ob.observe(val)
+	    var dep = new Dep()
+	    Object.defineProperty(ob.value, key, {
+	        enumerable: true,
+	        configurable: true,
+	        get: function() {
+	            if (Dep.target) {
+	                dep.depend()
+	                if (childOb) {
+	                    childOb.dep.depend()
+	                }
+	            }
+	            return val
+	        },
+	        set: function(newVal) {
+	            if (newVal === val) return
+	            val = newVal
+	            childOb = ob.observe(newVal)
+	            dep.notify()
 	        }
-	      }
-	      return val
-	    },
-	    set: function (newVal) {
-	      if (newVal === val) return
-	      val = newVal
-	      childOb = ob.observe(newVal)
-	      dep.notify()
-	    }
-	  })
+	    })
 	}
 	
 	/**
@@ -8814,8 +8822,8 @@
 	 * @param {Vue} vm
 	 */
 	
-	Observer.prototype.addVm = function (vm) {
-	  (this.vms || (this.vms = [])).push(vm)
+	Observer.prototype.addVm = function(vm) {
+	    (this.vms || (this.vms = [])).push(vm)
 	}
 	
 	/**
@@ -8825,8 +8833,8 @@
 	 * @param {Vue} vm
 	 */
 	
-	Observer.prototype.removeVm = function (vm) {
-	  this.vms.$remove(vm)
+	Observer.prototype.removeVm = function(vm) {
+	    this.vms.$remove(vm)
 	}
 	
 	// helpers
@@ -8839,8 +8847,8 @@
 	 * @param {Object} proto
 	 */
 	
-	function protoAugment (target, src) {
-	  target.__proto__ = src
+	function protoAugment(target, src) {
+	    target.__proto__ = src
 	}
 	
 	/**
@@ -8851,13 +8859,13 @@
 	 * @param {Object} proto
 	 */
 	
-	function copyAugment (target, src, keys) {
-	  var i = keys.length
-	  var key
-	  while (i--) {
-	    key = keys[i]
-	    _.define(target, key, src[key])
-	  }
+	function copyAugment(target, src, keys) {
+	    var i = keys.length
+	    var key
+	    while (i--) {
+	        key = keys[i]
+	        _.define(target, key, src[key])
+	    }
 	}
 	
 	module.exports = Observer
@@ -9089,6 +9097,8 @@
 	        // so we need to keep reference; this step also injects
 	        // the template and caches the original attributes
 	        // on the container node and replacer node.
+	        // 提出el的attr属性出来
+	        // 如果遇到script的模版，处理
 	        var original = el
 	        el = compiler.transclude(el, options)
 	        this._initElement(el)
@@ -10258,38 +10268,38 @@
 	 * @public
 	 */
 	
-	exports.$mount = function (el) {
-	  if (this._isCompiled) {
-	    process.env.NODE_ENV !== 'production' && _.warn(
-	      '$mount() should be called only once.'
-	    )
-	    return
-	  }
-	  el = _.query(el)
-	  if (!el) {
-	    el = document.createElement('div')
-	  }
-	  this._compile(el)
-	  this._isCompiled = true
-	  this._callHook('compiled')
-	  this._initDOMHooks()
-	  if (_.inDoc(this.$el)) {
-	    this._callHook('attached')
-	    ready.call(this)
-	  } else {
-	    this.$once('hook:attached', ready)
-	  }
-	  return this
+	exports.$mount = function(el) {
+	    if (this._isCompiled) {
+	        process.env.NODE_ENV !== 'production' && _.warn(
+	            '$mount() should be called only once.'
+	        )
+	        return
+	    }
+	    el = _.query(el)
+	    if (!el) {
+	        el = document.createElement('div')
+	    }
+	    this._compile(el)
+	    this._isCompiled = true
+	    this._callHook('compiled')
+	    this._initDOMHooks()
+	    if (_.inDoc(this.$el)) {
+	        this._callHook('attached')
+	        ready.call(this)
+	    } else {
+	        this.$once('hook:attached', ready)
+	    }
+	    return this
 	}
 	
 	/**
 	 * Mark an instance as ready.
 	 */
 	
-	function ready () {
-	  this._isAttached = true
-	  this._isReady = true
-	  this._callHook('ready')
+	function ready() {
+	    this._isAttached = true
+	    this._isReady = true
+	    this._callHook('ready')
 	}
 	
 	/**
@@ -10297,8 +10307,8 @@
 	 * _destroy.
 	 */
 	
-	exports.$destroy = function (remove, deferCleanup) {
-	  this._destroy(remove, deferCleanup)
+	exports.$destroy = function(remove, deferCleanup) {
+	    this._destroy(remove, deferCleanup)
 	}
 	
 	/**
@@ -10310,8 +10320,8 @@
 	 * @return {Function}
 	 */
 	
-	exports.$compile = function (el, host) {
-	  return compiler.compile(el, this.$options, true)(this, el, host)
+	exports.$compile = function(el, host) {
+	    return compiler.compile(el, this.$options, true)(this, el, host)
 	}
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
