@@ -43,7 +43,7 @@ module.exports = {
 
   /**
    * Whether to parse mustache tags in templates.
-   *
+   * 是否在模版中解析mustache标记
    * @type {Boolean}
    */
 

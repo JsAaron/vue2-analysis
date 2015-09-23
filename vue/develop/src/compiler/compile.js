@@ -20,6 +20,12 @@ var terminalDirectives = [
  * be called on instance root nodes, but can also be used
  * for partial compilation if the partial argument is true.
  *
+ * 编译一个模版，返回一个可复用的合成链接函数
+ * 内部包含了更多的递归连接函数
+ * 这个顶级编译函数通常会被称为根节点实例
+ * 但是只要参数正确也能够被局部使用
+ *
+ * 
  * The returned composite link function, when called, will
  * return an unlink function that tearsdown all directives
  * created during the linking phase.
@@ -63,6 +69,7 @@ exports.compile = function(el, options, partial) {
 
 /**
  * Apply a linker to a vm/element pair and capture the
+ * 应用一个链接到一个vm /元素对和捕获
  * directives created during the process.
  *
  * @param {Function} linker
@@ -170,6 +177,7 @@ exports.compileRoot = function(el, options) {
             }
         } else {
             // non-component, just compile as a normal element.
+            // 没组件，只是正常编译一个普通元素
             replacerLinkFn = compileDirectives(el.attributes, options)
         }
     }
@@ -234,19 +242,23 @@ function compileElement(el, options) {
     }
     var linkFn
     var hasAttrs = el.hasAttributes()
-        // check terminal directives (repeat & if)
+    // check terminal directives (repeat & if)
+    // 检查是不是repeat或者if指令
     if (hasAttrs) {
         linkFn = checkTerminalDirectives(el, options)
     }
     // check element directives
+    // 检测元素自定义属性
     if (!linkFn) {
         linkFn = checkElementDirectives(el, options)
     }
     // check component
+    // 检查组件
     if (!linkFn) {
         linkFn = checkComponent(el, options)
     }
     // normal directives
+    // 正常指令
     if (!linkFn && hasAttrs) {
         linkFn = compileDirectives(el.attributes, options)
     }
@@ -435,12 +447,17 @@ function checkComponent(el, options, hasAttrs) {
  * Check an element for terminal directives in fixed order.
  * If it finds one, return a terminal link function.
  *
+ * 检查终端指令按固定顺序的元素
+ * 如果找到if repeat 返回一个终端结合的函数
+ * 
  * @param {Element} el
  * @param {Object} options
  * @return {Function} terminalLinkFn
  */
 
 function checkTerminalDirectives(el, options) {
+    // 跳过编译此元素和此元素所有的子元素
+    // 。跳过大量没有指令的节点可以加快编译速度。
     if (_.attr(el, 'pre') !== null) {
         return skip
     }
@@ -484,7 +501,7 @@ function makeTerminalNodeLinkFn(el, dirName, value, options, def) {
 
 /**
  * Compile the directives on an element and return a linker.
- *
+ * 编译元素上的指令，返回一个链接器 
  * @param {Array|NamedNodeMap} attrs
  * @param {Object} options
  * @return {Function}
@@ -495,24 +512,26 @@ function compileDirectives(attrs, options) {
     var dirs = []
     var attr, name, value, dir, dirName, dirDef
     while (i--) {
-        attr = attrs[i]
-        name = attr.name
-        value = attr.value
+        attr = attrs[i] 
+        name = attr.name //"v-on"
+        value = attr.value //"click:onClick"
         if (name.indexOf(config.prefix) === 0) { //如果是v开头
-            dirName = name.slice(config.prefix.length)
-            //找到对应的指定解释器
+            dirName = name.slice(config.prefix.length) //"on"
+            //找到对应的指定解释器 
             dirDef = resolveAsset(options, 'directives', dirName)
             if (process.env.NODE_ENV !== 'production') {
                 _.assertAsset(dirDef, 'directive', dirName)
             }
             if (dirDef) {
+                //指令解释器合集
                 dirs.push({
                     name        : dirName,
+                    //解析指令表达式
                     descriptors : dirParser.parse(value),
                     def         : dirDef
                 })
             }
-        } else if (config.interpolate) {
+        } else if (config.interpolate) { //是否在模版中解析mustache标记
             dir = collectAttrDirective(name, value, options)
             if (dir) {
                 dirs.push(dir)
