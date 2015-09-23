@@ -20,6 +20,7 @@ exports.transclude = function (el, options) {
   // parent scope. we are mutating the options object here
   // assuming the same object will be used for compile
   // right after this.
+  // 抽出属性编译，需要在父作用域编译
   if (options) {
     options._containerAttrs = extractAttrs(el)
   }

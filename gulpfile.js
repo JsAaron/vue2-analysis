@@ -4,8 +4,8 @@ var path = require('path');
 var notify = require('gulp-notify');
 var concat = require('gulp-concat'); //合并文件
 
-var jshint = require('gulp-jshint');
-var map = require('map-stream');
+// var jshint = require('gulp-jshint');
+// var map = require('map-stream');
 
 //http://csspod.com/using-browserify-with-gulp/
 var browserify = require('browserify');

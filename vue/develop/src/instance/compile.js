@@ -32,10 +32,14 @@ exports._compile = function(el) {
         // 如果遇到script的模版，处理
         var original = el
         el = compiler.transclude(el, options)
+
+        //el._vue__ = this;
         this._initElement(el)
 
         // root is always compiled per-instance, because
         // container attrs and props can be different every time.
+        // 根元素一直是预编译
+        // 因为包含的属性与props每次都不同
         var rootLinker = compiler.compileRoot(el, options)
 
         // compile and link the rest
