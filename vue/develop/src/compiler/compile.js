@@ -170,6 +170,7 @@ exports.compileRoot = function(el, options) {
             }
         } else {
             // non-component, just compile as a normal element.
+            // 没组件，只是正常编译一个普通元素
             replacerLinkFn = compileDirectives(el.attributes, options)
         }
     }
@@ -486,7 +487,7 @@ function makeTerminalNodeLinkFn(el, dirName, value, options, def) {
 
 /**
  * Compile the directives on an element and return a linker.
- *
+ * 编译元素上的指令，返回一个链接器 
  * @param {Array|NamedNodeMap} attrs
  * @param {Object} options
  * @return {Function}
@@ -497,19 +498,21 @@ function compileDirectives(attrs, options) {
     var dirs = []
     var attr, name, value, dir, dirName, dirDef
     while (i--) {
-        attr = attrs[i]
-        name = attr.name
-        value = attr.value
+        attr = attrs[i] 
+        name = attr.name //"v-on"
+        value = attr.value //"click:onClick"
         if (name.indexOf(config.prefix) === 0) { //如果是v开头
-            dirName = name.slice(config.prefix.length)
-            //找到对应的指定解释器
+            dirName = name.slice(config.prefix.length) //"on"
+            //找到对应的指定解释器 
             dirDef = resolveAsset(options, 'directives', dirName)
             if (process.env.NODE_ENV !== 'production') {
                 _.assertAsset(dirDef, 'directive', dirName)
             }
             if (dirDef) {
+                //指令解释器合集
                 dirs.push({
                     name        : dirName,
+                    //解析指令表达式
                     descriptors : dirParser.parse(value),
                     def         : dirDef
                 })

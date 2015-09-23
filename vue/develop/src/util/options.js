@@ -325,11 +325,14 @@ exports.mergeOptions = function merge(parent, child, vm) {
  */
 
 exports.resolveAsset = function resolve(options, type, id) {
+    
     var camelizedId = _.camelize(id)
     var pascalizedId = camelizedId.charAt(0).toUpperCase() + camelizedId.slice(1)
+    //找到options['directives']对应的指令
     var assets = options[type]
     //指令解析器
     var asset = assets[id] || assets[camelizedId] || assets[pascalizedId]
+
     //如果没找到对应的指令解释器
     while (!asset &&
         options._parent &&

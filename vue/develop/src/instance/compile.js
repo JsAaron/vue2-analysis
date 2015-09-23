@@ -45,8 +45,8 @@ exports._compile = function(el) {
         // compile and link the rest
         var contentLinkFn
         var ctor = this.constructor
-            // component compilation can be cached
-            // as long as it's not using inline-template
+        // component compilation can be cached
+        // as long as it's not using inline-template
         if (options._linkerCachable) {
             contentLinkFn = ctor.linker
             if (!contentLinkFn) {
