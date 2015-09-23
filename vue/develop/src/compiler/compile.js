@@ -242,8 +242,13 @@ function compileElement(el, options) {
     }
     var linkFn
     var hasAttrs = el.hasAttributes()
+<<<<<<< HEAD
     // check terminal directives (repeat & if)
     // 检查是不是repeat或者if指令
+=======
+        // check terminal directives (repeat & if)
+        // 检查是不是repeat或者if指令
+>>>>>>> 2ea3b59afd7f5e80c3db6e641d58c4c22c6259c6
     if (hasAttrs) {
         linkFn = checkTerminalDirectives(el, options)
     }
@@ -253,7 +258,11 @@ function compileElement(el, options) {
         linkFn = checkElementDirectives(el, options)
     }
     // check component
+<<<<<<< HEAD
     // 检查组件
+=======
+    // 组件
+>>>>>>> 2ea3b59afd7f5e80c3db6e641d58c4c22c6259c6
     if (!linkFn) {
         linkFn = checkComponent(el, options)
     }
