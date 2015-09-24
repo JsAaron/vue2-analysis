@@ -55,6 +55,7 @@ exports._compile = function(el) {
         }
 
         // link phase
+        // 连接阶段 
         var rootUnlinkFn = rootLinker(this, el)
         var contentUnlinkFn = contentLinkFn ? contentLinkFn(this, el) : compiler.compile(el, options)(this, el, host)
 

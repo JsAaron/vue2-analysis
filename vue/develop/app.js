@@ -4,7 +4,8 @@ var vm = new Vue({
 	el:"#demo",
     data: {
         firstName : 'Foo',
-        lastName  : 'Bar'
+        lastName  : 'Bar',
+        message   :'jaja'
     },
     computed: {
         fullName: function() {
@@ -12,8 +13,10 @@ var vm = new Vue({
         }
     },
     methods:{
-        onClick:function(){
+        onDown:function(){
             this.firstName = "Aaron"
+        },
+        onUp:function(){
             this.lastName  = "慕课网"
         }
     }

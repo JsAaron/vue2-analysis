@@ -9,7 +9,7 @@
 <body>
     
 
-    <div id="demo" v-on="click:onClick">{{fullName}}
+    <div id="demo" v-on="mousedown:onDown,mouseup:onUp" v-class="hidden : isHidden">{{fullName}}
 		<ul>
 			<li>{{firstName}}</li>
 			<li>{{lastName}}</li>

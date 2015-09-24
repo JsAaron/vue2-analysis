@@ -532,6 +532,7 @@ function compileDirectives(attrs, options) {
                 })
             }
         } else if (config.interpolate) { //是否在模版中解析mustache标记
+            // mustache 风格的绑定
             dir = collectAttrDirective(name, value, options)
             if (dir) {
                 dirs.push(dir)
