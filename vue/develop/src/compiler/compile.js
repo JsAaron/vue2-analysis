@@ -37,9 +37,13 @@ var terminalDirectives = [
  */
 
 exports.compile = function(el, options, partial) {
+
     // link function for the node itself.
+    // 节点本身
     var nodeLinkFn = partial || !options._asComponent ? compileNode(el, options) : null
-        // link function for the childNodes
+    
+    // link function for the childNodes
+    // 子节点
     var childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) &&
         el.tagName !== 'SCRIPT' &&
         el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null
@@ -193,6 +197,8 @@ exports.compileRoot = function(el, options) {
         }
 
         // link self
+        // 编译出节点的指令
+        // 生成指令数组directives
         var selfDirs = linkAndCapture(function() {
             if (replacerLinkFn) replacerLinkFn(vm, el)
         }, vm)
@@ -282,7 +288,11 @@ function compileTextNode(node, options) {
     var el, token
     for (var i = 0, l = tokens.length; i < l; i++) {
         token = tokens[i]
-        el = token.tag ? processTextToken(token, options) : document.createTextNode(token.value)
+
+        el = token.tag 
+            ? processTextToken(token, options) 
+            : document.createTextNode(token.value)
+        
         frag.appendChild(el)
     }
     return makeTextNodeLinkFn(tokens, frag, options)
@@ -368,7 +378,9 @@ function compileNodeList(nodeList, options) {
     var nodeLinkFn, childLinkFn, node
     for (var i = 0, l = nodeList.length; i < l; i++) {
         node = nodeList[i]
+        // /编译节点
         nodeLinkFn = compileNode(node, options)
+
         childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) &&
             node.tagName !== 'SCRIPT' &&
             node.hasChildNodes() ? compileNodeList(node.childNodes, options) : null
@@ -564,6 +576,10 @@ function makeNodeLinkFn(directives) {
                 // custom link fn
                 dir._link(vm, el)
             } else {
+                //多个指令
+                //v-on=
+                //"mousedown:onDown,
+                // mouseup:onUp"
                 k = dir.descriptors.length
                 for (j = 0; j < k; j++) {
                     vm._bindDir(dir.name, el,

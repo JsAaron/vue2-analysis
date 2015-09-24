@@ -57,7 +57,12 @@ exports._compile = function(el) {
         // link phase
         // 连接阶段 
         var rootUnlinkFn = rootLinker(this, el)
-        var contentUnlinkFn = contentLinkFn ? contentLinkFn(this, el) : compiler.compile(el, options)(this, el, host)
+
+        //编译子节点
+        var contentUnlinkFn = 
+              contentLinkFn 
+                ? contentLinkFn(this, el) 
+                : compiler.compile(el, options)(this, el, host)
 
         // register composite unlink function
         // to be called during instance destruction
