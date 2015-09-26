@@ -54,6 +54,8 @@ exports._compile = function(el) {
 
         // component compilation can be cached
         // as long as it's not using inline-template
+        // 组件编译将被缓存
+        // 只要它不是使用inline-template
         if (options._linkerCachable) {
             contentLinkFn = ctor.linker
             if (!contentLinkFn) {
@@ -63,6 +65,7 @@ exports._compile = function(el) {
 
         // link phase
         // 连接阶段 
+        // 把dirs解析成指令Directive对象
         var rootUnlinkFn = rootLinker(this, el)
 
         //编译子节点

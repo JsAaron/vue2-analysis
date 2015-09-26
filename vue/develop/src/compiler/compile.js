@@ -382,12 +382,16 @@ function compileNodeList(nodeList, options) {
     var nodeLinkFn, childLinkFn, node
     for (var i = 0, l = nodeList.length; i < l; i++) {
         node = nodeList[i]
-        // /编译节点
+
+        //编译节点
         nodeLinkFn = compileNode(node, options)
 
+        //编译子节点
         childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) &&
             node.tagName !== 'SCRIPT' &&
             node.hasChildNodes() ? compileNodeList(node.childNodes, options) : null
+
+        //存入节点列表
         linkFns.push(nodeLinkFn, childLinkFn)
     }
     return linkFns.length ? makeChildLinkFn(linkFns) : null
