@@ -182,6 +182,10 @@ exports.compileRoot = function(el, options) {
         } else {
             // non-component, just compile as a normal element.
             // 没组件，只是正常编译一个普通元素
+            // 
+            // replacerLinkFn 
+            //      解析dirs指令合集
+            // 
             replacerLinkFn = compileDirectives(el.attributes, options)
         }
     }
@@ -552,6 +556,8 @@ function compileDirectives(attrs, options) {
         }
     }
     // sort by priority, LOW to HIGH
+    // 根据属性的权重大小进行排序
+    // 指令优先级
     if (dirs.length) {
         dirs.sort(directiveComparator)
         return makeNodeLinkFn(dirs)
@@ -560,7 +566,7 @@ function compileDirectives(attrs, options) {
 
 /**
  * Build a link function for all directives on a single node.
- *
+ * 建立一个链接功能指令在单个节点上。
  * @param {Array} directives
  * @return {Function} directivesLinkFn
  */

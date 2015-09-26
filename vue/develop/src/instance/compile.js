@@ -34,17 +34,24 @@ exports._compile = function(el) {
         el = compiler.transclude(el, options)
 
         //el._vue__ = this;
+        //beforeCompile
         this._initElement(el)
 
         // root is always compiled per-instance, because
         // container attrs and props can be different every time.
         // 根元素一直是预编译
         // 因为包含的属性与props每次都不同
+        // 包了2层curry
+        //      rootLinkFn
+        //          replacerLinkFn
         var rootLinker = compiler.compileRoot(el, options)
 
+
         // compile and link the rest
+        // 编译和链接
         var contentLinkFn
         var ctor = this.constructor
+
         // component compilation can be cached
         // as long as it's not using inline-template
         if (options._linkerCachable) {
@@ -59,10 +66,8 @@ exports._compile = function(el) {
         var rootUnlinkFn = rootLinker(this, el)
 
         //编译子节点
-        var contentUnlinkFn = 
-              contentLinkFn 
-                ? contentLinkFn(this, el) 
-                : compiler.compile(el, options)(this, el, host)
+        var contentUnlinkFn =
+            contentLinkFn ? contentLinkFn(this, el) : compiler.compile(el, options)(this, el, host)
 
         // register composite unlink function
         // to be called during instance destruction

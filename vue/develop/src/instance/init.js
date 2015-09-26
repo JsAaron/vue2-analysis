@@ -22,7 +22,7 @@ exports._init = function(options) {
     this.$ = {} // child vm references
     this.$$ = {} // element references
     this._watchers = [] // all watchers as an array
-    this._directives = [] // all directives
+    this._directives = [] // all directives 
     this._childCtors = {} // inherit:true constructors
 
     // a flag to avoid this being observed
