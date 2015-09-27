@@ -7,15 +7,18 @@
 </head>
 
 <body>
-    
-
     <div id="demo" v-on="mousedown:onDown,mouseup:onUp" v-class="hidden : isHidden">{{fullName}}
-		<ul>
-			<li>{{firstName}}</li>
-			<li>{{lastName}}</li>
-		<ul>
+        <ul>
+            <li>{{firstName}}</li>
+            <li>{{lastName}}</li>
+            <ul>
+                <li>{{firstName}}</li>
+                <li>
+                	<a>{{lastName}}</a>
+                </li>
+            </ul>
+        </ul>
     </div>
-
     <script type="text/javascript" src="bundle.js"></script>
 </body>
 

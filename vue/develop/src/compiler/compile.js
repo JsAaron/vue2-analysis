@@ -289,6 +289,7 @@ function compileTextNode(node, options) {
         return null
     }
     var frag = document.createDocumentFragment()
+
     var el, token
     for (var i = 0, l = tokens.length; i < l; i++) {
         token = tokens[i]
@@ -299,12 +300,13 @@ function compileTextNode(node, options) {
         
         frag.appendChild(el)
     }
+
     return makeTextNodeLinkFn(tokens, frag, options)
 }
 
 /**
  * Process a single text token.
- *
+ * 处理单个文本标记
  * @param {Object} token
  * @param {Object} options
  * @return {Node}
@@ -387,9 +389,10 @@ function compileNodeList(nodeList, options) {
         nodeLinkFn = compileNode(node, options)
 
         //编译子节点
-        childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) &&
-            node.tagName !== 'SCRIPT' &&
-            node.hasChildNodes() ? compileNodeList(node.childNodes, options) : null
+        //递归compileNodeList子节点
+        childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) 
+            && node.tagName !== 'SCRIPT' 
+            && node.hasChildNodes() ? compileNodeList(node.childNodes, options) : null
 
         //存入节点列表
         linkFns.push(nodeLinkFn, childLinkFn)
@@ -411,8 +414,10 @@ function makeChildLinkFn(linkFns) {
             node = nodes[n]
             nodeLinkFn = linkFns[i++]
             childrenLinkFn = linkFns[i++]
-                // cache childNodes before linking parent, fix #657
+            // cache childNodes before linking parent, fix #657
             var childNodes = _.toArray(node.childNodes)
+
+            //执行代码编译
             if (nodeLinkFn) {
                 nodeLinkFn(vm, node, host)
             }
