@@ -412,6 +412,7 @@ function makeChildLinkFn(linkFns) {
         var node, nodeLinkFn, childrenLinkFn
         for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
             node = nodes[n]
+            
             nodeLinkFn = linkFns[i++]
             childrenLinkFn = linkFns[i++]
             // cache childNodes before linking parent, fix #657
