@@ -1,5 +1,5 @@
-##vue+gulp+webpack 单页面组件开发
-######网络问题 开发保留了node_modules文件夹
+##vue+gulp+webpack 
+### vue源码分析 单页面组件开发
 -----------------------------------
 
 ##node环境
@@ -13,7 +13,6 @@
 
     gulp
 
-3
 ##源码分析命令
 
     gulp vue
