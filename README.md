@@ -1,18 +1,8 @@
-##vue+gulp+webpack 
-### vue源码分析 单页面组件开发
+### vue源码分析 
 -----------------------------------
 
 ##node环境
+rollup打包
 
-    browser-sync
-    webpack
-    gulp
-
-
-##开发命令
-
-    gulp
-
-##源码分析命令
-
-    gulp vue
+##命令
+npm run build

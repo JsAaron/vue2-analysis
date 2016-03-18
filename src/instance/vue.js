@@ -9,6 +9,9 @@ import domAPI from './api/dom'
 import eventsAPI from './api/events'
 import lifecycleAPI from './api/lifecycle'
 
+
+
+
 /**
  * The exposed Vue constructor.
  *
