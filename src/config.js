@@ -1,12 +1,9 @@
-module.exports = {
+import { compileRegex } from './parsers/text'
 
-  /**
-   * The prefix to look for when parsing directives.
-   *
-   * @type {String}
-   */
+let delimiters = ['{{', '}}']
+let unsafeDelimiters = ['{{{', '}}}']
 
-  prefix: 'v-',
+const config = {
 
   /**
    * Whether to print debug messages.
@@ -18,36 +15,12 @@ module.exports = {
   debug: false,
 
   /**
-   * Strict mode.
-   * Disables asset lookup in the view parent chain.
-   */
-
-  strict: false,
-
-  /**
    * Whether to suppress warnings.
    *
    * @type {Boolean}
    */
 
   silent: false,
-
-  /**
-   * Whether allow observer to alter data objects'
-   * __proto__.
-   *
-   * @type {Boolean}
-   */
-
-  proto: true,
-
-  /**
-   * Whether to parse mustache tags in templates.
-   *
-   * @type {Boolean}
-   */
-
-  interpolate: true,
 
   /**
    * Whether to use async rendering.
@@ -61,6 +34,13 @@ module.exports = {
    */
 
   warnExpressionErrors: true,
+
+  /**
+   * Whether to allow devtools inspection.
+   * Disabled by default in production builds.
+   */
+
+  devtools: process.env.NODE_ENV !== 'production',
 
   /**
    * Internal flag to indicate the delimiters have been
@@ -100,25 +80,32 @@ module.exports = {
    * Max circular updates allowed in a batcher flush cycle.
    */
 
-  _maxUpdateCount: 100
+  _maxUpdateCount: 100,
 
-}
+  /**
+   * Interpolation delimiters. Changing these would trigger
+   * the text parser to re-compile the regular expressions.
+   *
+   * @type {Array<String>}
+   */
 
-/**
- * Interpolation delimiters.
- * We need to mark the changed flag so that the text parser
- * knows it needs to recompile the regex.
- *
- * @type {Array<String>}
- */
-
-var delimiters = ['{{', '}}']
-Object.defineProperty(module.exports, 'delimiters', {
-  get: function () {
+  get delimiters () {
     return delimiters
   },
-  set: function (val) {
+
+  set delimiters (val) {
     delimiters = val
-    this._delimitersChanged = true
+    compileRegex()
+  },
+
+  get unsafeDelimiters () {
+    return unsafeDelimiters
+  },
+
+  set unsafeDelimiters (val) {
+    unsafeDelimiters = val
+    compileRegex()
   }
-})
+}
+
+export default config

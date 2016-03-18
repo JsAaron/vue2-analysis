@@ -1,16 +1,22 @@
-var _ = require('../util')
-var queue = require('./queue')
-var addClass = _.addClass
-var removeClass = _.removeClass
-var transitionEndEvent = _.transitionEndEvent
-var animationEndEvent = _.animationEndEvent
-var transDurationProp = _.transitionProp + 'Duration'
-var animDurationProp = _.animationProp + 'Duration'
+import { pushJob } from './queue'
+import {
+  on,
+  off,
+  bind,
+  addClass,
+  removeClass,
+  cancellable,
+  transitionEndEvent,
+  animationEndEvent,
+  transitionProp,
+  animationProp,
+  warn
+} from '../util/index'
 
-var TYPE_TRANSITION = 1
-var TYPE_ANIMATION = 2
-
-var uid = 0
+const TYPE_TRANSITION = 'transition'
+const TYPE_ANIMATION = 'animation'
+const transDurationProp = transitionProp + 'Duration'
+const animDurationProp = animationProp + 'Duration'
 
 /**
  * A Transition object that encapsulates the state and logic
@@ -22,11 +28,11 @@ var uid = 0
  * @param {Vue} vm
  */
 
-function Transition (el, id, hooks, vm) {
-  this.id = uid++
+export default function Transition (el, id, hooks, vm) {
+  this.id = id
   this.el = el
-  this.enterClass = id + '-enter'
-  this.leaveClass = id + '-leave'
+  this.enterClass = (hooks && hooks.enterClass) || id + '-enter'
+  this.leaveClass = (hooks && hooks.leaveClass) || id + '-leave'
   this.hooks = hooks
   this.vm = vm
   // async state
@@ -39,11 +45,26 @@ function Transition (el, id, hooks, vm) {
   this.justEntered = false
   this.entered = this.left = false
   this.typeCache = {}
+  // check css transition type
+  this.type = hooks && hooks.type
+  /* istanbul ignore if */
+  if (process.env.NODE_ENV !== 'production') {
+    if (
+      this.type &&
+      this.type !== TYPE_TRANSITION &&
+      this.type !== TYPE_ANIMATION
+    ) {
+      warn(
+        'invalid CSS transition type for transition="' +
+        this.id + '": ' + this.type
+      )
+    }
+  }
   // bind
   var self = this
   ;['enterNextTick', 'enterDone', 'leaveNextTick', 'leaveDone']
     .forEach(function (m) {
-      self[m] = _.bind(self[m], self)
+      self[m] = bind(self[m], self)
     })
 }
 
@@ -86,7 +107,7 @@ p.enter = function (op, cb) {
     return // user called done synchronously.
   }
   this.cancel = this.hooks && this.hooks.enterCancelled
-  queue.push(this.enterNextTick)
+  pushJob(this.enterNextTick)
 }
 
 /**
@@ -96,10 +117,19 @@ p.enter = function (op, cb) {
  */
 
 p.enterNextTick = function () {
+  // Important hack:
+  // in Chrome, if a just-entered element is applied the
+  // leave class while its interpolated property still has
+  // a very small value (within one frame), Chrome will
+  // skip the leave transition entirely and not firing the
+  // transtionend event. Therefore we need to protected
+  // against such cases using a one-frame timeout.
   this.justEntered = true
-  _.nextTick(function () {
-    this.justEntered = false
-  }, this)
+  var self = this
+  setTimeout(function () {
+    self.justEntered = false
+  }, 17)
+
   var enterDone = this.enterDone
   var type = this.getCssTransitionType(this.enterClass)
   if (!this.pendingJsCb) {
@@ -173,7 +203,7 @@ p.leave = function (op, cb) {
     if (this.justEntered) {
       this.leaveDone()
     } else {
-      queue.push(this.leaveNextTick)
+      pushJob(this.leaveNextTick)
     }
   }
 }
@@ -218,7 +248,7 @@ p.cancelPending = function () {
   var hasPending = false
   if (this.pendingCssCb) {
     hasPending = true
-    _.off(this.el, this.pendingCssEvent, this.pendingCssCb)
+    off(this.el, this.pendingCssEvent, this.pendingCssCb)
     this.pendingCssEvent = this.pendingCssCb = null
   }
   if (this.pendingJsCb) {
@@ -263,7 +293,7 @@ p.callHookWithCb = function (type) {
   var hook = this.hooks && this.hooks[type]
   if (hook) {
     if (hook.length > 1) {
-      this.pendingJsCb = _.cancellable(this[type + 'Done'])
+      this.pendingJsCb = cancellable(this[type + 'Done'])
     }
     hook.call(this.vm, this.el, this.pendingJsCb)
   }
@@ -288,11 +318,13 @@ p.getCssTransitionType = function (className) {
     // CSS transitions.
     document.hidden ||
     // explicit js-only transition
-    (this.hooks && this.hooks.css === false)
+    (this.hooks && this.hooks.css === false) ||
+    // element is hidden
+    isHidden(this.el)
   ) {
     return
   }
-  var type = this.typeCache[className]
+  var type = this.type || this.typeCache[className]
   if (type) return type
   var inlineStyles = this.el.style
   var computedStyles = window.getComputedStyle(this.el)
@@ -328,14 +360,35 @@ p.setupCssCb = function (event, cb) {
   var el = this.el
   var onEnd = this.pendingCssCb = function (e) {
     if (e.target === el) {
-      _.off(el, event, onEnd)
+      off(el, event, onEnd)
       self.pendingCssEvent = self.pendingCssCb = null
       if (!self.pendingJsCb && cb) {
         cb()
       }
     }
   }
-  _.on(el, event, onEnd)
+  on(el, event, onEnd)
 }
 
-module.exports = Transition
+/**
+ * Check if an element is hidden - in that case we can just
+ * skip the transition alltogether.
+ *
+ * @param {Element} el
+ * @return {Boolean}
+ */
+
+function isHidden (el) {
+  if (/svg$/.test(el.namespaceURI)) {
+    // SVG elements do not have offset(Width|Height)
+    // so we need to check the client rect
+    var rect = el.getBoundingClientRect()
+    return !(rect.width || rect.height)
+  } else {
+    return !(
+      el.offsetWidth ||
+      el.offsetHeight ||
+      el.getClientRects().length
+    )
+  }
+}

@@ -1,4 +1,8 @@
-var _ = require('../util')
+import {
+  before,
+  remove,
+  transitionEndEvent
+} from '../util/index'
 
 /**
  * Append with transition.
@@ -9,8 +13,8 @@ var _ = require('../util')
  * @param {Function} [cb]
  */
 
-exports.append = function (el, target, vm, cb) {
-  apply(el, 1, function () {
+export function appendWithTransition (el, target, vm, cb) {
+  applyTransition(el, 1, function () {
     target.appendChild(el)
   }, vm, cb)
 }
@@ -24,9 +28,9 @@ exports.append = function (el, target, vm, cb) {
  * @param {Function} [cb]
  */
 
-exports.before = function (el, target, vm, cb) {
-  apply(el, 1, function () {
-    _.before(el, target)
+export function beforeWithTransition (el, target, vm, cb) {
+  applyTransition(el, 1, function () {
+    before(el, target)
   }, vm, cb)
 }
 
@@ -38,59 +42,10 @@ exports.before = function (el, target, vm, cb) {
  * @param {Function} [cb]
  */
 
-exports.remove = function (el, vm, cb) {
-  apply(el, -1, function () {
-    _.remove(el)
+export function removeWithTransition (el, vm, cb) {
+  applyTransition(el, -1, function () {
+    remove(el)
   }, vm, cb)
-}
-
-/**
- * Remove by appending to another parent with transition.
- * This is only used in block operations.
- *
- * @param {Element} el
- * @param {Element} target
- * @param {Vue} vm
- * @param {Function} [cb]
- */
-
-exports.removeThenAppend = function (el, target, vm, cb) {
-  apply(el, -1, function () {
-    target.appendChild(el)
-  }, vm, cb)
-}
-
-/**
- * Append the childNodes of a fragment to target.
- *
- * @param {DocumentFragment} block
- * @param {Node} target
- * @param {Vue} vm
- */
-
-exports.blockAppend = function (block, target, vm) {
-  var nodes = _.toArray(block.childNodes)
-  for (var i = 0, l = nodes.length; i < l; i++) {
-    exports.before(nodes[i], target, vm)
-  }
-}
-
-/**
- * Remove a block of nodes between two edge nodes.
- *
- * @param {Node} start
- * @param {Node} end
- * @param {Vue} vm
- */
-
-exports.blockRemove = function (start, end, vm) {
-  var node = start.nextSibling
-  var next
-  while (node !== end) {
-    next = node.nextSibling
-    exports.remove(node, vm)
-    node = next
-  }
 }
 
 /**
@@ -105,13 +60,13 @@ exports.blockRemove = function (start, end, vm) {
  * @param {Function} [cb]
  */
 
-var apply = exports.apply = function (el, direction, op, vm, cb) {
+export function applyTransition (el, direction, op, vm, cb) {
   var transition = el.__v_trans
   if (
     !transition ||
     // skip if there are no js hooks and CSS transition is
     // not supported
-    (!transition.hooks && !_.transitionEndEvent) ||
+    (!transition.hooks && !transitionEndEvent) ||
     // skip transitions for initial compile
     !vm._isCompiled ||
     // if the vm is being manipulated by a parent directive

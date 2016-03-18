@@ -1,8 +1,9 @@
-var Cache = require('../cache')
-var config = require('../config')
-var dirParser = require('./directive')
-var regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g
-var cache, tagRE, htmlRE, firstChar, lastChar
+import Cache from '../cache'
+import config from '../config'
+import { parseDirective } from '../parsers/directive'
+
+const regexEscapeRE = /[-.*+?^${}()|[\]\/\\]/g
+let cache, tagRE, htmlRE
 
 /**
  * Escape a string so it can be used in a RegExp
@@ -15,32 +16,18 @@ function escapeRegex (str) {
   return str.replace(regexEscapeRE, '\\$&')
 }
 
-/**
- * Compile the interpolation tag regex.
- *
- * @return {RegExp}
- */
-
-function compileRegex () {
-  config._delimitersChanged = false
-  var open = config.delimiters[0]
-  var close = config.delimiters[1]
-  firstChar = open.charAt(0)
-  lastChar = close.charAt(close.length - 1)
-  var firstCharRE = escapeRegex(firstChar)
-  var lastCharRE = escapeRegex(lastChar)
-  var openRE = escapeRegex(open)
-  var closeRE = escapeRegex(close)
+export function compileRegex () {
+  var open = escapeRegex(config.delimiters[0])
+  var close = escapeRegex(config.delimiters[1])
+  var unsafeOpen = escapeRegex(config.unsafeDelimiters[0])
+  var unsafeClose = escapeRegex(config.unsafeDelimiters[1])
   tagRE = new RegExp(
-    firstCharRE + '?' + openRE +
-    '(.+?)' +
-    closeRE + lastCharRE + '?',
+    unsafeOpen + '(.+?)' + unsafeClose + '|' +
+    open + '(.+?)' + close,
     'g'
   )
   htmlRE = new RegExp(
-    '^' + firstCharRE + openRE +
-    '.*' +
-    closeRE + lastCharRE + '$'
+    '^' + unsafeOpen + '.*' + unsafeClose + '$'
   )
   // reset cache
   cache = new Cache(1000)
@@ -57,8 +44,8 @@ function compileRegex () {
  *               - {Boolean} [oneTime]
  */
 
-exports.parse = function (text) {
-  if (config._delimitersChanged) {
+export function parseText (text) {
+  if (!cache) {
     compileRegex()
   }
   var hit = cache.get(text)
@@ -71,7 +58,7 @@ exports.parse = function (text) {
   }
   var tokens = []
   var lastIndex = tagRE.lastIndex = 0
-  var match, index, value, first, oneTime, twoWay
+  var match, index, html, value, first, oneTime
   /* eslint-disable no-cond-assign */
   while (match = tagRE.exec(text)) {
   /* eslint-enable no-cond-assign */
@@ -83,18 +70,18 @@ exports.parse = function (text) {
       })
     }
     // tag token
-    first = match[1].charCodeAt(0)
+    html = htmlRE.test(match[0])
+    value = html ? match[1] : match[2]
+    first = value.charCodeAt(0)
     oneTime = first === 42 // *
-    twoWay = first === 64  // @
-    value = oneTime || twoWay
-      ? match[1].slice(1)
-      : match[1]
+    value = oneTime
+      ? value.slice(1)
+      : value
     tokens.push({
       tag: true,
       value: value.trim(),
-      html: htmlRE.test(match[0]),
-      oneTime: oneTime,
-      twoWay: twoWay
+      html: html,
+      oneTime: oneTime
     })
     lastIndex = index + match[0].length
   }
@@ -117,12 +104,14 @@ exports.parse = function (text) {
  * @return {String}
  */
 
-exports.tokensToExp = function (tokens, vm) {
-  return tokens.length > 1
-    ? tokens.map(function (token) {
-        return formatToken(token, vm)
-      }).join('+')
-    : formatToken(tokens[0], vm, true)
+export function tokensToExp (tokens, vm) {
+  if (tokens.length > 1) {
+    return tokens.map(function (token) {
+      return formatToken(token, vm)
+    }).join('+')
+  } else {
+    return formatToken(tokens[0], vm, true)
+  }
 }
 
 /**
@@ -130,13 +119,13 @@ exports.tokensToExp = function (tokens, vm) {
  *
  * @param {Object} token
  * @param {Vue} [vm]
- * @param {Boolean} single
+ * @param {Boolean} [single]
  * @return {String}
  */
 
 function formatToken (token, vm, single) {
   return token.tag
-    ? vm && token.oneTime
+    ? token.oneTime && vm
       ? '"' + vm.$eval(token.value) + '"'
       : inlineFilters(token.value, single)
     : '"' + token.value + '"'
@@ -162,7 +151,7 @@ function inlineFilters (exp, single) {
       ? exp
       : '(' + exp + ')'
   } else {
-    var dir = dirParser.parse(exp)[0]
+    var dir = parseDirective(exp)
     if (!dir.filters) {
       return '(' + exp + ')'
     } else {

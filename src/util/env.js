@@ -1,39 +1,53 @@
+/* global MutationObserver */
+
 // can we use __proto__?
-exports.hasProto = '__proto__' in {}
+export const hasProto = '__proto__' in {}
 
 // Browser environment sniffing
-var inBrowser = exports.inBrowser =
+export const inBrowser =
   typeof window !== 'undefined' &&
   Object.prototype.toString.call(window) !== '[object Object]'
 
-exports.isIE9 =
-  inBrowser &&
-  navigator.userAgent.toLowerCase().indexOf('msie 9.0') > 0
+// detect devtools
+export const devtools = inBrowser && window.__VUE_DEVTOOLS_GLOBAL_HOOK__
 
-exports.isAndroid =
-  inBrowser &&
-  navigator.userAgent.toLowerCase().indexOf('android') > 0
+// UA sniffing for working around browser-specific quirks
+const UA = inBrowser && window.navigator.userAgent.toLowerCase()
+export const isIE9 = UA && UA.indexOf('msie 9.0') > 0
+export const isAndroid = UA && UA.indexOf('android') > 0
+
+let transitionProp
+let transitionEndEvent
+let animationProp
+let animationEndEvent
 
 // Transition property/event sniffing
-if (inBrowser && !exports.isIE9) {
-  var isWebkitTrans =
+if (inBrowser && !isIE9) {
+  const isWebkitTrans =
     window.ontransitionend === undefined &&
     window.onwebkittransitionend !== undefined
-  var isWebkitAnim =
+  const isWebkitAnim =
     window.onanimationend === undefined &&
     window.onwebkitanimationend !== undefined
-  exports.transitionProp = isWebkitTrans
+  transitionProp = isWebkitTrans
     ? 'WebkitTransition'
     : 'transition'
-  exports.transitionEndEvent = isWebkitTrans
+  transitionEndEvent = isWebkitTrans
     ? 'webkitTransitionEnd'
     : 'transitionend'
-  exports.animationProp = isWebkitAnim
+  animationProp = isWebkitAnim
     ? 'WebkitAnimation'
     : 'animation'
-  exports.animationEndEvent = isWebkitAnim
+  animationEndEvent = isWebkitAnim
     ? 'webkitAnimationEnd'
     : 'animationend'
+}
+
+export {
+  transitionProp,
+  transitionEndEvent,
+  animationProp,
+  animationEndEvent
 }
 
 /**
@@ -46,7 +60,7 @@ if (inBrowser && !exports.isIE9) {
  * @param {Object} ctx
  */
 
-exports.nextTick = (function () {
+export const nextTick = (function () {
   var callbacks = []
   var pending = false
   var timerFunc
@@ -58,6 +72,7 @@ exports.nextTick = (function () {
       copies[i]()
     }
   }
+
   /* istanbul ignore if */
   if (typeof MutationObserver !== 'undefined') {
     var counter = 1
@@ -71,7 +86,13 @@ exports.nextTick = (function () {
       textNode.data = counter
     }
   } else {
-    timerFunc = setTimeout
+    // webpack attempts to inject a shim for setImmediate
+    // if it is used as a global, so we have to work around that to
+    // avoid bundling unnecessary code.
+    const context = inBrowser
+      ? window
+      : typeof global !== 'undefined' ? global : {}
+    timerFunc = context.setImmediate || setTimeout
   }
   return function (cb, ctx) {
     var func = ctx

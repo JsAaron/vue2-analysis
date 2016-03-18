@@ -1,6 +1,7 @@
-var _ = require('../util')
-var arrayProto = Array.prototype
-var arrayMethods = Object.create(arrayProto)
+import { def, indexOf } from '../util/index'
+
+const arrayProto = Array.prototype
+export const arrayMethods = Object.create(arrayProto)
 
 /**
  * Intercept mutating methods and emit events
@@ -18,7 +19,7 @@ var arrayMethods = Object.create(arrayProto)
 .forEach(function (method) {
   // cache original method
   var original = arrayProto[method]
-  _.define(arrayMethods, method, function mutator () {
+  def(arrayMethods, method, function mutator () {
     // avoid leaking arguments:
     // http://jsperf.com/closure-with-arguments
     var i = arguments.length
@@ -28,7 +29,7 @@ var arrayMethods = Object.create(arrayProto)
     }
     var result = original.apply(this, args)
     var ob = this.__ob__
-    var inserted, removed
+    var inserted
     switch (method) {
       case 'push':
         inserted = args
@@ -38,17 +39,11 @@ var arrayMethods = Object.create(arrayProto)
         break
       case 'splice':
         inserted = args.slice(2)
-        removed = result
-        break
-      case 'pop':
-      case 'shift':
-        removed = [result]
         break
     }
     if (inserted) ob.observeArray(inserted)
-    if (removed) ob.unobserveArray(removed)
     // notify change
-    ob.notify()
+    ob.dep.notify()
     return result
   })
 })
@@ -62,12 +57,12 @@ var arrayMethods = Object.create(arrayProto)
  * @return {*} - replaced element
  */
 
-_.define(
+def(
   arrayProto,
   '$set',
   function $set (index, val) {
     if (index >= this.length) {
-      this.length = index + 1
+      this.length = Number(index) + 1
     }
     return this.splice(index, 1, val)[0]
   }
@@ -80,19 +75,15 @@ _.define(
  * @param {*} val
  */
 
-_.define(
+def(
   arrayProto,
   '$remove',
-  function $remove (index) {
+  function $remove (item) {
     /* istanbul ignore if */
     if (!this.length) return
-    if (typeof index !== 'number') {
-      index = _.indexOf(this, index)
-    }
+    var index = indexOf(this, item)
     if (index > -1) {
       return this.splice(index, 1)
     }
   }
 )
-
-module.exports = arrayMethods

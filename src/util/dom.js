@@ -1,5 +1,8 @@
-var _ = require('./index')
-var config = require('../config')
+import config from '../config'
+import { isIE9 } from './env'
+import { warn } from './debug'
+import { camelize } from './lang'
+import { removeWithTransition } from '../transition/index'
 
 /**
  * Query an element selector if it's not an element already.
@@ -8,12 +11,12 @@ var config = require('../config')
  * @return {Element}
  */
 
-exports.query = function (el) {
+export function query (el) {
   if (typeof el === 'string') {
     var selector = el
     el = document.querySelector(el)
     if (!el) {
-      process.env.NODE_ENV !== 'production' && _.warn(
+      process.env.NODE_ENV !== 'production' && warn(
         'Cannot find element: ' + selector
       )
     }
@@ -25,7 +28,7 @@ exports.query = function (el) {
  * Check if a node is in the document.
  * Note: document.documentElement.contains should work here
  * but always returns false for comment nodes in phantomjs,
- * making unit tests difficult. This is fixed byy doing the
+ * making unit tests difficult. This is fixed by doing the
  * contains() check on the node's parentNode instead of
  * the node itself.
  *
@@ -33,7 +36,7 @@ exports.query = function (el) {
  * @return {Boolean}
  */
 
-exports.inDoc = function (node) {
+export function inDoc (node) {
   var doc = document.documentElement
   var parent = node && node.parentNode
   return doc === node ||
@@ -42,19 +45,48 @@ exports.inDoc = function (node) {
 }
 
 /**
- * Extract an attribute from a node.
+ * Get and remove an attribute from a node.
  *
  * @param {Node} node
- * @param {String} attr
+ * @param {String} _attr
  */
 
-exports.attr = function (node, attr) {
-  attr = config.prefix + attr
-  var val = node.getAttribute(attr)
+export function getAttr (node, _attr) {
+  var val = node.getAttribute(_attr)
   if (val !== null) {
-    node.removeAttribute(attr)
+    node.removeAttribute(_attr)
   }
   return val
+}
+
+/**
+ * Get an attribute with colon or v-bind: prefix.
+ *
+ * @param {Node} node
+ * @param {String} name
+ * @return {String|null}
+ */
+
+export function getBindAttr (node, name) {
+  var val = getAttr(node, ':' + name)
+  if (val === null) {
+    val = getAttr(node, 'v-bind:' + name)
+  }
+  return val
+}
+
+/**
+ * Check the presence of a bind attribute.
+ *
+ * @param {Node} node
+ * @param {String} name
+ * @return {Boolean}
+ */
+
+export function hasBindAttr (node, name) {
+  return node.hasAttribute(name) ||
+    node.hasAttribute(':' + name) ||
+    node.hasAttribute('v-bind:' + name)
 }
 
 /**
@@ -64,7 +96,7 @@ exports.attr = function (node, attr) {
  * @param {Element} target
  */
 
-exports.before = function (el, target) {
+export function before (el, target) {
   target.parentNode.insertBefore(el, target)
 }
 
@@ -75,9 +107,9 @@ exports.before = function (el, target) {
  * @param {Element} target
  */
 
-exports.after = function (el, target) {
+export function after (el, target) {
   if (target.nextSibling) {
-    exports.before(el, target.nextSibling)
+    before(el, target.nextSibling)
   } else {
     target.parentNode.appendChild(el)
   }
@@ -89,7 +121,7 @@ exports.after = function (el, target) {
  * @param {Element} el
  */
 
-exports.remove = function (el) {
+export function remove (el) {
   el.parentNode.removeChild(el)
 }
 
@@ -100,9 +132,9 @@ exports.remove = function (el) {
  * @param {Element} target
  */
 
-exports.prepend = function (el, target) {
+export function prepend (el, target) {
   if (target.firstChild) {
-    exports.before(el, target.firstChild)
+    before(el, target.firstChild)
   } else {
     target.appendChild(el)
   }
@@ -115,7 +147,7 @@ exports.prepend = function (el, target) {
  * @param {Element} el
  */
 
-exports.replace = function (target, el) {
+export function replace (target, el) {
   var parent = target.parentNode
   if (parent) {
     parent.replaceChild(el, target)
@@ -128,10 +160,11 @@ exports.replace = function (target, el) {
  * @param {Element} el
  * @param {String} event
  * @param {Function} cb
+ * @param {Boolean} [useCapture]
  */
 
-exports.on = function (el, event, cb) {
-  el.addEventListener(event, cb)
+export function on (el, event, cb, useCapture) {
+  el.addEventListener(event, cb, useCapture)
 }
 
 /**
@@ -142,24 +175,43 @@ exports.on = function (el, event, cb) {
  * @param {Function} cb
  */
 
-exports.off = function (el, event, cb) {
+export function off (el, event, cb) {
   el.removeEventListener(event, cb)
+}
+
+/**
+ * In IE9, setAttribute('class') will result in empty class
+ * if the element also has the :class attribute; However in
+ * PhantomJS, setting `className` does not work on SVG elements...
+ * So we have to do a conditional check here.
+ *
+ * @param {Element} el
+ * @param {String} cls
+ */
+
+export function setClass (el, cls) {
+  /* istanbul ignore if */
+  if (isIE9 && !/svg$/.test(el.namespaceURI)) {
+    el.className = cls
+  } else {
+    el.setAttribute('class', cls)
+  }
 }
 
 /**
  * Add class with compatibility for IE & SVG
  *
  * @param {Element} el
- * @param {Strong} cls
+ * @param {String} cls
  */
 
-exports.addClass = function (el, cls) {
+export function addClass (el, cls) {
   if (el.classList) {
     el.classList.add(cls)
   } else {
     var cur = ' ' + (el.getAttribute('class') || '') + ' '
     if (cur.indexOf(' ' + cls + ' ') < 0) {
-      el.setAttribute('class', (cur + cls).trim())
+      setClass(el, (cur + cls).trim())
     }
   }
 }
@@ -168,10 +220,10 @@ exports.addClass = function (el, cls) {
  * Remove class with compatibility for IE & SVG
  *
  * @param {Element} el
- * @param {Strong} cls
+ * @param {String} cls
  */
 
-exports.removeClass = function (el, cls) {
+export function removeClass (el, cls) {
   if (el.classList) {
     el.classList.remove(cls)
   } else {
@@ -180,7 +232,10 @@ exports.removeClass = function (el, cls) {
     while (cur.indexOf(tar) >= 0) {
       cur = cur.replace(tar, ' ')
     }
-    el.setAttribute('class', cur.trim())
+    setClass(el, cur.trim())
+  }
+  if (!el.className) {
+    el.removeAttribute('class')
   }
 }
 
@@ -190,21 +245,18 @@ exports.removeClass = function (el, cls) {
  *
  * @param {Element} el
  * @param {Boolean} asFragment
- * @return {Element}
+ * @return {Element|DocumentFragment}
  */
 
-exports.extractContent = function (el, asFragment) {
+export function extractContent (el, asFragment) {
   var child
   var rawContent
   /* istanbul ignore if */
-  if (
-    exports.isTemplate(el) &&
-    el.content instanceof DocumentFragment
-  ) {
+  if (isTemplate(el) && isFragment(el.content)) {
     el = el.content
   }
   if (el.hasChildNodes()) {
-    exports.trimNode(el)
+    trimNode(el)
     rawContent = asFragment
       ? document.createDocumentFragment()
       : document.createElement('div')
@@ -218,20 +270,29 @@ exports.extractContent = function (el, asFragment) {
 }
 
 /**
- * Trim possible empty head/tail textNodes inside a parent.
+ * Trim possible empty head/tail text and comment
+ * nodes inside a parent.
  *
  * @param {Node} node
  */
 
-exports.trimNode = function (node) {
-  trim(node, node.firstChild)
-  trim(node, node.lastChild)
+export function trimNode (node) {
+  var child
+  /* eslint-disable no-sequences */
+  while (child = node.firstChild, isTrimmable(child)) {
+    node.removeChild(child)
+  }
+  while (child = node.lastChild, isTrimmable(child)) {
+    node.removeChild(child)
+  }
+  /* eslint-enable no-sequences */
 }
 
-function trim (parent, node) {
-  if (node && node.nodeType === 3 && !node.data.trim()) {
-    parent.removeChild(node)
-  }
+function isTrimmable (node) {
+  return node && (
+    (node.nodeType === 3 && !node.data.trim()) ||
+    node.nodeType === 8
+  )
 }
 
 /**
@@ -242,7 +303,7 @@ function trim (parent, node) {
  * @param {Element} el
  */
 
-exports.isTemplate = function (el) {
+export function isTemplate (el) {
   return el.tagName &&
     el.tagName.toLowerCase() === 'template'
 }
@@ -253,8 +314,8 @@ exports.isTemplate = function (el) {
  * - fragment instance
  * - v-html
  * - v-if
+ * - v-for
  * - component
- * - repeat
  *
  * @param {String} content
  * @param {Boolean} persist - IE trashes empty textNodes on
@@ -265,8 +326,109 @@ exports.isTemplate = function (el) {
  * @return {Comment|Text}
  */
 
-exports.createAnchor = function (content, persist) {
-  return config.debug
+export function createAnchor (content, persist) {
+  var anchor = config.debug
     ? document.createComment(content)
     : document.createTextNode(persist ? ' ' : '')
+  anchor.__v_anchor = true
+  return anchor
+}
+
+/**
+ * Find a component ref attribute that starts with $.
+ *
+ * @param {Element} node
+ * @return {String|undefined}
+ */
+
+var refRE = /^v-ref:/
+export function findRef (node) {
+  if (node.hasAttributes()) {
+    var attrs = node.attributes
+    for (var i = 0, l = attrs.length; i < l; i++) {
+      var name = attrs[i].name
+      if (refRE.test(name)) {
+        return camelize(name.replace(refRE, ''))
+      }
+    }
+  }
+}
+
+/**
+ * Map a function to a range of nodes .
+ *
+ * @param {Node} node
+ * @param {Node} end
+ * @param {Function} op
+ */
+
+export function mapNodeRange (node, end, op) {
+  var next
+  while (node !== end) {
+    next = node.nextSibling
+    op(node)
+    node = next
+  }
+  op(end)
+}
+
+/**
+ * Remove a range of nodes with transition, store
+ * the nodes in a fragment with correct ordering,
+ * and call callback when done.
+ *
+ * @param {Node} start
+ * @param {Node} end
+ * @param {Vue} vm
+ * @param {DocumentFragment} frag
+ * @param {Function} cb
+ */
+
+export function removeNodeRange (start, end, vm, frag, cb) {
+  var done = false
+  var removed = 0
+  var nodes = []
+  mapNodeRange(start, end, function (node) {
+    if (node === end) done = true
+    nodes.push(node)
+    removeWithTransition(node, vm, onRemoved)
+  })
+  function onRemoved () {
+    removed++
+    if (done && removed >= nodes.length) {
+      for (var i = 0; i < nodes.length; i++) {
+        frag.appendChild(nodes[i])
+      }
+      cb && cb()
+    }
+  }
+}
+
+/**
+ * Check if a node is a DocumentFragment.
+ *
+ * @param {Node} node
+ * @return {Boolean}
+ */
+
+export function isFragment (node) {
+  return node && node.nodeType === 11
+}
+
+/**
+ * Get outerHTML of elements, taking care
+ * of SVG elements in IE as well.
+ *
+ * @param {Element} el
+ * @return {String}
+ */
+
+export function getOuterHTML (el) {
+  if (el.outerHTML) {
+    return el.outerHTML
+  } else {
+    var container = document.createElement('div')
+    container.appendChild(el.cloneNode(true))
+    return container.innerHTML
+  }
 }
