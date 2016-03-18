@@ -86,8 +86,6 @@ gulp.task('web-server', function() {
 });
 
 
-
-
 gulp.task('watch', ['web-server'], function() {
     gulp.watch(dest + homepage).on('change', reload);
     gulp.watch(dest + '**/*.js').on('change', reload);

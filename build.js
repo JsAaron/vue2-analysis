@@ -1,6 +1,6 @@
-var fs = require('fs')
-var rollup = require('rollup')
-var babel = require('rollup-plugin-babel')
+var fs      = require('fs')
+var rollup  = require('rollup')
+var babel   = require('rollup-plugin-babel')
 var replace = require('rollup-plugin-replace')
 var version = process.env.VERSION;
 
@@ -11,7 +11,6 @@ var banner =
     ' * (c) ' + new Date().getFullYear() + ' Evan You\n' +
     ' * Released under the MIT License.\n' +
     ' */'
-
 
 module.exports = function() {
     rollup.rollup({
