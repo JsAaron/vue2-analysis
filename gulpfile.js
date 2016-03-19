@@ -1,6 +1,6 @@
-var gulp = require('gulp');
+var gulp    = require('gulp');
 var webpack = require('webpack');
-var build = require('./build.js')
+var build   = require('./build.js')
 
 //http://www.browsersync.cn/docs/recipes/
 var browserSync = require('browser-sync').create();
@@ -16,7 +16,7 @@ var webServer = {
     port: 3000,
     logLevel: "debug",
     logPrefix: "Aaron",
-    open: true,
+    open: false,
     files: [dest + "/*.js", "./index.html"] //监控变化
 }
 

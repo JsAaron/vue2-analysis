@@ -9702,7 +9702,7 @@ var template = Object.freeze({
 
     installGlobalAPI(Vue);
 
-    Vue.version = '1.0.18';
+    Vue.version = 'undefined';
 
     // devtools global hook
     /* istanbul ignore next */

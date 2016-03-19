@@ -5,7 +5,7 @@ import config from './config'
 
 installGlobalAPI(Vue)
 
-Vue.version = '1.0.18'
+Vue.version = 'undefined'
 
 export default Vue
 
@@ -22,8 +22,8 @@ if (config.devtools) {
       'Download the Vue Devtools for a better development experience:\n' +
       'https://github.com/vuejs/vue-devtools'
     )
-  }
+  } 
 }
 
-
-  
+   
+     
