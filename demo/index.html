@@ -19,7 +19,8 @@
     </ul>
 </div>
 <script type="text/javascript">
-new Vue({
+
+var vm = new Vue({
     el: '#app',
     data: {
         newTodo: '',
@@ -42,6 +43,11 @@ new Vue({
         }
     }
 })
+
+vm.$watch('newTodo', function (val) {
+  console.log(val)
+})
+
 </script>
 
 </html>

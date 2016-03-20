@@ -9138,6 +9138,7 @@ var template = Object.freeze({
         } else {
           this.$once('hook:attached', ready);
         }
+        console.log(9);
         return this;
       };
 

@@ -33,6 +33,7 @@ function handleErrors() {
 
 // web服务 Server + watching scss/html files
 gulp.task('web-server', function() {
+    build()
     browserSync.init(webServer);
 });
 

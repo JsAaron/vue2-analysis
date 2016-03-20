@@ -31,6 +31,7 @@ export default function (Vue) {
     } else {
       this.$once('hook:attached', ready)
     }
+    console.log(9)
     return this
   }
 
