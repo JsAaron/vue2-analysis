@@ -1,5 +1,18 @@
-### vue源码分析 
------------------------------------
 
-###命令
+#Vue源码学习
+
+****
+
+npm install
+
 gulp
+
+gulp-mini
+
+
+>Gitub: <https://github.com/JsAaron/vue-learn/>
+
+****
+
+
+
