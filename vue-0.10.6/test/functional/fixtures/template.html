@@ -1,0 +1,108 @@
+<meta charset="utf-8">
+
+<div id="usa" v-partial="global"></div>
+<div id="conditional" v-partial="{{ok ? 'global' : 'nope'}}"></div>
+<div id="japan">{{> local}}</div>
+<div id="repeat">{{> repeat}}</div>
+
+<script type="text/v-template" id="test">
+    <p>{{hi}}!</p>
+</script>
+
+<script type="text/v-template" id="repeat-template">
+    <p v-repeat="items">{{title}}</p>
+</script>
+
+<!-- content insertion point tests -->
+<div id="content">
+<my-compponent>
+    <p class="b">{{b}}</p>
+    <p class="rest1">rest</p>
+    <p class="rest2">rest</p>
+    <p class="a">{{a}}</p>
+</my-compponent>
+</div>
+
+<script type="text/v-template" id="content-template">
+<h1>before</h1>
+<content select=".a"></content>
+<content select=".b"></content>
+<content></content>
+<h2>after</h2>
+</script>
+
+<!-- content fallback test -->
+<div id="fallback"></div>
+
+<script src="../../../dist/vue.js"></script>
+<script>
+
+    Vue.config({
+        debug:true
+    })
+
+    // direct usage
+    var china  = new Vue({
+        id: 'china',
+        template: '#test'
+    })
+    document.body.appendChild(china.$el)
+    // setting value after compile also works,
+    // as long as it has appeared in the template
+    china.hi = '你好'
+
+    // extended usage
+    var Hawaii = Vue.extend({
+        id: 'hawaii',
+        template: '#test'
+    })
+    var hawaii = new Hawaii()
+    document.body.appendChild(hawaii.$el)
+    hawaii.hi = 'Aloha'
+
+    // global partial
+    Vue.partial('global', '#test')
+    var usa = new Vue({
+        el: '#usa'
+    })
+    usa.hi = 'Hi dude'
+
+    // conditional partial
+    Vue.partial('nope', '<p>nope</p>')
+    new Vue({
+        el: '#conditional'
+    })
+
+    // direct partial
+    var japan = new Vue({
+        el: '#japan',
+        partials: {
+            local: '#test'
+        }
+    })
+    japan.hi = 'こんにちは'
+
+    var repeat = new Vue({
+        el: '#repeat',
+        partials: {
+            repeat: '#repeat-template'
+        },
+        data: {
+            items: [{ title: 'Repeat' }]
+        }
+    })
+
+    Vue.component('my-compponent', {
+        template: '#content-template',
+        data: {
+            a: 'A', b: 'B'
+        }
+    })
+
+    new Vue({el:'#content'})
+
+    new Vue({
+        el: '#fallback',
+        template: '<content>This is fallback</content>'
+    })
+</script>

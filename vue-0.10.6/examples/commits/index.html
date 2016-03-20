@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+<style>
+    #demo {
+        font-family: 'Helvetica', Arial, sans-serif;
+    }
+    a {
+        text-decoration: none;
+        color: #f66;
+    }
+    li {
+        line-height: 1.5em;
+        margin-bottom: 20px;
+    }
+    .author, .date {
+        font-weight: bold;
+    }
+</style>
+
+<div id="demo">
+    <h1>Latest Vue.js Commits</h1>
+    <input type="radio" id="master" name="branch" v-model="branch" value="master">
+    <label for="master">master</label>
+    <br>
+    <input type="radio" id="dev" name="branch" v-model="branch" value="dev">
+    <label for="dev">dev</label>
+    <ul>
+        <li v-repeat="commits">
+            <a href="{{html_url}}" target="_blank" class="commit">{{sha.slice(0, 7)}}</a>
+            - <span class="message">{{commit.message | truncate}}</span><br>
+            by <span class="author">{{commit.author.name}}</span>
+            at <span class="date">{{commit.author.date | formatDate}}</span>
+        </li>
+    </ul>
+</div>
+
+<script src="../../dist/vue.js"></script>
+<script src="app.js"></script>

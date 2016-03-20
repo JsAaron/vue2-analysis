@@ -1,0 +1,49 @@
+<form id="forms">
+
+    <input type="text" name="text" v-model="text">
+
+    <input type="checkbox" name="checkbox" v-model="checked">
+
+    <input type="radio" name="radio" v-model="radio" value="a">
+    <input type="radio" name="radio" v-model="radio" value="b">
+
+    <select v-model="select" name="select">
+        <option>a</option>
+        <option>b</option>
+    </select>
+
+    <select id="multi" v-model="multipleSelect" name="multi" multiple>
+        <option>a</option>
+        <option>b</option>
+        <option>c</option>
+        <option>d</option>
+    </select>
+
+    <textarea name="textarea" v-model="textarea">more {{text}}</textarea>
+
+</form>
+
+<div id="values">
+    <p class="text">{{text}}</p>
+    <p class="checkbox">{{checked}}</p>
+    <p class="radio">{{radio}}</p>
+    <p class="select">{{select}}</p>
+    <p class="multipleSelect">{{multipleSelect}}</p>
+    <p class="textarea">{{textarea}}</p>
+</div>
+
+<script src="../../../dist/vue.js"></script>
+<script>
+    var test = new Vue({
+        el: 'body',
+        lazy: true,
+        data: {
+            text: 'some text',
+            checked: true,
+            radio: 'b',
+            select: 'b',
+            multipleSelect: ['a','c'],
+            textarea: undefined
+        }
+    })
+</script>

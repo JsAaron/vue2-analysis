@@ -1,0 +1,69 @@
+<div id="log"></div>
+<div id="test">
+    <div class="dir" v-hola="dirMsg"></div>
+    <div class="filter">{{filterMsg | nodigits}}</div>
+    <div class="partial" v-partial="partial-test"></div>
+    <div class="vm" v-component="vm-test">{{vmMsg}}</div>
+    <div class="vm-w-model" v-component="vm-w-model" v-with="vmData">{{selfMsg + msg}}</div>
+</div>
+<div id="child">
+    <div class="cvm" v-component="vm-test">{{vmMsg}}</div>
+</div>
+
+<script src="../../../dist/vue.js"></script>
+<script>
+    // Vue.config({debug:true})
+    var log = document.getElementById('log')
+    var T = Vue.extend({
+        created: function () {
+            log.textContent += ' T created'  
+        },
+        ready: function () {
+            log.textContent += ' T ready'
+        },
+        components: {
+            'vm-test': {
+                data: {
+                    vmMsg: 'component works'
+                }
+            }
+        },
+        filters: {
+            nodigits: function (value) {
+                return value.replace(/\d/g, '')
+            }
+        }
+    })
+    // test late asset addition
+    T.directive('hola', function (value) {
+        this.el.innerHTML = value + ' works'
+    })
+    T.partial('partial-test', '{{partialMsg}}')
+    T.component('vm-w-model', {
+        ready: function () {
+            this.selfMsg = 'component + with '
+        }
+    })
+    var C = T.extend({
+        created: function () {
+            log.textContent += ' C created'  
+        },
+        ready: function () {
+            log.textContent += ' C ready'
+        }
+    })
+    var test = new T({
+        el: '#test',
+        data: {
+            dirMsg: 'directive',
+            filterMsg: 'fi43l132ter5 w12345orks',
+            partialMsg: 'partial works',
+            vmData: {
+                msg: 'works'
+            }
+        }
+    })
+    new C({
+        el: '#child'
+    })
+</script>
