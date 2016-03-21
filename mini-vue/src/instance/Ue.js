@@ -1,3 +1,6 @@
+import { warn, mergeOptions } from '../util/index'
+
+
 /**
  * Ue构造器
  * @param {[type]} options [description]
@@ -10,6 +13,16 @@ function Ue(options) {
 Ue.prototype._init = function(options) {
     options = options || {}
     this.$el = null;
+
+
+    //合并options参数
+    options = this.$options = mergeOptions(
+        this.constructor.options,
+        options,
+        this
+    )
+
+
     //初始化空数据
     //通过_initScope方法填充
     this._data = {}
@@ -49,6 +62,13 @@ Ue.prototype._initProps = function() {
     var options = this.$options
     var el = options.el
     var props = options.props
+    if (props && !el) {
+        warn(
+            '在实例化的时候,如果没有el,props不会被变异'
+        )
+    }
+
+
 }
 
 
