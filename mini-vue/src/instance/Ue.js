@@ -22,7 +22,6 @@ Ue.prototype._init = function(options) {
         this
     )
 
-
     //初始化空数据
     //通过_initScope方法填充
     this._data = {}

@@ -3,10 +3,10 @@ import Ue from './instance/Ue'
 //实例扩展的一些api接口
 import installGlobalAPI  from './global-api'
 
-installGlobalAPI(Vue)
+installGlobalAPI(Ue)
 
-Vue.version = 'undefined'
+Ue.version = 'undefined'
 
-export default Vue
+export default Ue
 
 window.Ue = Ue;

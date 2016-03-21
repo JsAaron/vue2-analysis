@@ -1,4 +1,5 @@
 
+import directives from './directives/public/index'
 
 
 
