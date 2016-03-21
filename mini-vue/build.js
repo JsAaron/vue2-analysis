@@ -54,7 +54,7 @@
 	
 	var _Ue2 = _interopRequireDefault(_Ue);
 	
-	var _globalApi = __webpack_require__(8);
+	var _globalApi = __webpack_require__(9);
 	
 	var _globalApi2 = _interopRequireDefault(_globalApi);
 	
@@ -86,6 +86,8 @@
 	
 	var _index = __webpack_require__(2);
 	
+	var _index2 = __webpack_require__(3);
+	
 	/**
 	 * Ue构造器
 	 * @param {[type]} options [description]
@@ -99,13 +101,15 @@
 	    this.$el = null;
 	
 	    //合并options参数
-	    options = this.$options = (0, _index.mergeOptions)(this.constructor.options, options, this);
+	    options = this.$options = (0, _index2.mergeOptions)(this.constructor.options, options, this);
 	
 	    //初始化空数据
 	    //通过_initScope方法填充
 	    this._data = {};
 	
 	    this._initState();
+	
+	    console.log(this);
 	};
 	
 	Object.defineProperty(Ue.prototype, '$data', {
@@ -127,6 +131,8 @@
 	 */
 	Ue.prototype._initState = function () {
 	    this._initProps();
+	    this._initMethods();
+	    this._initData();
 	};
 	
 	/**
@@ -138,10 +144,79 @@
 	    var el = options.el;
 	    var props = options.props;
 	    if (props && !el) {
-	        (0, _index.warn)('在实例化的时候,如果没有el,props不会被变异');
+	        (0, _index2.warn)('在实例化的时候,如果没有el,props不会被变异');
+	    }
+	    //确保选择器字符串转换成现在的元素
+	    el = options.el = (0, _index2.query)(el);
+	};
+	
+	/**
+	 * 简单绑定
+	 * 比本地化更快
+	 * @param  {Function} fn  [description]
+	 * @param  {[type]}   ctx [description]
+	 * @return {[type]}       [description]
+	 */
+	function bind(fn, ctx) {
+	    return function (a) {
+	        var l = arguments.length;
+	        return l ? l > 1 ? fn.apply(ctx, arguments) : fn.call(ctx, a) : fn.call(ctx);
+	    };
+	}
+	
+	/**
+	 * 构建方法
+	 * 方法必须要绑定到实例
+	 * 可能代替prop作为一个子组件
+	 * @return {[type]} [description]
+	 */
+	Ue.prototype._initMethods = function () {
+	    var methods = this.$options.methods;
+	    if (methods) {
+	        for (var key in methods) {
+	            this[key] = bind(methods[key], this);
+	        }
 	    }
 	};
 	
+	/**
+	 * 初始化数据
+	 * @return {[type]} [description]
+	 */
+	Ue.prototype._initData = function () {
+	    var dataFn = this.$options.data;
+	    var data = this._data = dataFn ? dataFn() : {};
+	    var props = this._props;
+	    var keys = Object.keys(data);
+	    var i, key;
+	    i = keys.length;
+	    while (i--) {
+	        key = keys[i];
+	        this._proxy(key);
+	    }
+	
+	    (0, _index.observe)(data, this);
+	};
+	
+	/**
+	 * 代理一个属性,所以
+	 * vm.prop === vm._data.prop
+	 * @param  {[type]} key [description]
+	 * @return {[type]}     [description]
+	 */
+	Ue.prototype._proxy = function (key) {
+	    var self = this;
+	    Object.defineProperty(self, key, {
+	        configurable: true,
+	        enumerable: true,
+	        get: function proxyGetter() {
+	            return self._data[key];
+	        },
+	        set: function proxySetter(val) {
+	            self._data[key] = val;
+	        }
+	    });
+	};
 	exports.default = Ue;
 
 /***/ },
@@ -151,10 +226,55 @@
 	'use strict';
 	
 	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	
+	exports.Observer = Observer;
+	exports.observe = observe;
+	
+	var _index = __webpack_require__(3);
+	
+	function Observer(value) {
+	    this.value = value;
+	}
+	
+	/**
+	 * 为实例的value创建观察observer
+	 * 成功：返回一个新的observer
+	 * 或者返回已经存在的observer对象
+	 * @param  {[type]} value [description]
+	 * @return {[type]}       [description]
+	 */
+	function observe(value, vm) {
+	    //必须是对象
+	    if (!value || (typeof value === 'undefined' ? 'undefined' : _typeof(value)) !== 'object') {
+	        return;
+	    }
+	    var ob;
+	    //如果存在
+	    if ((0, _index.hasOwn)(value, '__ob__') && value.__ob__ instanceof Observer) {
+	        ob = value.__ob__;
+	        //数组
+	        //对象
+	        //可以被扩展
+	    } else if (((0, _index.isArray)(value) || (0, _index.isPlainObject)(value)) && Object.isExtensible(value)) {
+	            ob = new Observer(value);
+	        }
+	}
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 	
-	var _lang = __webpack_require__(3);
+	var _lang = __webpack_require__(4);
 	
 	Object.keys(_lang).forEach(function (key) {
 	  if (key === "default") return;
@@ -166,7 +286,7 @@
 	  });
 	});
 	
-	var _debug = __webpack_require__(4);
+	var _debug = __webpack_require__(5);
 	
 	Object.keys(_debug).forEach(function (key) {
 	  if (key === "default") return;
@@ -178,7 +298,7 @@
 	  });
 	});
 	
-	var _dom = __webpack_require__(5);
+	var _dom = __webpack_require__(6);
 	
 	Object.keys(_dom).forEach(function (key) {
 	  if (key === "default") return;
@@ -190,7 +310,7 @@
 	  });
 	});
 	
-	var _options = __webpack_require__(6);
+	var _options = __webpack_require__(7);
 	
 	Object.keys(_options).forEach(function (key) {
 	  if (key === "default") return;
@@ -203,15 +323,20 @@
 	});
 
 /***/ },
-/* 3 */
+/* 4 */
 /***/ function(module, exports) {
 
 	'use strict';
 	
 	Object.defineProperty(exports, "__esModule", {
-	    value: true
+	  value: true
 	});
+	
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+	
 	exports.hasOwn = hasOwn;
+	exports.isObject = isObject;
+	exports.isPlainObject = isPlainObject;
 	exports._toString = _toString;
 	exports.extend = extend;
 	
@@ -224,12 +349,32 @@
 	 * @return {Boolean}
 	 */
 	function hasOwn(obj, key) {
-	    return hasOwnProperty.call(obj, key);
+	  return hasOwnProperty.call(obj, key);
+	}
+	
+	function isObject(obj) {
+	  return obj !== null && (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object';
+	}
+	
+	//是一个真实的对象
+	//通过call prototype  == [object object]
+	var toString = Object.prototype.toString;
+	var OBJECT_STRING = '[object Object]';
+	function isPlainObject(obj) {
+	  return toString.call(obj) === OBJECT_STRING;
 	}
 	
 	function _toString(value) {
-	    return value == null ? '' : value.toString();
+	  return value == null ? '' : value.toString();
 	}
+	
+	/**
+	 * 数组检测
+	 *
+	 * @param {*} obj
+	 * @return {Boolean}
+	 */
+	var isArray = exports.isArray = Array.isArray;
 	
 	/**
 	 * 混入属性合并
@@ -238,16 +383,16 @@
 	 * @return {[type]}      [description]
 	 */
 	function extend(to, from) {
-	    var keys = Object.keys(from);
-	    var i = keys.length;
-	    while (i--) {
-	        to[keys[i]] = from[keys[i]];
-	    }
-	    return to;
+	  var keys = Object.keys(from);
+	  var i = keys.length;
+	  while (i--) {
+	    to[keys[i]] = from[keys[i]];
+	  }
+	  return to;
 	}
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -268,7 +413,7 @@
 	exports.warn = warn;
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -294,7 +439,7 @@
 	}
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -304,15 +449,35 @@
 	});
 	exports.mergeOptions = mergeOptions;
 	
-	var _config = __webpack_require__(7);
+	var _config = __webpack_require__(8);
 	
 	var _config2 = _interopRequireDefault(_config);
 	
-	var _lang = __webpack_require__(3);
+	var _lang = __webpack_require__(4);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	var strats = _config2.default.optionMergeStrategies = Object.create(null);
+	
+	/**
+	 * 助手递归合并两个数据对象在一起
+	 * @param  {[type]} to   [description]
+	 * @param  {[type]} from [description]
+	 * @return {[type]}      [description]
+	 */
+	function mergeData(to, from) {
+	    var key, toVal, fromVal;
+	    for (key in from) {
+	        toVal = to[key];
+	        fromVal = from[key];
+	        if (!(0, _lang.hasOwn)(to, key)) {
+	            (0, _lang.set)(to, key, fromVal);
+	        } else if ((0, _lang.isObject)(toVal) && (0, _lang.isObject)(fromVal)) {
+	            mergeData(toVal, fromVal);
+	        }
+	    }
+	    return to;
+	}
 	
 	/**
 	 * 当存在一个vm(实例创建), 我们需要做的 
@@ -329,7 +494,18 @@
 	    strats[type + 's'] = mergeAssets;
 	});
 	
-	strats.data = function () {};
+	strats.data = function (parentVal, childVal, vm) {
+	    return function mergedInstanceDataFn() {
+	        // instance merge
+	        var instanceData = typeof childVal === 'function' ? childVal.call(vm) : childVal;
+	        var defaultData = typeof parentVal === 'function' ? parentVal.call(vm) : undefined;
+	        if (instanceData) {
+	            return mergeData(instanceData, defaultData);
+	        } else {
+	            return defaultData;
+	        }
+	    };
+	};
 	
 	strats.el = function () {};
 	
@@ -389,13 +565,11 @@
 	        options[key] = strat(parent[key], child[key], vm, key);
 	    }
 	
-	    console.log(options);
-	
 	    return options;
 	}
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -418,7 +592,7 @@
 	exports.default = config;
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -440,31 +614,11 @@
 		};
 	};
 	
-	var _index = __webpack_require__(9);
+	var _index = __webpack_require__(10);
 	
 	var _index2 = _interopRequireDefault(_index);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _text = __webpack_require__(10);
-	
-	var _text2 = _interopRequireDefault(_text);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	exports.default = {
-	  text: _text2.default
-	}; // text & html
 
 /***/ },
 /* 10 */
@@ -476,7 +630,27 @@
 	  value: true
 	});
 	
-	var _index = __webpack_require__(2);
+	var _text = __webpack_require__(11);
+	
+	var _text2 = _interopRequireDefault(_text);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	exports.default = {
+	  text: _text2.default
+	}; // text & html
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _index = __webpack_require__(3);
 	
 	exports.default = {
 	  bind: function bind() {

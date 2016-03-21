@@ -12,6 +12,28 @@ import {
 
 var strats = config.optionMergeStrategies = Object.create(null)
 
+
+/**
+ * 助手递归合并两个数据对象在一起
+ * @param  {[type]} to   [description]
+ * @param  {[type]} from [description]
+ * @return {[type]}      [description]
+ */
+function mergeData(to, from) {
+    var key, toVal, fromVal
+    for (key in from) {
+        toVal = to[key]
+        fromVal = from[key]
+        if (!hasOwn(to, key)) {
+            set(to, key, fromVal)
+        } else if (isObject(toVal) && isObject(fromVal)) {
+            mergeData(toVal, fromVal)
+        }
+    }
+    return to
+}
+
+
 /**
  * 当存在一个vm(实例创建), 我们需要做的 
  * 构造函数之间的三方合并选项, 实例
@@ -27,8 +49,17 @@ config._assetTypes.forEach(function(type) {
     strats[type + 's'] = mergeAssets;
 });
 
-strats.data = function() {
-
+strats.data = function(parentVal, childVal, vm) {
+    return function mergedInstanceDataFn() {
+        // instance merge
+        var instanceData = typeof childVal === 'function' ? childVal.call(vm) : childVal
+        var defaultData = typeof parentVal === 'function' ? parentVal.call(vm) : undefined
+        if (instanceData) {
+            return mergeData(instanceData, defaultData)
+        } else {
+            return defaultData
+        }
+    }
 }
 
 strats.el = function() {
@@ -90,8 +121,6 @@ export function mergeOptions(parent, child, vm) {
             //object.create继承parent=>child
         options[key] = strat(parent[key], child[key], vm, key)
     }
-
-    console.log(options)
 
     return options
 }
