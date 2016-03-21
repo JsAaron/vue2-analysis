@@ -1,7 +1,6 @@
-
 import {
     observe
-}from '../observer/index'
+} from '../observer/index'
 
 import {
     warn,
@@ -33,9 +32,12 @@ Ue.prototype._init = function(options) {
     //初始化空数据
     //通过_initScope方法填充
     this._data = {}
-
     this._initState()
 
+    //el存在,开始编译
+    if (options.el) {
+        this.$mount(options.el);
+    }
     console.log(this)
 }
 
@@ -121,9 +123,9 @@ Ue.prototype._initMethods = function() {
  */
 Ue.prototype._initData = function() {
     var dataFn = this.$options.data;
-    var data   = this._data = dataFn ? dataFn() : {};
-    var props  = this._props;
-    var keys   = Object.keys(data);
+    var data = this._data = dataFn ? dataFn() : {};
+    var props = this._props;
+    var keys = Object.keys(data);
     var i, key;
     i = keys.length;
     while (i--) {
@@ -154,4 +156,25 @@ Ue.prototype._proxy = function(key) {
         }
     })
 }
+
+
+/**
+ * 开始编译
+ * @return {[type]} [description]
+ */
+Ue.prototype.$mount = function(el) {
+    el = query(el)
+    if (!el) {
+        el = document.createElement('div')
+    }
+    //开始编译
+    this._compile(el)
+}
+
+
+Ue.prototype._compile = function(el) {
+
+}
+
+
 export default Ue

@@ -54,7 +54,7 @@
 	
 	var _Ue2 = _interopRequireDefault(_Ue);
 	
-	var _globalApi = __webpack_require__(9);
+	var _globalApi = __webpack_require__(10);
 	
 	var _globalApi2 = _interopRequireDefault(_globalApi);
 	
@@ -86,7 +86,7 @@
 	
 	var _index = __webpack_require__(2);
 	
-	var _index2 = __webpack_require__(3);
+	var _index2 = __webpack_require__(4);
 	
 	/**
 	 * Ue构造器
@@ -106,9 +106,12 @@
 	    //初始化空数据
 	    //通过_initScope方法填充
 	    this._data = {};
-	
 	    this._initState();
 	
+	    //el存在,开始编译
+	    if (options.el) {
+	        this.$mount(options.el);
+	    }
 	    console.log(this);
 	};
 	
@@ -217,6 +220,22 @@
 	        }
 	    });
 	};
+	
+	/**
+	 * 开始编译
+	 * @return {[type]} [description]
+	 */
+	Ue.prototype.$mount = function (el) {
+	    el = (0, _index2.query)(el);
+	    if (!el) {
+	        el = document.createElement('div');
+	    }
+	    //开始编译
+	    this._compile(el);
+	};
+	
+	Ue.prototype._compile = function (el) {};
+	
 	exports.default = Ue;
 
 /***/ },
@@ -232,12 +251,90 @@
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 	
 	exports.Observer = Observer;
+	exports.defineReactive = defineReactive;
 	exports.observe = observe;
 	
-	var _index = __webpack_require__(3);
+	var _dep = __webpack_require__(3);
+	
+	var _dep2 = _interopRequireDefault(_dep);
+	
+	var _index = __webpack_require__(4);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	function Observer(value) {
 	    this.value = value;
+	    this.dep = new _dep2.default();
+	    //给option.data扩展一个__ob__对象
+	    //默认enumerable为false不能被枚举
+	    (0, _index.def)(value, '__ob__', this);
+	    //值是数组
+	    if ((0, _index.isArray)(value)) {
+	        console.log('isArray为处理');
+	    } else {
+	        this.walk(value);
+	    }
+	}
+	
+	/**
+	 * 当值是对象的时候
+	 * 把每一个属性转化成setter/getter
+	 * @param  {[type]} obj [description]
+	 * @return {[type]}     [description]
+	 */
+	Observer.prototype.walk = function (obj) {
+	    var keys = Object.keys(obj);
+	    for (var i = 0, l = keys.length; i < l; i++) {
+	        this.convert(keys[i], obj[keys[i]]);
+	    }
+	};
+	
+	/**
+	 * 转化一个属性转换成getter / setter
+	 * 所以当这个属性被改变的时候，我们能触发这个事件
+	 * @param {String} key
+	 * @param {*} val
+	 */
+	Observer.prototype.convert = function (key, val) {
+	    defineReactive(this.value, key, val);
+	};
+	
+	/*
+	 *添加一个所有者vm,所以当设置/删除美元突变
+	 *发生我们可以通知所有者vm代理键和
+	 *消化观察者。这只是对象时调用
+	 *观察是一个实例的根元数据。
+	 */
+	Observer.prototype.addVm = function (vm) {
+	    (this.vms || (this.vms = [])).push(vm);
+	};
+	
+	/**
+	 * 给对象定义活动属性
+	 * @param  {[type]} obj          [description]
+	 * @param  {[type]} key          [description]
+	 * @param  {[type]} val          [description]
+	 * @param  {[type]} doNotObserve [description]
+	 * @return {[type]}              [description]
+	 */
+	function defineReactive(obj, key, val, doNotObserve) {
+	    var dep = new _dep2.default();
+	    //属性可以被删除
+	    var property = Object.getOwnPropertyDescriptor(obj, key);
+	    if (property && property.configurable === false) {
+	        return;
+	    }
+	    Object.defineProperty(obj, key, {
+	        enumerable: true,
+	        configurable: true,
+	        get: function reactiveGetter() {
+	            alert('set');
+	            return value;
+	        },
+	        set: function reactiveSetter(newVal) {
+	            alert('get');
+	        }
+	    });
 	}
 	
 	/**
@@ -262,6 +359,12 @@
 	    } else if (((0, _index.isArray)(value) || (0, _index.isPlainObject)(value)) && Object.isExtensible(value)) {
 	            ob = new Observer(value);
 	        }
+	
+	    if (ob && vm) {
+	        ob.addVm(vm);
+	    }
+	
+	    return ob;
 	}
 
 /***/ },
@@ -273,8 +376,32 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	exports.default = Dep;
 	
-	var _lang = __webpack_require__(4);
+	var _index = __webpack_require__(4);
+	
+	var uid = 0;
+	
+	/**
+	 * dep 是一个可观察量
+	 * 可以被多个指定订阅
+	 */
+	function Dep() {
+	  this.id = uid++;
+	  this.subs = [];
+	}
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _lang = __webpack_require__(5);
 	
 	Object.keys(_lang).forEach(function (key) {
 	  if (key === "default") return;
@@ -286,7 +413,7 @@
 	  });
 	});
 	
-	var _debug = __webpack_require__(5);
+	var _debug = __webpack_require__(6);
 	
 	Object.keys(_debug).forEach(function (key) {
 	  if (key === "default") return;
@@ -298,7 +425,7 @@
 	  });
 	});
 	
-	var _dom = __webpack_require__(6);
+	var _dom = __webpack_require__(7);
 	
 	Object.keys(_dom).forEach(function (key) {
 	  if (key === "default") return;
@@ -310,7 +437,7 @@
 	  });
 	});
 	
-	var _options = __webpack_require__(7);
+	var _options = __webpack_require__(8);
 	
 	Object.keys(_options).forEach(function (key) {
 	  if (key === "default") return;
@@ -323,13 +450,13 @@
 	});
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports) {
 
 	'use strict';
 	
 	Object.defineProperty(exports, "__esModule", {
-	  value: true
+	    value: true
 	});
 	
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
@@ -338,8 +465,9 @@
 	exports.isObject = isObject;
 	exports.isPlainObject = isPlainObject;
 	exports._toString = _toString;
+	exports.toArray = toArray;
+	exports.def = def;
 	exports.extend = extend;
-	
 	var hasOwnProperty = Object.prototype.hasOwnProperty;
 	
 	/**
@@ -349,11 +477,11 @@
 	 * @return {Boolean}
 	 */
 	function hasOwn(obj, key) {
-	  return hasOwnProperty.call(obj, key);
+	    return hasOwnProperty.call(obj, key);
 	}
 	
 	function isObject(obj) {
-	  return obj !== null && (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object';
+	    return obj !== null && (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object';
 	}
 	
 	//是一个真实的对象
@@ -361,11 +489,46 @@
 	var toString = Object.prototype.toString;
 	var OBJECT_STRING = '[object Object]';
 	function isPlainObject(obj) {
-	  return toString.call(obj) === OBJECT_STRING;
+	    return toString.call(obj) === OBJECT_STRING;
 	}
 	
 	function _toString(value) {
-	  return value == null ? '' : value.toString();
+	    return value == null ? '' : value.toString();
+	}
+	
+	/**
+	 * 数组化
+	 * 转化一个像数组的对象变成一个真实的数组
+	 * @param  {[type]} list  [description]
+	 * @param  {[type]} start [description]
+	 * @return {[type]}       [description]
+	 */
+	function toArray(list, start) {
+	    start = start || 0;
+	    var i = list.length - start;
+	    var ret = new Array(i);
+	    while (i--) {
+	        ret[i] = list[i + start];
+	    }
+	    return ret;
+	}
+	
+	/**
+	 * 定义一个属性
+	 *
+	 * @param {Object} obj
+	 * @param {String} key
+	 * @param {*} val
+	 * @param {Boolean} [enumerable]
+	 */
+	
+	function def(obj, key, val, enumerable) {
+	    Object.defineProperty(obj, key, {
+	        value: val,
+	        enumerable: !!enumerable,
+	        writable: true,
+	        configurable: true
+	    });
 	}
 	
 	/**
@@ -383,16 +546,16 @@
 	 * @return {[type]}      [description]
 	 */
 	function extend(to, from) {
-	  var keys = Object.keys(from);
-	  var i = keys.length;
-	  while (i--) {
-	    to[keys[i]] = from[keys[i]];
-	  }
-	  return to;
+	    var keys = Object.keys(from);
+	    var i = keys.length;
+	    while (i--) {
+	        to[keys[i]] = from[keys[i]];
+	    }
+	    return to;
 	}
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -413,7 +576,7 @@
 	exports.warn = warn;
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -439,7 +602,7 @@
 	}
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -449,11 +612,11 @@
 	});
 	exports.mergeOptions = mergeOptions;
 	
-	var _config = __webpack_require__(8);
+	var _config = __webpack_require__(9);
 	
 	var _config2 = _interopRequireDefault(_config);
 	
-	var _lang = __webpack_require__(4);
+	var _lang = __webpack_require__(5);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -569,7 +732,7 @@
 	}
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -592,7 +755,7 @@
 	exports.default = config;
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -614,31 +777,11 @@
 		};
 	};
 	
-	var _index = __webpack_require__(10);
+	var _index = __webpack_require__(11);
 	
 	var _index2 = _interopRequireDefault(_index);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _text = __webpack_require__(11);
-	
-	var _text2 = _interopRequireDefault(_text);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	exports.default = {
-	  text: _text2.default
-	}; // text & html
 
 /***/ },
 /* 11 */
@@ -650,7 +793,27 @@
 	  value: true
 	});
 	
-	var _index = __webpack_require__(3);
+	var _text = __webpack_require__(12);
+	
+	var _text2 = _interopRequireDefault(_text);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	exports.default = {
+	  text: _text2.default
+	}; // text & html
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _index = __webpack_require__(4);
 	
 	exports.default = {
 	  bind: function bind() {
