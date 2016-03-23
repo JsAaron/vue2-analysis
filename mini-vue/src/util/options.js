@@ -62,8 +62,9 @@ strats.data = function(parentVal, childVal, vm) {
     }
 }
 
-strats.el = function() {
-
+strats.el = function(parentVal, childVal, vm) {
+    var ret = childVal || parentVal
+    return ret   
 }
 
 strats.props = strats.methods = strats.computed = function(parentVal, childVal) {
@@ -118,7 +119,7 @@ export function mergeOptions(parent, child, vm) {
 
     function mergeField(key) {
         var strat = strats[key] || defaultStrat
-            //object.create继承parent=>child
+        //object.create继承parent=>child
         options[key] = strat(parent[key], child[key], vm, key)
     }
 

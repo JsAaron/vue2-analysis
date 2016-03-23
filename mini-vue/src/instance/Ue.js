@@ -8,6 +8,10 @@ import {
     query
 } from '../util/index'
 
+import {
+    compile
+} from '../compiler/index'
+
 
 /**
  * Ue构造器
@@ -171,8 +175,17 @@ Ue.prototype.$mount = function(el) {
     this._compile(el)
 }
 
-
+/**
+ * Transclude,编译和链接元素
+ * 
+ * @param  {[type]} el [description]
+ * @return {[type]}    [description]
+ */
 Ue.prototype._compile = function(el) {
+
+    var options = this.$options;
+    //编译节点
+    var contentUnlinkFn = compile(el, options)(this, el);
 
 }
 
