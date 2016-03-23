@@ -109,7 +109,7 @@ gulp.task('mini-server', function() {
 /**
  * 迷你vue
  */
-gulp.task('mini', ['webpack-pack','mini-server'], function() {
+gulp.task('webpack', ['webpack-pack','mini-server'], function() {
     gulp.watch(miniRoot + '/src/**/*.js', function() {
         gulp.run('webpack-pack');
     })

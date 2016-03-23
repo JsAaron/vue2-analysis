@@ -7,7 +7,7 @@ npm install
 
 gulp
 
-gulp-mini
+gulp-webpack
 
 
 >Gitub: <https://github.com/JsAaron/vue-learn/>
