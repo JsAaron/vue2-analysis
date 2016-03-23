@@ -2169,7 +2169,7 @@
     }
 
     config._assetTypes.forEach(function(type) {
-        console.log(type)
+        // console.log(type)
         strats[type + 's'] = mergeAssets;
     });
 

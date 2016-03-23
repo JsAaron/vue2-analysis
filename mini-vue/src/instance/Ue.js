@@ -185,7 +185,7 @@ Ue.prototype._compile = function(el) {
 
     var options = this.$options;
     //编译节点
-    var contentUnlinkFn = compile(el, options)(this, el);
+    var contentUnlinkFn = compile(el, options);
 
 }
 

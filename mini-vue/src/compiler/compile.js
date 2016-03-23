@@ -1,3 +1,13 @@
+import publicDirectives from '../directives/public/index'
+
+//特殊的绑定前缀
+//用来检查指定
+
+//v-on|@快捷方式
+const onRE = /^v-on:|^@/
+    //普通v-命令
+const dirAttrRE = /^v-([^:]+)(?:$|:(.*)$)/
+
 //定义终端指令
 export const terminalDirectives = [
     'for',
@@ -37,13 +47,15 @@ function compileNodeList(nodeList, options) {
     for (var i = 0, l = nodeList.length; i < l; i++) {
         node = nodeList[i];
         nodeLinkFn = compileNode(node, options);
-        childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) && node.tagName !== 'SCRIPT' && node.hasChildNodes() ? compileNodeList(node.childNodes, options) : null;
+        //如果有字节
+        //递归
+        if (node.hasChildNodes()) {
+            childLinkFn = compileNodeList(node.childNodes, options)
+        }
         linkFns.push(nodeLinkFn, childLinkFn);
     }
-    return linkFns.length ? makeChildLinkFn(linkFns) : null;
+    console.log(linkFns)
 }
-
-
 
 
 
@@ -124,6 +136,45 @@ function compileDirectives(attrs, options) {
         //找到每一个属性
         attr = attrs[i]
             //属性值
-        value = rawValue = attr.name;
+        name = rawName = attr.name;
+
+        //事件绑定
+        //v-on: | @
+        if (onRE.test(name)) {
+            arg = name.replace(onRE, '');
+            pushDir('on', publicDirectives.on);
+        }
+
+        // 普通指定
+        if (matched = name.match(dirAttrRE)) {
+            dirName = matched[1];
+            arg = matched[2];
+            var assets = options['directives'];
+            dirDef = assets[dirName];
+            if (dirDef) {
+                pushDir(dirName, dirDef);
+            }
+        }
+
+        console.log(dirs)
     }
+
+    /**
+     * push 一个指令
+     * @param  {[type]} dirName      [description]
+     * @param  {[type]} def          [description]
+     * @param  {[type]} interpTokens [description]
+     * @return {[type]}              [description]
+     */
+    function pushDir(dirName, def, interpTokens) {
+        dirs.push({
+            name: dirName,
+            attr: rawName,
+            raw: rawValue,
+            def: def,
+            arg: arg
+        });
+    }
+
+
 }

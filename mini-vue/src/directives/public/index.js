@@ -1,6 +1,9 @@
-// text & html
-import text from './text'
-
+/**
+ * 指令
+ */
+import on from './on'
+import model from './model/index'
 export default {
-  text
+  on,
+  model
 }

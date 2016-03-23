@@ -101,7 +101,7 @@ gulp.task('mini-server', function() {
         port      : 3000,
         logLevel  : "debug",
         logPrefix : "Aaron",
-        open      : true,
+        open      : false,
         files     : [miniRoot + "/build.js", miniRoot+"/index.html"] //监控变化
     });
 })
