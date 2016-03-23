@@ -1,16 +1,21 @@
 import {
     observe
-} from '../observer/index'
+}
+from '../observer/index'
 
 import {
     warn,
     mergeOptions,
     query
-} from '../util/index'
+}
+from '../util/index'
 
 import {
     compile
-} from '../compiler/index'
+}
+from '../compiler/index'
+
+import Directive from '../directive'
 
 
 /**
@@ -37,6 +42,9 @@ Ue.prototype._init = function(options) {
     //通过_initScope方法填充
     this._data = {}
     this._initState()
+
+    //所有指令合集
+    this._directives = []
 
     //el存在,开始编译
     if (options.el) {
@@ -185,9 +193,23 @@ Ue.prototype._compile = function(el) {
 
     var options = this.$options;
     //编译节点
-    var contentUnlinkFn = compile(el, options);
+    var contentUnlinkFn = compile(el, options)(this, el);
 
 }
+
+
+/**
+ * 给元素创建并且绑定一个指定
+ * @param  {[type]} descriptor [description]
+ * @param  {[type]} node       [description]
+ * @param  {[type]} host       [description]
+ * @param  {[type]} scope      [description]
+ * @param  {[type]} frag       [description]
+ * @return {[type]}            [description]
+ */
+Ue.prototype._bindDir = function(descriptor, node, host, scope, frag) {
+    this._directives.push(new Directive(descriptor, this, node, host, scope, frag));
+};
 
 
 export default Ue

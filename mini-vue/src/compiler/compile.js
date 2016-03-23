@@ -1,5 +1,8 @@
 import publicDirectives from '../directives/public/index'
-import {toArray} from '../util/index'
+import {
+    toArray
+}
+from '../util/index'
 
 //特殊的绑定前缀
 //用来检查指定
@@ -14,7 +17,7 @@ export const terminalDirectives = [
     'for',
     'if'
 ]
- 
+
 
 /**
  * 编译一个模版，返回一个可以重用的复合连接函数
@@ -33,13 +36,33 @@ export function compile(el, options, partial) {
     var nodeLinkFn = compileNode(el, options);
     //编译子节点
     var childLinkFn = el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null;
+
+
+    return function compositeLinkFn(vm, el, host, scope, frag) {
+        var childNodes = toArray(el.childNodes);
+        //初始化link
+        var dirs = linkAndCapture(function compositeLinkCapturer() {
+            if (nodeLinkFn) nodeLinkFn(vm, el, host, scope, frag)
+            if (childLinkFn) childLinkFn(vm, childNodes, host, scope, frag)
+        }, vm)
+        return makeUnlinkFn(vm, dirs)
+    };
+
 }
- 
- 
+
+
+function linkAndCapture (linker, vm) {
+  var originalDirCount = vm._directives.length
+  linker()
+  return dirs
+}
+
+
+
 //************************
 //      编译子节点
 //************************ 
- 
+
 /**
  * 编译一个节点列表
  * 返回子节点childLinkFn
@@ -82,7 +105,7 @@ function makeChildLinkFn(linkFns) {
 //      编译本身节点
 //************************
 
- 
+
 /**
  * 返回一个基于节点类型的nodeLinkFn
  * @param  {[type]} node    [description]

@@ -71,7 +71,7 @@ gulp.task('webpack-pack', function() {
         //出口文件输出配置
         output: {
             path: miniRoot, //js位置
-            filename: 'build.js'
+            filename: 'Ue.js'
         },
         //source map 支持
         devtool: '#source-map',
@@ -102,7 +102,7 @@ gulp.task('mini-server', function() {
         logLevel  : "debug",
         logPrefix : "Aaron",
         open      : false,
-        files     : [miniRoot + "/build.js", miniRoot+"/index.html"] //监控变化
+        files     : [miniRoot + "/Ue.js", miniRoot+"/index.html"] //监控变化
     });
 })
 
