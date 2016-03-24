@@ -18,6 +18,9 @@ export const terminalDirectives = [
     'if'
 ]
 
+var tagRE = /\{\{\{(.+?)\}\}\}|\{\{(.+?)\}\}/g
+var htmlRE = /^\{\{\{.*\}\}\}$/
+
 
 /**
  * 编译一个模版，返回一个可以重用的复合连接函数
@@ -40,6 +43,9 @@ export function compile(el, options, partial) {
 
     return function compositeLinkFn(vm, el, host, scope, frag) {
         var childNodes = toArray(el.childNodes);
+
+
+        return
         //初始化link
         var dirs = linkAndCapture(function compositeLinkCapturer() {
             if (nodeLinkFn) nodeLinkFn(vm, el, host, scope, frag)
@@ -51,10 +57,12 @@ export function compile(el, options, partial) {
 }
 
 
-function linkAndCapture (linker, vm) {
-  var originalDirCount = vm._directives.length
-  linker()
-  return dirs
+function linkAndCapture(linker, vm) {
+    var originalDirCount = vm._directives.length
+    linker()
+
+
+    return dirs
 }
 
 
@@ -69,6 +77,10 @@ function linkAndCapture (linker, vm) {
  * @param  {[type]} nodeList [description]
  * @param  {[type]} options  [description]
  * @return {[type]}          [description]
+ *
+ * [nodeLinkFn,childLinkFn,nodeLinkFn,childLinkFn...........]
+ * 
+ * 
  */
 function compileNodeList(nodeList, options) {
     var linkFns = [];
@@ -76,6 +88,7 @@ function compileNodeList(nodeList, options) {
     for (var i = 0, l = nodeList.length; i < l; i++) {
         node = nodeList[i];
         //本身节点
+        //nodeType = (1 || 3) 元素 文本节点
         nodeLinkFn = compileNode(node, options);
         //如果有子字节
         if (node.hasChildNodes()) {
@@ -95,7 +108,7 @@ function compileNodeList(nodeList, options) {
  */
 function makeChildLinkFn(linkFns) {
     return function childLinkFn(vm, nodes, host, scope, frag) {
-        alert(linkFns)
+        console.log('makeChildLinkFn')
     }
 }
 
@@ -120,7 +133,7 @@ function compileNode(node, options) {
         return compileElement(node, options)
     } else if (type === 3 && node.data.trim()) {
         //文本类型,不为空
-        // return compileTextNode(node, options)
+        return compileTextNode(node, options)
     } else {
         return null
     }
@@ -147,6 +160,82 @@ function compileElement(el, options) {
     }
     return linkFn;
 }
+
+
+/**
+ * 编译文本节点
+ * @return {[type]} [description]
+ */
+function compileTextNode(node, options) {
+
+    //保证必须有值
+    var tokens = parseText(node.wholeText);
+    if (!tokens) {
+        return null;
+    }
+
+    var frag = document.createDocumentFragment();
+    var el, token;
+    for (var i = 0, l = tokens.length; i < l; i++) {
+        token = tokens[i];
+        el = token.tag ? processTextToken(token, options) : document.createTextNode(token.value);
+        frag.appendChild(el);
+    }
+    return makeTextNodeLinkFn(tokens, frag, options);
+}
+
+
+
+function makeTextNodeLinkFn(tokens, frag) {
+    return function textNodeLinkFn(vm, el, host, scope) {
+        console.log('text link')
+    };
+}
+
+
+function processTextToken(token, options) {
+    var el;
+    el = document.createTextNode(' ');
+    setTokenType('text');
+
+    function setTokenType(type) {
+        if (token.descriptor) return;
+        token.descriptor = {
+            name: type,
+            def: publicDirectives[type],
+            expression: token.value
+        };
+    }
+
+    return el
+}
+
+
+
+/**
+ * 解析文本
+ * @return {[type]} [description]
+ */
+function parseText(text) {
+    var tokens = [];
+    var match, index, html, value, first, oneTime;
+    while (match = tagRE.exec(text)) {
+        index = match.index;
+        html = htmlRE.test(match[0]);
+        value = html ? match[1] : match[2];
+        first = value.charCodeAt(0);
+        oneTime = first === 42; // *
+        value = oneTime ? value.slice(1) : value;
+        tokens.push({
+            tag: true,
+            value: value.trim(),
+            html: html,
+            oneTime: oneTime
+        });
+    }
+    return tokens;
+}
+
 
 
 /**

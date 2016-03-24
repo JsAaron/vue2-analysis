@@ -9,47 +9,63 @@
 <body>
     <script type="text/javascript" src="vue.js"></script>
 </body>
+
 <div id="app">
-    <input v-model="newTodo" v-on:keyup.enter="addTodo">
-    <ul>
-        <li v-for="todo in todos">
-            <span>{{ todo.text }}</span>
-            <button v-on:click="removeTodo($index)">X</button>
-        </li>
-    </ul>
+    <a >{{ message }}</a>
+    
+    <a v-on:click="show()">点击</a>
+    
 </div>
+
 <script type="text/javascript">
+
+
+new Vue({
+  el: '#app',
+  data: {
+    message: 'Hello Vue.js!'
+  },
+  methods:{
+    show:function(){
+        this.message = "aaron"
+    }
+  }
+})
 
 
 // Vue.config.async = false
 
-var vm = new Vue({
-    el: '#app',
-    data: {
-        newTodo: '',
-        todos: [{
-            text: 'Add some todos'
-        }]
-    },
-    methods: {
-        addTodo: function() {
-            var text = this.newTodo.trim()
-            if (text) {
-                this.todos.push({
-                    text: text
-                })
-                this.newTodo = ''
-            }
-        },
-        removeTodo: function(index) {
-            this.todos.splice(index, 1)
-        }
-    }
-})
+// var vm = new Vue({
+//     el: '#app',
+//     data: {
+//         msg:'test123',
+//         newTodo: '',
+//         todos: [{
+//             text: 'Add some todos'
+//         }]
+//     },
+//     methods: {
+//         show:function(index){
+//             alert(index)
+//         },
+//         addTodo: function() {
+//             var text = this.newTodo.trim()
+//             if (text) {
+//                 this.todos.push({
+//                     text: text
+//                 })
+//                 this.newTodo = ''
+//             }
+//         },
+//         removeTodo: function(index) {
+//             this.todos.splice(index, 1)
+//         }
+//     }
+// })
 
-vm.$watch('newTodo', function (val) {
-  console.log(val)
-})
+// vm.$watch('newTodo', function (val) {
+//   console.log(val)
+// })
 
 </script>
 

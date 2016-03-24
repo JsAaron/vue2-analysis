@@ -65,7 +65,7 @@ Object.defineProperty(Ue.prototype, '$data', {
     }
 })
 
-
+ 
 /**
  * 构建实例的作用域
  * 包含
@@ -190,11 +190,9 @@ Ue.prototype.$mount = function(el) {
  * @return {[type]}    [description]
  */
 Ue.prototype._compile = function(el) {
-
     var options = this.$options;
     //编译节点
     var contentUnlinkFn = compile(el, options)(this, el);
-
 }
 
 

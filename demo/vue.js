@@ -6623,7 +6623,13 @@
         // link function for the node itself.
         var nodeLinkFn = partial || !options._asComponent ? compileNode(el, options) : null;
         // link function for the childNodes
-        var childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) && el.tagName !== 'SCRIPT' && el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null;
+        var childLinkFn = null;
+
+        if (!(nodeLinkFn && nodeLinkFn.terminal) && el.tagName !== 'SCRIPT') {
+            if(el.hasChildNodes()){
+                compileNodeList(el.childNodes, options)
+            }   
+        }
 
         /**
          * A composite linker function to be called on a already
@@ -7021,7 +7027,12 @@
         for (var i = 0, l = nodeList.length; i < l; i++) {
             node = nodeList[i];
             nodeLinkFn = compileNode(node, options);
-            childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) && node.tagName !== 'SCRIPT' && node.hasChildNodes() ? compileNodeList(node.childNodes, options) : null;
+            childLinkFn = null
+                if (!(nodeLinkFn && nodeLinkFn.terminal) && node.tagName !== 'SCRIPT') {
+                    if (node.hasChildNodes()) {
+                        compileNodeList(node.childNodes, options)
+                    }
+                }
             linkFns.push(nodeLinkFn, childLinkFn);
         }
         return linkFns.length ? makeChildLinkFn(linkFns) : null;
