@@ -4,7 +4,9 @@
 ****
 npm install
 
-gulp
+######提供两种打包方案
+
+gulp rollup
 
 gulp webpack
 

@@ -422,7 +422,7 @@
 	            if (nodeLinkFn) nodeLinkFn(vm, el, host, scope, frag);
 	            if (childLinkFn) childLinkFn(vm, childNodes, host, scope, frag);
 	        }, vm);
-	        return makeUnlinkFn(vm, dirs);
+	        // return makeUnlinkFn(vm, dirs)
 	    };
 	}
 

@@ -16,12 +16,12 @@ var src      = root + '/src'
 var dest     = root
 var packName = 'Ue'
 
+
 /**
  * web server
  * @return {[type]}   [description]
  */
 gulp.task('server', function() {
-    return
     browserSync.init({
         server    : root,
         index     : 'index.html',
@@ -32,7 +32,7 @@ gulp.task('server', function() {
         files: [root + "/Ue.js", root + "/index.html"] //监控变化
     });
 })
-
+ 
 function logError(e) {
     console.log(e)
 }
