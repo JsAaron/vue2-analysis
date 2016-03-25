@@ -45,6 +45,8 @@ Ue.prototype._init = function(options) {
 
     //所有指令合集
     this._directives = []
+    //所有观察对象
+    this._watchers = []
 
     //el存在,开始编译
     if (options.el) {

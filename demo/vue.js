@@ -7983,6 +7983,7 @@ var template = Object.freeze({
 
       // copy def properties
       var def = descriptor.def;
+      console.log(def)
       if (typeof def === 'function') {
         this.update = def;
       } else {

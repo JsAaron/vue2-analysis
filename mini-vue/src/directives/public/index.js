@@ -1,9 +1,11 @@
 /**
- * æŒ‡ä»¤
+ * Ö¸Áî
  */
 import on from './on'
+import text from './text'
 import model from './model/index'
 export default {
-  on,
-  model
+    on,
+    model,
+    text
 }

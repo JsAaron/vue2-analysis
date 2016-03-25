@@ -59,8 +59,12 @@ function linkAndCapture(linker, vm) {
     //指令数
     var originalDirCount = vm._directives.length
     linker()
-
-
+    //拷贝指令
+    var dirs = vm._directives.slice(originalDirCount);
+    //指令初始化
+    for (var i = 0, l = dirs.length; i < l; i++) {
+        dirs[i]._bind();
+    }
     return
 }
 
@@ -209,10 +213,13 @@ function processTextToken(token, options) {
 
     function setTokenType(type) {
         if (token.descriptor) return;
+        if(!publicDirectives[type]){
+            console.log('指令没找到',type)
+        }
         token.descriptor = {
-            name: type,
-            def: publicDirectives[type],
-            expression: token.value
+            name       : type,
+            def        : publicDirectives[type],
+            expression : token.value
         };
     }
     return el
@@ -236,7 +243,7 @@ function makeTextNodeLinkFn(tokens, frag) {
         replace(el, fragClone);
     };
 }
- 
+
 
 /**
  * 解析文本

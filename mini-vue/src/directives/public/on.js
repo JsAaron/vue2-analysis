@@ -1,6 +1,7 @@
 
 
 export default {
+	test:'on',
     bind: function() {
 
     },
