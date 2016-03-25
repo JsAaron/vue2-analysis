@@ -1,7 +1,6 @@
 import config from '../config'
 import {
     extend,
-    set,
     isObject,
     isArray,
     isPlainObject,

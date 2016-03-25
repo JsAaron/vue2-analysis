@@ -10,28 +10,25 @@
     <script type="text/javascript" src="Ue.js"></script>
 </body>
 <div id="app">
-    <a >{{ message }}</a>
-    
-    <a v-on:click="show()">点击</a>
-    
+    <a>{{ message }}</a>
+    <ul>
+        <li>
+            <a v-on:click="show()">点击</a>
+        </li>
+    </ul>
 </div>
-
 <script type="text/javascript">
-
-
 new Ue({
-  el: '#app',
-  data: {
-    message: 'Hello Vue.js!'
-  },
-  methods:{
-    show:function(){
-        this.message = "aaron"
+    el: '#app',
+    data: {
+        message: 'Hello Vue.js!'
+    },
+    methods: {
+        show: function() {
+            this.message = "aaron"
+        }
     }
-  }
 })
-
-
 </script>
 
 </html>

@@ -43,9 +43,6 @@ export function compile(el, options, partial) {
 
     return function compositeLinkFn(vm, el, host, scope, frag) {
         var childNodes = toArray(el.childNodes);
-
-
-        return
         //初始化link
         var dirs = linkAndCapture(function compositeLinkCapturer() {
             if (nodeLinkFn) nodeLinkFn(vm, el, host, scope, frag)
@@ -54,15 +51,16 @@ export function compile(el, options, partial) {
         return makeUnlinkFn(vm, dirs)
     };
 
-}
+} 
 
 
 function linkAndCapture(linker, vm) {
+    //指令数
     var originalDirCount = vm._directives.length
     linker()
 
-
-    return dirs
+ 
+    return 
 }
 
 
@@ -112,7 +110,7 @@ function makeChildLinkFn(linkFns) {
     }
 }
 
-
+ 
 
 //************************
 //      编译本身节点
@@ -167,13 +165,11 @@ function compileElement(el, options) {
  * @return {[type]} [description]
  */
 function compileTextNode(node, options) {
-
     //保证必须有值
     var tokens = parseText(node.wholeText);
     if (!tokens) {
         return null;
     }
-
     var frag = document.createDocumentFragment();
     var el, token;
     for (var i = 0, l = tokens.length; i < l; i++) {
@@ -188,7 +184,7 @@ function compileTextNode(node, options) {
 
 function makeTextNodeLinkFn(tokens, frag) {
     return function textNodeLinkFn(vm, el, host, scope) {
-        console.log('text link')
+        console.log('返回文本makeTextNodeLinkFn')
     };
 }
 

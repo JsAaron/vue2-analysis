@@ -9,27 +9,25 @@
 <body>
     <script type="text/javascript" src="vue.js"></script>
 </body>
-
 <div id="app">
-    <a >{{ message }}</a>
-    
-    <a v-on:click="show()">点击</a>
-    
+    <a>{{ message }}</a>
+    <ul>
+        <li>
+            <a v-on:click="show()">点击</a>
+        </li>
+    </ul>
 </div>
-
 <script type="text/javascript">
-
-
 new Vue({
-  el: '#app',
-  data: {
-    message: 'Hello Vue.js!'
-  },
-  methods:{
-    show:function(){
-        this.message = "aaron"
+    el: '#app',
+    data: {
+        message: 'Hello Vue.js!'
+    },
+    methods: {
+        show: function() {
+            this.message = "aaron"
+        }
     }
-  }
 })
 
 
@@ -66,7 +64,6 @@ new Vue({
 // vm.$watch('newTodo', function (val) {
 //   console.log(val)
 // })
-
 </script>
 
 </html>
