@@ -16,3 +16,18 @@ export function query(el) {
     return el
 }
 
+
+
+/**
+ * 通过el替换target节点
+ *
+ * @param {Element} target
+ * @param {Element} el
+ */
+
+export function replace (target, el) {
+  var parent = target.parentNode
+  if (parent) {
+    parent.replaceChild(el, target)
+  }
+}

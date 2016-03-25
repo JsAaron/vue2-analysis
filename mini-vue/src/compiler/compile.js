@@ -1,6 +1,7 @@
 import publicDirectives from '../directives/public/index'
 import {
-    toArray
+    toArray,
+    replace
 }
 from '../util/index'
 
@@ -45,13 +46,13 @@ export function compile(el, options, partial) {
         var childNodes = toArray(el.childNodes);
         //初始化link
         var dirs = linkAndCapture(function compositeLinkCapturer() {
-            if (nodeLinkFn) nodeLinkFn(vm, el, host, scope, frag)
-            if (childLinkFn) childLinkFn(vm, childNodes, host, scope, frag)
-        }, vm)
-        // return makeUnlinkFn(vm, dirs)
+                if (nodeLinkFn) nodeLinkFn(vm, el, host, scope, frag)
+                if (childLinkFn) childLinkFn(vm, childNodes, host, scope, frag)
+            }, vm)
+            // return makeUnlinkFn(vm, dirs)
     };
 
-} 
+}
 
 
 function linkAndCapture(linker, vm) {
@@ -59,8 +60,8 @@ function linkAndCapture(linker, vm) {
     var originalDirCount = vm._directives.length
     linker()
 
- 
-    return 
+
+    return
 }
 
 
@@ -92,6 +93,8 @@ function compileNodeList(nodeList, options) {
         if (node.hasChildNodes()) {
             //递归
             childLinkFn = compileNodeList(node.childNodes, options)
+        } else {
+            childLinkFn = null;
         }
         linkFns.push(nodeLinkFn, childLinkFn);
     }
@@ -101,16 +104,33 @@ function compileNodeList(nodeList, options) {
 
 /**
  * 生成子节点的link函数
+ * linkFns 
+ *     [nodeLinkFn,childrenLinkFn,nodeLinkFn,childrenLinkFn.......]
+ * linkFns的数组排列是一个父节点linnk一个子节点link
+ * 所以在遍历的时候通过i++的来0,1 | 2,3 这样双取值
+ * 
  * @param  {[type]} linkFns [description]
  * @return {[type]}         [description]
  */
 function makeChildLinkFn(linkFns) {
     return function childLinkFn(vm, nodes, host, scope, frag) {
-        console.log('makeChildLinkFn')
+        var node, nodeLinkFn, childrenLinkFn
+        for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
+            node = nodes[n]
+            nodeLinkFn = linkFns[i++]
+            childrenLinkFn = linkFns[i++]
+            var childNodes = toArray(node.childNodes)
+            if (nodeLinkFn) {
+                nodeLinkFn(vm, node, host, scope, frag)
+            }
+            if (childrenLinkFn) {
+                childrenLinkFn(vm, childNodes, host, scope, frag)
+            }
+        }
     }
 }
 
- 
+
 
 //************************
 //      编译本身节点
@@ -170,6 +190,7 @@ function compileTextNode(node, options) {
     if (!tokens) {
         return null;
     }
+    //创建文档碎片
     var frag = document.createDocumentFragment();
     var el, token;
     for (var i = 0, l = tokens.length; i < l; i++) {
@@ -178,14 +199,6 @@ function compileTextNode(node, options) {
         frag.appendChild(el);
     }
     return makeTextNodeLinkFn(tokens, frag, options);
-}
-
-
-
-function makeTextNodeLinkFn(tokens, frag) {
-    return function textNodeLinkFn(vm, el, host, scope) {
-        console.log('返回文本makeTextNodeLinkFn')
-    };
 }
 
 
@@ -202,11 +215,28 @@ function processTextToken(token, options) {
             expression: token.value
         };
     }
-
     return el
 }
 
 
+function makeTextNodeLinkFn(tokens, frag) {
+    return function textNodeLinkFn(vm, el, host, scope) {
+        var fragClone = frag.cloneNode(true);
+        var childNodes = toArray(fragClone.childNodes);
+        var token, value, node;
+        for (var i = 0, l = tokens.length; i < l; i++) {
+            token = tokens[i];
+            value = token.value;
+            if (token.tag) {
+                node = childNodes[i];
+                vm._bindDir(token.descriptor, node, host, scope);
+            }
+        }
+        //拿文档碎片替换{{}}节点
+        replace(el, fragClone);
+    };
+}
+ 
 
 /**
  * 解析文本
