@@ -155,6 +155,11 @@ Ue.prototype._initData = function() {
 /**
  * 代理一个属性,所以
  * vm.prop === vm._data.prop
+ * 在外面访问
+ * data ={
+ *    message:'aaaa'
+ * }
+ * this.message = > vm._data.message
  * @param  {[type]} key [description]
  * @return {[type]}     [description]
  */

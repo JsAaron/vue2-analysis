@@ -1,9 +1,13 @@
+import Dep from './observer/dep'
 import {
     extend,
     warn
-} from './util/index'
-
-import { parseExpression } from './parsers/expression'
+}
+from './util/index'
+import {
+    parseExpression
+}
+from './parsers/expression'
 
 let uid = 0
 
@@ -36,7 +40,12 @@ export default function Watcher(vm, expOrFn, cb, options) {
     //定义一个标示
     this.id = ++uid
 
+    //dep列表
+    this.deps = []
+
+    this.depIds = Object.create(null)
     this.newDeps = [];
+    this.newDepIds = null
 
     //解析表达式
     //得到setter/getter
@@ -48,7 +57,6 @@ export default function Watcher(vm, expOrFn, cb, options) {
     //获取值
     this.value = this.get();
 
-    console.log(isFn)
 }
 
 
@@ -60,24 +68,73 @@ Watcher.prototype.get = function() {
         value = this.getter.call(scope, scope)
     } catch (e) {
         if (
-            process.env.NODE_ENV !== 'production' &&
-            config.warnExpressionErrors
+            process.env.NODE_ENV !== 'production'
         ) {
             warn(
                 'Error when evaluating expression "' +
-                this.expression + '". ' +
-                (config.debug ? '' : 'Turn on debug mode to see stack trace.'), e
+                this.expression
             )
         }
     }
+    this.afterGet();
+    return value;
 }
- 
+
 
 /**
  * 准备收集依赖
  * @return {[type]} [description]
  */
 Watcher.prototype.beforeGet = function() {
+    /**
+     * 暴露出观察对象
+     * @type {[type]}
+     */
+    Dep.target = this;
     this.newDepIds = Object.create(null);
     this.newDeps.length = 0;
+};
+
+
+/**
+ * 清理依赖收集
+ */
+
+Watcher.prototype.afterGet = function() {
+    Dep.target = null;
+    var i = this.deps.length;
+    while (i--) {
+        var dep = this.deps[i];
+        if (!this.newDepIds[dep.id]) {
+            dep.removeSub(this);
+        }
+    }
+    //重新赋予依赖值
+    this.depIds = this.newDepIds;
+    var tmp = this.deps;
+    this.deps = this.newDeps;
+    this.newDeps = tmp;
+};
+
+
+/**
+ * 给这个指令增加一个依赖
+ * Dep.target.addDep(this)
+ *
+ * value 
+ *   =>getter
+ *   =>Dep.target
+ *   =>dep.depend
+ * @param {Dep} dep
+ */
+
+Watcher.prototype.addDep = function(dep) {
+    var id = dep.id;
+    if (!this.newDepIds[id]) {
+        this.newDepIds[id] = true;
+        this.newDeps.push(dep);
+        if (!this.depIds[id]) {
+            dep.addSub(this);
+        }
+    }
 };

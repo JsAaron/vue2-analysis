@@ -4,10 +4,10 @@
  * Released under the MIT License.
  */
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global.build = factory());
-}(this, function () { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('util/index')) :
+  typeof define === 'function' && define.amd ? define(['util/index'], factory) :
+  (global.build = factory(global.util_index));
+}(this, function (util_index) { 'use strict';
 
   var hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -94,9 +94,9 @@
   /**
    * 错误提示
    */
-  let warn$1;
+  let warn$2;
   const hasConsole = typeof console !== 'undefined';
-  warn$1 = function (msg, e) {
+  warn$2 = function (msg, e) {
       if (hasConsole) {
           console.warn('[Ue warn]: ' + msg);
       }
@@ -269,6 +269,27 @@
     this.subs = [];
   }
 
+  /**
+   * 自我作为一个依赖项添加到目标watcher
+   */
+  Dep.prototype.depend = function () {
+    /**
+     *  Dep.target = this;
+     *  this = new Watcher()
+     *  this.addDep
+     */
+    Dep.target.addDep(this);
+  };
+
+  /**
+   * 添加一个指令订阅者
+   * @param {Directive} sub
+   */
+
+  Dep.prototype.addSub = function (sub) {
+    this.subs.push(sub);
+  };
+
   function Observer(value) {
       this.value = value;
       this.dep = new Dep();
@@ -335,11 +356,16 @@
           enumerable: true,
           configurable: true,
           get: function reactiveGetter() {
-              alert('set');
+              //原始值
+              var value = val;
+              //如果有依赖
+              if (Dep.target) {
+                  dep.depend();
+              }
               return value;
           },
           set: function reactiveSetter(newVal) {
-              alert('get');
+              // alert('get')
           }
       });
   }
@@ -386,9 +412,13 @@
 
       test: 'text',
 
-      bind: function () {},
+      bind: function () {
+          this.attr = this.el.nodeType === 3 ? 'data' : 'textContent';
+      },
 
-      update: function (value) {}
+      update: function (value) {
+          this.el[this.attr] = value;
+      }
   };
 
   var model = {
@@ -765,6 +795,153 @@
       };
   }
 
+  /**
+   * 建立一个getter函数。需要eval。
+   * @param  {[type]} body [description]
+   * @return {[type]}      [description]
+   */
+  function makeGetterFn(body) {
+      try {
+          return new Function('scope', 'return ' + body + ';');
+      } catch (e) {
+          'development' !== 'production' && util_index.warn('Invalid expression. ' + 'Generated function body: ' + body);
+      }
+  }
+
+  /**
+   * 解析表达式
+   * 重写setter/getter
+   * @param  {[type]} exp     [description]
+   * @param  {[type]} needSet [description]
+   * @return {[type]}         [description]
+   */
+  function parseExpression(exp, needSet) {
+      exp = exp.trim();
+      var res = { exp: exp };
+      //简单表达式getter
+      res.get = makeGetterFn('scope.' + exp);
+      return res;
+  }
+
+  let uid$1 = 0;
+
+  /**
+   * watcher用来解析表达式
+   * 收集依赖关系
+   * 当表达式的值被改变触发callback回调函数
+   * 给api或者指令 使用$watch()方法
+   * @param {[type]}   vm      [description]
+   * @param {[type]}   expOrFn [description]
+   * @param {Function} cb      [description]
+   * @param {[type]}   options [description]
+   */
+  function Watcher(vm, expOrFn, cb, options) {
+      //混入参数
+      if (options) {
+          extend(this, options);
+      }
+
+      //表达式是不是函数
+      var isFn = typeof expOrFn === 'function';
+
+      this.vm = vm;
+      //加入this的观察数组
+      vm._watchers.push(this);
+
+      this.expression = expOrFn;
+      this.cb = cb;
+
+      //定义一个标示
+      this.id = ++uid$1;
+
+      //dep列表
+      this.deps = [];
+
+      this.depIds = Object.create(null);
+      this.newDeps = [];
+      this.newDepIds = null;
+
+      //解析表达式
+      //得到setter/getter
+      var res = parseExpression(expOrFn, this.twoWay);
+      this.getter = res.get;
+      this.setter = res.set;
+
+      //获取值
+      this.value = this.get();
+  }
+
+  Watcher.prototype.get = function () {
+      this.beforeGet();
+      var scope = this.scope || this.vm;
+      var value;
+      try {
+          value = this.getter.call(scope, scope);
+      } catch (e) {
+          if ('development' !== 'production') {
+              warn$2('Error when evaluating expression "' + this.expression);
+          }
+      }
+      this.afterGet();
+      return value;
+  };
+
+  /**
+   * 准备收集依赖
+   * @return {[type]} [description]
+   */
+  Watcher.prototype.beforeGet = function () {
+      /**
+       * 暴露出观察对象
+       * @type {[type]}
+       */
+      Dep.target = this;
+      this.newDepIds = Object.create(null);
+      this.newDeps.length = 0;
+  };
+
+  /**
+   * 清理依赖收集
+   */
+
+  Watcher.prototype.afterGet = function () {
+      Dep.target = null;
+      var i = this.deps.length;
+      while (i--) {
+          var dep = this.deps[i];
+          if (!this.newDepIds[dep.id]) {
+              dep.removeSub(this);
+          }
+      }
+      //重新赋予依赖值
+      this.depIds = this.newDepIds;
+      var tmp = this.deps;
+      this.deps = this.newDeps;
+      this.newDeps = tmp;
+  };
+
+  /**
+   * 给这个指令增加一个依赖
+   * Dep.target.addDep(this)
+   *
+   * value 
+   *   =>getter
+   *   =>Dep.target
+   *   =>dep.depend
+   * @param {Dep} dep
+   */
+
+  Watcher.prototype.addDep = function (dep) {
+      var id = dep.id;
+      if (!this.newDepIds[id]) {
+          this.newDepIds[id] = true;
+          this.newDeps.push(dep);
+          if (!this.depIds[id]) {
+              dep.addSub(this);
+          }
+      }
+  };
+
   function noop() {}
 
   /**
@@ -796,7 +973,7 @@
       var name = this.name;
       var descriptor = this.descriptor;
 
-      console.log(descriptor);
+      // console.log(descriptor)
 
       //移除定义的属性
       //v-on: ....
@@ -819,35 +996,61 @@
           this.bind();
       }
 
-      //给上下文对象包装更新方法
-      var dir = this;
-      if (this.update) {
-          this._update = function (val, oldVal) {
-              if (!dir._locked) {
-                  dir.update(val, oldVal);
-              }
-          };
-      } else {
-          this._update = noop;
+      //如果是表达式
+      //并且有更新函数
+      //并且表达式不是函数
+      if (this.expression && this.update && !this._checkStatement()) {
+
+          // console.log(this)
+          //textl类型处理
+          //给上下文对象包装更新方法
+          var dir = this;
+          if (this.update) {
+              this._update = function (val, oldVal) {
+                  if (!dir._locked) {
+                      dir.update(val, oldVal);
+                  }
+              };
+          } else {
+              this._update = noop;
+          }
+
+          var preProcess = this._preProcess ? bind(this._preProcess, this) : null;
+          var postProcess = this._postProcess ? bind(this._postProcess, this) : null;
+          var watcher = this._watcher = new Watcher(this.vm, this.expression, this._update, // callback
+          {
+              filters: this.filters,
+              twoWay: this.twoWay,
+              deep: this.deep,
+              preProcess: preProcess,
+              postProcess: postProcess,
+              scope: this._scope
+          });
+
+          //更新值
+          if (this.update) {
+              this.update(watcher.value);
+          }
       }
+  };
 
-      var preProcess = this._preProcess ? bind(this._preProcess, this) : null;
-      var postProcess = this._postProcess ? bind(this._postProcess, this) : null;
-      // var watcher = this._watcher = new Watcher(
-      //     this.vm,
-      //     this.expression,
-      //     this._update, // callback
-      //     {
-      //         filters     : this.filters,
-      //         twoWay      : this.twoWay,
-      //         deep        : this.deep,
-      //         preProcess  : preProcess,
-      //         postProcess : postProcess,
-      //         scope       : this._scope
-      //     }
-      // );
+  /**
+   * 检查指令是否是函数调用
+   * 并且如果表达式是一个可以调用
+   * 如果两者都满足
+   * 将要包装表达式，并且作为事件处理句柄
+   *
+   * 例如： on-click="a++"
+   *
+   * @return {Boolean}
+   */
 
-      // console.log(this)
+  Directive.prototype._checkStatement = function () {
+      var expression = this.expression;
+      if (expression && this.acceptStatement && !isSimplePath(expression)) {
+
+          return true;
+      }
   };
 
   /**
@@ -915,7 +1118,7 @@
       var el = options.el;
       var props = options.props;
       if (props && !el) {
-          warn$1('在实例化的时候,如果没有el,props不会被变异');
+          warn$2('在实例化的时候,如果没有el,props不会被变异');
       }
       //确保选择器字符串转换成现在的元素
       el = options.el = query(el);
@@ -972,6 +1175,11 @@
   /**
    * 代理一个属性,所以
    * vm.prop === vm._data.prop
+   * 在外面访问
+   * data ={
+   *    message:'aaaa'
+   * }
+   * this.message = > vm._data.message
    * @param  {[type]} key [description]
    * @return {[type]}     [description]
    */

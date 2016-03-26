@@ -1,15 +1,17 @@
-import { _toString } from '../../util/index'
+import {
+    _toString
+}
+from '../../util/index'
 
 export default {
 
-	test:'text',
+    test: 'text',
 
     bind: function() {
-
+        this.attr = this.el.nodeType === 3 ? 'data' : 'textContent'
     },
 
     update: function(value) {
-
+        this.el[this.attr] = value
     }
 }
- 

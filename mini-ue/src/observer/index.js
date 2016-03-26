@@ -77,16 +77,21 @@ export function defineReactive(obj, key, val, doNotObserve) {
         enumerable: true,
         configurable: true,
         get: function reactiveGetter() {
-            alert('set')
+            //原始值
+            var value =  val;
+            //如果有依赖
+            if (Dep.target) {
+                dep.depend();
+            }
             return value
         },
         set: function reactiveSetter(newVal) {
-            alert('get')
+            // alert('get')
         }
-    })
+    }) 
 }
 
-
+ 
 /**
  * 为实例的value创建观察observer
  * 成功：返回一个新的observer
