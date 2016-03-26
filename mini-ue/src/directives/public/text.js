@@ -12,6 +12,6 @@ export default {
     },
 
     update: function(value) {
-        this.el[this.attr] = value
+        this.el[this.attr] = _toString(value)
     }
 }

@@ -49,6 +49,20 @@ export function toArray(list, start) {
 
 
 /**
+ * 文本输出
+ * 如果是null 返回空
+ * 如果有值，通过toString强制转字符串
+ * @param {*} value
+ * @return {String}
+ */
+
+export function _toString (value) {
+  return value == null
+    ? ''
+    : value.toString()
+}
+
+/**
  * 定义一个属性
  *
  * @param {Object} obj
