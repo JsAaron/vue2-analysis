@@ -1,13 +1,13 @@
 /*!
- * Vue.js vundefined
+ * build.js vundefined
  * (c) 2016 Evan You
  * Released under the MIT License.
  */
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('util/index')) :
-  typeof define === 'function' && define.amd ? define(['util/index'], factory) :
-  (global.Ue = factory(global.util_index));
-}(this, function (util_index) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global.build = factory());
+}(this, function () { 'use strict';
 
   var hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -94,9 +94,9 @@
   /**
    * 错误提示
    */
-  let warn$2;
+  let warn$1;
   const hasConsole = typeof console !== 'undefined';
-  warn$2 = function (msg, e) {
+  warn$1 = function (msg, e) {
       if (hasConsole) {
           console.warn('[Ue warn]: ' + msg);
       }
@@ -135,7 +135,7 @@
   /**
    * 配置文件
    */
-  const config$1 = {
+  const config = {
 
       /**
        * 组件列表类型
@@ -144,7 +144,7 @@
       _assetTypes: ['component', 'directive', 'elementDirective', 'filter', 'transition', 'partial']
   };
 
-  var strats = config$1.optionMergeStrategies = Object.create(null);
+  var strats = config.optionMergeStrategies = Object.create(null);
 
   /**
    * 助手递归合并两个数据对象在一起
@@ -177,7 +177,7 @@
       var res = Object.create(parentVal);
       return childVal ? extend(res, guardArrayAssets(childVal)) : res;
   }
-  config$1._assetTypes.forEach(function (type) {
+  config._assetTypes.forEach(function (type) {
       strats[type + 's'] = mergeAssets;
   });
 
@@ -435,6 +435,7 @@
    * @return {[type]}         [description]
    */
   function compile(el, options, partial) {
+
       //编译节点本身
       var nodeLinkFn = compileNode(el, options);
       //编译子节点
@@ -764,101 +765,6 @@
       };
   }
 
-  /**
-   * 建立一个getter函数。需要eval。
-   * @param  {[type]} body [description]
-   * @return {[type]}      [description]
-   */
-  function makeGetterFn(body) {
-      try {
-          return new Function('scope', 'return ' + body + ';');
-      } catch (e) {
-          'development' !== 'production' && util_index.warn('Invalid expression. ' + 'Generated function body: ' + body);
-      }
-  }
-
-  /**
-   * 解析表达式
-   * 重写setter/getter
-   * @param  {[type]} exp     [description]
-   * @param  {[type]} needSet [description]
-   * @return {[type]}         [description]
-   */
-  function parseExpression(exp, needSet) {
-      exp = exp.trim();
-      var res = { exp: exp };
-      //简单表达式getter
-      res.get = makeGetterFn('scope.' + exp);
-      return res;
-  }
-
-  let uid$1 = 0;
-
-  /**
-   * watcher用来解析表达式
-   * 收集依赖关系
-   * 当表达式的值被改变触发callback回调函数
-   * 给api或者指令 使用$watch()方法
-   * @param {[type]}   vm      [description]
-   * @param {[type]}   expOrFn [description]
-   * @param {Function} cb      [description]
-   * @param {[type]}   options [description]
-   */
-  function Watcher(vm, expOrFn, cb, options) {
-      //混入参数
-      if (options) {
-          extend(this, options);
-      }
-
-      //表达式是不是函数
-      var isFn = typeof expOrFn === 'function';
-
-      this.vm = vm;
-      //加入this的观察数组
-      vm._watchers.push(this);
-
-      this.expression = expOrFn;
-      this.cb = cb;
-
-      //定义一个标示
-      this.id = ++uid$1;
-
-      this.newDeps = [];
-
-      //解析表达式
-      //得到setter/getter
-      var res = parseExpression(expOrFn, this.twoWay);
-      this.getter = res.get;
-      this.setter = res.set;
-
-      //获取值
-      this.value = this.get();
-
-      console.log(isFn);
-  }
-
-  Watcher.prototype.get = function () {
-      this.beforeGet();
-      var scope = this.scope || this.vm;
-      var value;
-      try {
-          value = this.getter.call(scope, scope);
-      } catch (e) {
-          if ('development' !== 'production' && config.warnExpressionErrors) {
-              warn$2('Error when evaluating expression "' + this.expression + '". ' + (config.debug ? '' : 'Turn on debug mode to see stack trace.'), e);
-          }
-      }
-  };
-
-  /**
-   * 准备收集依赖
-   * @return {[type]} [description]
-   */
-  Watcher.prototype.beforeGet = function () {
-      this.newDepIds = Object.create(null);
-      this.newDeps.length = 0;
-  };
-
   function noop() {}
 
   /**
@@ -889,6 +795,8 @@
 
       var name = this.name;
       var descriptor = this.descriptor;
+
+      console.log(descriptor);
 
       //移除定义的属性
       //v-on: ....
@@ -925,15 +833,19 @@
 
       var preProcess = this._preProcess ? bind(this._preProcess, this) : null;
       var postProcess = this._postProcess ? bind(this._postProcess, this) : null;
-      var watcher = this._watcher = new Watcher(this.vm, this.expression, this._update, // callback
-      {
-          filters: this.filters,
-          twoWay: this.twoWay,
-          deep: this.deep,
-          preProcess: preProcess,
-          postProcess: postProcess,
-          scope: this._scope
-      });
+      // var watcher = this._watcher = new Watcher(
+      //     this.vm,
+      //     this.expression,
+      //     this._update, // callback
+      //     {
+      //         filters     : this.filters,
+      //         twoWay      : this.twoWay,
+      //         deep        : this.deep,
+      //         preProcess  : preProcess,
+      //         postProcess : postProcess,
+      //         scope       : this._scope
+      //     }
+      // );
 
       // console.log(this)
   };
@@ -947,6 +859,7 @@
   }
 
   Ue.prototype._init = function (options) {
+
       options = options || {};
       this.$el = null;
 
@@ -967,7 +880,7 @@
       if (options.el) {
           this.$mount(options.el);
       }
-      console.log(this);
+      // console.log(this)
   };
 
   Object.defineProperty(Ue.prototype, '$data', {
@@ -1002,7 +915,7 @@
       var el = options.el;
       var props = options.props;
       if (props && !el) {
-          warn$2('在实例化的时候,如果没有el,props不会被变异');
+          warn$1('在实例化的时候,如果没有el,props不会被变异');
       }
       //确保选择器字符串转换成现在的元素
       el = options.el = query(el);

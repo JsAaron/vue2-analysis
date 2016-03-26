@@ -11,10 +11,10 @@ var browserSync = require('browser-sync').create();
 var reload = browserSync.reload;
 
 
-var root     = './mini-vue'
+var root     = './mini-ue'
 var src      = root + '/src'
 var dest     = root
-var packName = 'Ue'
+var packName = 'build'
 
 
 /**
@@ -29,7 +29,7 @@ gulp.task('server', function() {
         logLevel  : "debug",
         logPrefix : "Aaron",
         open      : true,
-        files: [root + "/Ue.js", root + "/index.html"] //监控变化
+        files: [root + "/build.js", root + "/index.html"] //监控变化
     });
 })
  
@@ -44,20 +44,14 @@ function logError(e) {
 
 var banner =
     '/*!\n' +
-    ' * Vue.js v' + version + '\n' +
+    ' * build.js v' + version + '\n' +
     ' * (c) ' + new Date().getFullYear() + ' Evan You\n' +
     ' * Released under the MIT License.\n' +
     ' */'
 
-var main = fs
-    .readFileSync('src/index.js', 'utf-8')
-    .replace(/Vue\.version = '[\d\.]+'/, "Vue.version = '" + version + "'")
-fs.writeFileSync('src/index.js', main)
-
-
 gulp.task('rollup-pack', function() {
     rollup.rollup({
-            entry:  'mini-vue/src/index.js',
+            entry:  src +  '/index.js',
             plugins: [
                 replace({
                     'process.env.NODE_ENV': "'development'"
@@ -67,10 +61,10 @@ gulp.task('rollup-pack', function() {
         })
         .then(function(bundle) {
             console.log(bundle)
-            return write(dest +'/Ue.js', bundle.generate({
+            return write(dest +'/build.js', bundle.generate({
                 format: 'umd',
                 banner: banner,
-                moduleName: 'Ue'
+                moduleName: 'build'
             }).code)
         })
         .catch(logError)

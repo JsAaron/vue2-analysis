@@ -12,20 +12,20 @@
 <div id="app">
     <a>{{ message }}</a>
     <ul>
-        <li>
-            <a v-on:click="show()">点击</a>
-        </li>
+        <li> {{ name }} <a v-on:click="show()">点击</a> </li>
     </ul>
 </div>
 <script type="text/javascript">
 new Vue({
     el: '#app',
     data: {
+        name :"name",
         message: 'Hello Vue.js!'
     },
     methods: {
         show: function() {
-            this.message = "aaron"
+            this.message = "测试点击"
+            this.name = "aaron"
         }
     }
 })

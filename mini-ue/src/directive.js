@@ -1,4 +1,4 @@
-import Watcher from './watcher'
+// import Watcher from './watcher'
 import {
     extend
 }
@@ -37,6 +37,8 @@ Directive.prototype._bind = function() {
     var name = this.name;
     var descriptor = this.descriptor;
 
+    console.log(descriptor)
+
     //移除定义的属性
     //v-on: ....
     if (this.el && this.el.removeAttribute) {
@@ -44,7 +46,7 @@ Directive.prototype._bind = function() {
         this.el.removeAttribute(attr);
     }
 
-    //复制def属性
+    //复制def属性 
     var def = descriptor.def
     if (typeof def === 'function') {
         console.log('def function')
@@ -53,7 +55,7 @@ Directive.prototype._bind = function() {
         extend(this, def)
     }
 
-    //初始化bind方法
+    //初始化bind方法 
     if (this.bind) {
         this.bind();
     }
@@ -73,19 +75,19 @@ Directive.prototype._bind = function() {
 
     var preProcess  = this._preProcess ? bind(this._preProcess, this) : null
     var postProcess = this._postProcess ? bind(this._postProcess, this) : null
-    var watcher = this._watcher = new Watcher(
-        this.vm,
-        this.expression,
-        this._update, // callback
-        {
-            filters     : this.filters,
-            twoWay      : this.twoWay,
-            deep        : this.deep,
-            preProcess  : preProcess,
-            postProcess : postProcess,
-            scope       : this._scope
-        }
-    );
+    // var watcher = this._watcher = new Watcher(
+    //     this.vm,
+    //     this.expression,
+    //     this._update, // callback
+    //     {
+    //         filters     : this.filters,
+    //         twoWay      : this.twoWay,
+    //         deep        : this.deep,
+    //         preProcess  : preProcess,
+    //         postProcess : postProcess,
+    //         scope       : this._scope
+    //     }
+    // );
 
     // console.log(this)
 

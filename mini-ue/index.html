@@ -3,32 +3,38 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Vue + Webpack</title>
+    <title>处理用户输入</title>
 </head>
 
 <body>
-    <script type="text/javascript" src="Ue.js"></script>
+    <script type="text/javascript" src="build.js"></script>
 </body>
+
 <div id="app">
     <a>{{ message }}</a>
     <ul>
-        <li>
-            <a v-on:click="show()">点击</a>
-        </li>
+        <li> {{ name }} <a v-on:click="change()">点击</a> </li>
     </ul>
 </div>
+
+
 <script type="text/javascript">
+
+
 new Ue({
     el: '#app',
     data: {
+        name: "name",
         message: 'Hello Vue.js!'
     },
     methods: {
-        show: function() {
-            this.message = "aaron"
+        change: function() {
+            this.message = "测试点击"
+            this.name = "aaron"
         }
     }
 })
+
 </script>
 
 </html>

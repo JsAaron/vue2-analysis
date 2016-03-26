@@ -24,10 +24,11 @@ import Directive from '../directive'
  */
 function Ue(options) {
     this._init(options)
-}
+} 
 
 
 Ue.prototype._init = function(options) {
+
     options = options || {}
     this.$el = null;
 
@@ -52,7 +53,7 @@ Ue.prototype._init = function(options) {
     if (options.el) {
         this.$mount(options.el);
     }
-    console.log(this)
+    // console.log(this)
 }
 
 
@@ -195,7 +196,7 @@ Ue.prototype._compile = function(el) {
     var options = this.$options;
     //编译节点
     var contentUnlinkFn = compile(el, options)(this, el);
-}
+} 
 
 
 /**

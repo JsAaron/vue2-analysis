@@ -36,11 +36,11 @@ var htmlRE = /^\{\{\{.*\}\}\}$/
  * @return {[type]}         [description]
  */
 export function compile(el, options, partial) {
+
     //编译节点本身
     var nodeLinkFn = compileNode(el, options);
     //编译子节点
     var childLinkFn = el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null;
-
 
     return function compositeLinkFn(vm, el, host, scope, frag) {
         var childNodes = toArray(el.childNodes);
