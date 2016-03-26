@@ -1,5 +1,5 @@
 
-#Vue源码学习
+###Vue源码学习  Vue.js v1.0.18
 
 ****
 npm install
