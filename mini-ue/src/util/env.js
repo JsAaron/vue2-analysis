@@ -11,6 +11,10 @@ export const nextTick = (function() {
     var pending = false
     var timerFunc
 
+    /**
+     * 触发所有更新
+     * @return {[type]} [description]
+     */
     function nextTickHandler() {
         pending = false
         var copies = callbacks.slice(0)
@@ -60,4 +64,4 @@ export const nextTick = (function() {
         pending = true
         timerFunc(nextTickHandler, 0)
     }
-})()
+})() 

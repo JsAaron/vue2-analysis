@@ -160,7 +160,7 @@
 	/**
 	 * 配置文件
 	 */
-	const config = {
+	const config$1 = {
 
 	    /**
 	     * 组件列表类型
@@ -169,7 +169,7 @@
 	    _assetTypes: ['component', 'directive', 'elementDirective', 'filter', 'transition', 'partial']
 	};
 
-	var strats = config.optionMergeStrategies = Object.create(null);
+	var strats = config$1.optionMergeStrategies = Object.create(null);
 
 	/**
 	 * 助手递归合并两个数据对象在一起
@@ -202,7 +202,7 @@
 	    var res = Object.create(parentVal);
 	    return childVal ? extend(res, guardArrayAssets(childVal)) : res;
 	}
-	config._assetTypes.forEach(function (type) {
+	config$1._assetTypes.forEach(function (type) {
 	    strats[type + 's'] = mergeAssets;
 	});
 
@@ -282,6 +282,73 @@
 
 	    return options;
 	}
+
+	/**
+	 * 异步延迟一个任务来执行它
+	 * 我们利用MutationObserver来执行
+	 * 否则用setTimeout(0)
+	 * @param  {Array}  ) {              
+	 * @return {[type]}   [description]
+	 */
+	const nextTick = function () {
+	    var callbacks = [];
+	    var pending = false;
+	    var timerFunc;
+
+	    /**
+	     * 触发所有更新
+	     * @return {[type]} [description]
+	     */
+	    function nextTickHandler() {
+	        pending = false;
+	        var copies = callbacks.slice(0);
+	        callbacks = [];
+	        for (var i = 0; i < copies.length; i++) {
+	            copies[i]();
+	        }
+	    }
+
+	    //Mutation Observer（变动观察器）是监视DOM变动的接口。
+	    //当DOM对象树发生任何变动时，Mutation Observer会得到通知。
+	    //这样设计是为了应付DOM变动频繁的情况。
+	    //举例来说，
+	    // 如果在文档中连续插入1000个段落（p元素），
+	    // 会连续触发1000个插入事件，执行每个事件的回调函数，
+	    // 这很可能造成浏览器的卡顿；而MutationObserver完全不同，
+	    // 只在1000个段落都插入结束后才会触发，而且只触发一次。
+	    //
+	    // MutationObserver所观察的DOM变动（即上面代码的option对象），包含以下类型：
+	    // 	    childList：子元素的变动
+	    //	    attributes：属性的变动
+	    //  	characterData：节点内容或节点文本的变动
+	    //    	subtree：所有下属节点（包括子节点和子节点的子节点）的变动
+	    if (typeof MutationObserver !== 'undefined') {
+	        var counter = 1;
+	        var observer = new MutationObserver(nextTickHandler);
+	        var textNode = document.createTextNode(counter);
+	        observer.observe(textNode, {
+	            characterData: true
+	        });
+	        timerFunc = function () {
+	            counter = (counter + 1) % 2;
+	            textNode.data = counter;
+	        };
+	    } else {
+	        const context = inBrowser ? window : typeof global !== 'undefined' ? global : {};
+	        timerFunc = context.setImmediate || setTimeout;
+	    }
+	    return function (cb) {
+	        var func = cb;
+	        callbacks.push(func);
+
+	        //状态控制
+	        //如果执行了就不在调用
+	        //等一下次完毕
+	        if (pending) return;
+	        pending = true;
+	        timerFunc(nextTickHandler, 0);
+	    };
+	}();
 
 	let uid = 0;
 
@@ -882,9 +949,67 @@
 
 	/**
 	 * watcher批量处理器
+	 *
+	 * 有两个分开的队列
+	 * 一个用于指令directive更新
+	 * 一个是用来给用户注册的$watch()
+	 * 
 	 */
 
-	function pushWatcher(watcher) {}
+	var queue = [];
+	var has = {};
+	var queueIndex;
+
+	/**
+	 * 冲洗两个队列和运行观察对象
+	 */
+	function flushBatcherQueue() {
+	    runBatcherQueue(queue);
+	}
+
+	/**
+	 * 在单个队列中运行watchers
+	 * @param {Array} queue
+	 * queue 
+	 *   watcher对象合集
+	 */
+
+	function runBatcherQueue(queue) {
+	    for (queueIndex = 0; queueIndex < queue.length; queueIndex++) {
+	        var watcher = queue[queueIndex];
+	        var id = watcher.id;
+	        //清空标记
+	        has[id] = null;
+	        watcher.run();
+	        // in dev build, check and stop circular updates.
+	        if ('development' !== 'production' && has[id] != null) {
+	            circular[id] = (circular[id] || 0) + 1;
+	            if (circular[id] > config._maxUpdateCount) {
+	                queue.splice(has[id], 1);
+	                warn('You may have an infinite update loop for watcher ' + 'with expression: ' + watcher.expression);
+	            }
+	        }
+	    }
+	}
+
+	/**
+	 * 增加一个watcher对象到这个watcher队列
+	 * @param  {[type]} watcher [description]
+	 * @return {[type]}         [description]
+	 */
+	function pushWatcher(watcher) {
+
+	    var id = watcher.id;
+
+	    if (has[id] == null) {
+	        var q = queue;
+	        has[id] = q.length;
+	        //指令队列
+	        q.push(watcher);
+	        //更新动作
+	        nextTick(flushBatcherQueue);
+	    }
+	}
 
 	/**
 	 * 建立一个getter函数。需要eval。
@@ -1049,6 +1174,25 @@
 	Watcher.prototype.update = function (shallow) {
 	    //加入water列表
 	    pushWatcher(this);
+	};
+
+	/**
+	 * Batcher工作的接口
+	 * 提供给被Batcher方法调用
+	 * nextTickHandler
+	 * 在watcher队列运行
+	 */
+
+	Watcher.prototype.run = function () {
+	    //新值
+	    var value = this.get();
+	    if (value !== this.value) {
+	        //旧值
+	        var oldValue = this.value;
+	        //设置新值
+	        this.value = value;
+	        this.cb.call(this.vm, value, oldValue);
+	    }
 	};
 
 	function noop() {}

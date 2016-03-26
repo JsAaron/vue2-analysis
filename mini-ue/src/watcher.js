@@ -154,3 +154,24 @@ Watcher.prototype.update = function(shallow) {
     //加入water列表
     pushWatcher(this);
 };
+
+
+
+/**
+ * Batcher工作的接口
+ * 提供给被Batcher方法调用
+ * nextTickHandler
+ * 在watcher队列运行
+ */
+
+Watcher.prototype.run = function() {
+    //新值
+    var value = this.get();
+    if(value !== this.value){
+        //旧值
+        var oldValue = this.value;
+        //设置新值
+        this.value = value;
+        this.cb.call(this.vm, value, oldValue);
+    }
+}   
