@@ -35,7 +35,7 @@ Observer.prototype.walk = function(obj) {
     }
 }
 
-
+ 
 /**
  * 转化一个属性转换成getter / setter
  * 所以当这个属性被改变的时候，我们能触发这个事件

@@ -19,6 +19,32 @@ export function query(el) {
 
 
 /**
+ * 绑定shij
+ *
+ * @param {Element} el
+ * @param {String} event
+ * @param {Function} cb
+ * @param {Boolean} [useCapture]
+ */
+
+export function on (el, event, cb, useCapture) {
+  el.addEventListener(event, cb, useCapture)
+}
+
+/**
+ * 销毁事件
+ *
+ * @param {Element} el
+ * @param {String} event
+ * @param {Function} cb
+ */
+
+export function off (el, event, cb) {
+  el.removeEventListener(event, cb)
+}
+
+
+/**
  * 通过el替换target节点
  *
  * @param {Element} target

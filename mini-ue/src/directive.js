@@ -4,6 +4,12 @@ import {
 }
 from './util/index'
 
+import {
+    parseExpression,
+    isSimplePath
+}
+from './parsers/expression'
+
 function noop() {}
 
 /**
@@ -20,6 +26,8 @@ export default function Directive(descriptor, vm, el, host, scope, frag) {
     this.el = el;
     this.descriptor = descriptor;
     this.name = descriptor.name;
+    //事件name
+    this.arg = descriptor.arg;
     this.expression = descriptor.expression;
 }
 
@@ -60,7 +68,6 @@ Directive.prototype._bind = function() {
         this.bind();
     }
 
-
     //如果是表达式
     //并且有更新函数
     //并且表达式不是函数
@@ -80,29 +87,28 @@ Directive.prototype._bind = function() {
             this._update = noop;
         }
 
-
         var preProcess = this._preProcess ? bind(this._preProcess, this) : null
         var postProcess = this._postProcess ? bind(this._postProcess, this) : null
-            var watcher = this._watcher = new Watcher(
-                this.vm,
-                this.expression,
-                this._update, // callback
-                {
-                    filters     : this.filters,
-                    twoWay      : this.twoWay,
-                    deep        : this.deep,
-                    preProcess  : preProcess,
-                    postProcess : postProcess,
-                    scope       : this._scope
-                }
-            );
+        var watcher = this._watcher = new Watcher(
+            this.vm,
+            this.expression,
+            this._update, // callback
+            {
+                filters: this.filters,
+                twoWay: this.twoWay,
+                deep: this.deep,
+                preProcess: preProcess,
+                postProcess: postProcess,
+                scope: this._scope
+            }
+        );
 
         //更新值
         if (this.update) {
             this.update(watcher.value);
         }
 
-    } 
+    }
 
 
 }
@@ -116,12 +122,30 @@ Directive.prototype._bind = function() {
  *
  * 例如： on-click="a++"
  *
+ * on 指令
+ *     acceptStatement：true
+ * 
  * @return {Boolean}
  */
 
 Directive.prototype._checkStatement = function() {
     var expression = this.expression;
+
     if (expression && this.acceptStatement && !isSimplePath(expression)) {
+        //生成求值方法
+        var fn = parseExpression(expression).get;
+
+        var scope = this.vm;
+
+        //事件回调
+        var handler = function handler(e) {
+            scope.$event = e;
+            fn.call(scope, scope);
+            scope.$event = null;
+        };
+
+        //绑定事件
+        this.update(handler);
 
         return true;
     }

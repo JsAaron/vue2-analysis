@@ -8040,7 +8040,7 @@
             this.bind();
         }
         this._bound = true;
-
+console.log(this)
         if (this.literal) {
             this.update && this.update(descriptor.raw);
         } else if (

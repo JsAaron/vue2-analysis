@@ -53,7 +53,7 @@ Ue.prototype._init = function(options) {
     if (options.el) {
         this.$mount(options.el);
     }
-    // console.log(this)
+    console.log("####" , this)
 }
 
 

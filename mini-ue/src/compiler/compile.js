@@ -16,10 +16,10 @@ const dirAttrRE = /^v-([^:]+)(?:$|:(.*)$)/
 //定义终端指令
 export const terminalDirectives = [
     'for',
-    'if'
-]
+    'if'  
+]   
 
-var tagRE = /\{\{\{(.+?)\}\}\}|\{\{(.+?)\}\}/g
+var tagRE =  /\{\{\{(.+?)\}\}\}|\{\{(.+?)\}\}/g
 var htmlRE = /^\{\{\{.*\}\}\}$/
 
 
@@ -189,11 +189,12 @@ function compileElement(el, options) {
  * @return {[type]} [description]
  */
 function compileTextNode(node, options) {
-    //保证必须有值
+    //保证必须正确的值
     var tokens = parseText(node.wholeText);
     if (!tokens) {
         return null;
     }
+
     //创建文档碎片
     var frag = document.createDocumentFragment();
     var el, token;
@@ -226,6 +227,16 @@ function processTextToken(token, options) {
 }
 
 
+/**
+ * 文本处理 {{ message}}
+ * 通过文档碎片
+ * 解析出tokens的数组合集
+ * 然后通过每一个tokens填充文档中每一个node
+ *  node = childNodes[i];
+ * @param  {[type]} tokens [description]
+ * @param  {[type]} frag   [description]
+ * @return {[type]}        [description]
+ */
 function makeTextNodeLinkFn(tokens, frag) {
     return function textNodeLinkFn(vm, el, host, scope) {
         var fragClone = frag.cloneNode(true);
@@ -236,6 +247,7 @@ function makeTextNodeLinkFn(tokens, frag) {
             value = token.value;
             if (token.tag) {
                 node = childNodes[i];
+                //创建指令
                 vm._bindDir(token.descriptor, node, host, scope);
             }
         }
@@ -247,18 +259,35 @@ function makeTextNodeLinkFn(tokens, frag) {
 
 /**
  * 解析文本
+ * 包含："前后空格"
+ * " {{ name }} "
+ * 
  * @return {[type]} [description]
  */
 function parseText(text) {
+
+    //去掉换行
+    text = text.replace(/\n/g, '');
+
+
+    //如果不是ue能解析的文本
+    //必须是{{ }} 包含的节点
+    //比如:内容"中文节点"
+    //<a v-on:click="show()">点击</a> 
+    // "点击"=》text 就retrun
+    if (!/\s*\{\{/.test(text)) {
+        return null;
+    }      
+
     var tokens = [];
     var match, index, html, value, first, oneTime;
     while (match = tagRE.exec(text)) {
-        index = match.index;
-        html = htmlRE.test(match[0]);
-        value = html ? match[1] : match[2];
-        first = value.charCodeAt(0);
+        index   = match.index;
+        html    = htmlRE.test(match[0]);
+        value   = html ? match[1] : match[2];
+        first   = value.charCodeAt(0);
         oneTime = first === 42; // *
-        value = oneTime ? value.slice(1) : value;
+        value   = oneTime ? value.slice(1) : value;
         tokens.push({
             tag: true,
             value: value.trim(),
@@ -268,7 +297,7 @@ function parseText(text) {
     }
     return tokens;
 }
-
+ 
 
 
 /**
@@ -325,8 +354,10 @@ function compileDirectives(attrs, options) {
     while (i--) {
         //找到每一个属性
         attr = attrs[i]
-            //属性值
+        //属性名
         name = rawName = attr.name;
+        //属性值
+        value = rawValue = attr.value;
 
         //事件绑定
         //v-on: | @
@@ -359,7 +390,8 @@ function compileDirectives(attrs, options) {
             attr: rawName,
             raw: rawValue,
             def: def,
-            arg: arg
+            arg: arg,
+            expression: value,
         });
     }
 

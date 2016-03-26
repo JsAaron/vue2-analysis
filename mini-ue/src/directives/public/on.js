@@ -1,17 +1,19 @@
-
+import {
+    on, off, warn
+}
+from '../../util/index'
 
 export default {
-	test:'on',
+    test: 'on',
+
+    acceptStatement: true,
+
     bind: function() {
 
     },
-    update: function() {
-
-    },
-    update: function() {
-
-    },
-    update: function() {
-
+    update: function(handler) {
+        this.handler = handler;
+        on(this.el, this.arg, this.handler, 'fasle');
     }
 }
+ 
