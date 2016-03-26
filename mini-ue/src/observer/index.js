@@ -4,7 +4,8 @@ import {
     hasOwn,
     isArray,
     isPlainObject,
-} from '../util/index'
+}
+from '../util/index'
 
 
 export function Observer(value) {
@@ -35,7 +36,7 @@ Observer.prototype.walk = function(obj) {
     }
 }
 
- 
+
 /**
  * 转化一个属性转换成getter / setter
  * 所以当这个属性被改变的时候，我们能触发这个事件
@@ -76,22 +77,33 @@ export function defineReactive(obj, key, val, doNotObserve) {
     Object.defineProperty(obj, key, {
         enumerable: true,
         configurable: true,
+        //获取
         get: function reactiveGetter() {
             //原始值
-            var value =  val;
+            var value = val;
             //如果有依赖
+            //增加依赖
             if (Dep.target) {
                 dep.depend();
             }
             return value
         },
+        //设置
         set: function reactiveSetter(newVal) {
-            // alert('get')
+            var value = val;
+            if (newVal === value) {
+                return
+            }
+            //更新值
+            val = newVal
+
+            //依赖通知
+            dep.notify();
         }
-    }) 
+    })
 }
 
- 
+
 /**
  * 为实例的value创建观察observer
  * 成功：返回一个新的observer

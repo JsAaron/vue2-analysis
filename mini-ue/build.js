@@ -308,11 +308,25 @@
 
 	/**
 	 * 添加一个指令订阅者
-	 * @param {Directive} sub
+	 * @param {Directive} sub => watcher对象
 	 */
 
 	Dep.prototype.addSub = function (sub) {
 	  this.subs.push(sub);
+	};
+
+	/**
+	 * 更新
+	 * 通知所有用户的一个新值。
+	 * @return {[type]} [description]
+	 */
+	Dep.prototype.notify = function () {
+	  //subs就是watcher对象的合集
+	  var subs = toArray(this.subs);
+	  for (var i = 0, l = subs.length; i < l; i++) {
+	    //watcher.update
+	    subs[i].update();
+	  }
 	};
 
 	function Observer(value) {
@@ -380,17 +394,28 @@
 	    Object.defineProperty(obj, key, {
 	        enumerable: true,
 	        configurable: true,
+	        //获取
 	        get: function reactiveGetter() {
 	            //原始值
 	            var value = val;
 	            //如果有依赖
+	            //增加依赖
 	            if (Dep.target) {
 	                dep.depend();
 	            }
 	            return value;
 	        },
+	        //设置
 	        set: function reactiveSetter(newVal) {
-	            // alert('get')
+	            var value = val;
+	            if (newVal === value) {
+	                return;
+	            }
+	            //更新值
+	            val = newVal;
+
+	            //依赖通知
+	            dep.notify();
 	        }
 	    });
 	}
@@ -856,6 +881,12 @@
 	}
 
 	/**
+	 * watcher批量处理器
+	 */
+
+	function pushWatcher(watcher) {}
+
+	/**
 	 * 建立一个getter函数。需要eval。
 	 * @param  {[type]} body [description]
 	 * @return {[type]}      [description]
@@ -997,7 +1028,6 @@
 	 *   =>dep.depend
 	 * @param {Dep} dep
 	 */
-
 	Watcher.prototype.addDep = function (dep) {
 	    var id = dep.id;
 	    if (!this.newDepIds[id]) {
@@ -1007,6 +1037,18 @@
 	            dep.addSub(this);
 	        }
 	    }
+	};
+
+	/**
+	 * 订阅接口
+	 * 当依赖被改变时候调用
+	 * _data setter = >调用
+	 * @param  {[type]} shallow [description]
+	 * @return {[type]}         [description]
+	 */
+	Watcher.prototype.update = function (shallow) {
+	    //加入water列表
+	    pushWatcher(this);
 	};
 
 	function noop() {}

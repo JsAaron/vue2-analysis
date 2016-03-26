@@ -1,5 +1,9 @@
 import Dep from './observer/dep'
 import {
+    pushWatcher
+}
+from './batcher'
+import {
     extend,
     warn
 }
@@ -127,7 +131,6 @@ Watcher.prototype.afterGet = function() {
  *   =>dep.depend
  * @param {Dep} dep
  */
-
 Watcher.prototype.addDep = function(dep) {
     var id = dep.id;
     if (!this.newDepIds[id]) {
@@ -137,4 +140,17 @@ Watcher.prototype.addDep = function(dep) {
             dep.addSub(this);
         }
     }
+};
+
+
+/**
+ * 订阅接口
+ * 当依赖被改变时候调用
+ * _data setter = >调用
+ * @param  {[type]} shallow [description]
+ * @return {[type]}         [description]
+ */
+Watcher.prototype.update = function(shallow) {
+    //加入water列表
+    pushWatcher(this);
 };
