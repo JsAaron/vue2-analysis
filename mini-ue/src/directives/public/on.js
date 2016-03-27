@@ -13,7 +13,9 @@ export default {
     },
     update: function(handler) {
         this.handler = handler;
-        on(this.el, this.arg, this.handler, 'fasle');
+        on(this.el, this.arg, function(e){
+        	handler(e)
+        }, 'fasle');
     }
 }
  

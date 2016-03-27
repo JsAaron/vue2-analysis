@@ -525,7 +525,9 @@
 	    bind: function () {},
 	    update: function (handler) {
 	        this.handler = handler;
-	        on(this.el, this.arg, this.handler, 'fasle');
+	        on(this.el, this.arg, function (e) {
+	            handler(e);
+	        }, 'fasle');
 	    }
 	};
 
@@ -1011,6 +1013,10 @@
 	    }
 	}
 
+	//简单字符表达式
+	const pathTestRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?'\]|\[".*?"\]|\[\d+\]|\[[A-Za-z_$][\w$]*\])*$/;
+	const booleanLiteralRE = /^(?:true|false)$/;
+
 	/**
 	 * 建立一个getter函数。需要eval。
 	 * @param  {[type]} body [description]
@@ -1033,18 +1039,29 @@
 	 */
 	function parseExpression(exp, needSet) {
 	    exp = exp.trim();
-	    var res = { exp: exp };
+	    var res = {
+	        exp: exp
+	    };
 	    //简单表达式getter
 	    res.get = makeGetterFn('scope.' + exp);
 	    return res;
 	}
 
 	/**
-	 * 检测是一个简单是表达式
+	 * 检测是一个简单是路径表达式
+	 * 比如: 
+	 *    1 v-on:show() 错误
+	 *    2 v-on:show 正确
 	 * @param  {[type]}  exp [description]
 	 * @return {Boolean}     [description]
 	 */
-	function isSimplePath(exp) {}
+	function isSimplePath(exp) {
+	    return pathTestRE.test(exp) &&
+	    // don't treat true/false as paths
+	    !booleanLiteralRE.test(exp) &&
+	    // Math constants e.g. Math.PI, Math.E etc.
+	    exp.slice(0, 5) !== 'Math.';
+	}
 
 	let uid$1 = 0;
 
@@ -1086,6 +1103,9 @@
 
 	    //解析表达式
 	    //得到setter/getter
+	    //
+	    // v:on = "show" =>表达式，需要构建函数getter
+	    //
 	    var res = parseExpression(expOrFn, this.twoWay);
 	    this.getter = res.get;
 	    this.setter = res.set;

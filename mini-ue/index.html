@@ -13,7 +13,7 @@
 <div id="app">
     <a>{{ message }}</a>
     <ul>
-        <li> {{ name }} <a v-on:click="change()">点击</a> </li>
+        <li> {{ name }} <a v-on:click="change">点击</a> </li>
     </ul>
 </div>
 
@@ -28,7 +28,8 @@ new Ue({
         message: 'Hello Vue.js!'
     },
     methods: {
-        change: function() {
+        change: function(event) {
+            console.log(event)
             this.message = "测试点击"
             this.name = "aaron"
         }

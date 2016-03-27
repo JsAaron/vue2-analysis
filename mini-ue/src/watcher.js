@@ -53,6 +53,9 @@ export default function Watcher(vm, expOrFn, cb, options) {
 
     //解析表达式
     //得到setter/getter
+    //
+    // v:on = "show" =>表达式，需要构建函数getter
+    //
     var res = parseExpression(expOrFn, this.twoWay);
     this.getter = res.get;
     this.setter = res.set;
