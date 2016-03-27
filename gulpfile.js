@@ -1,8 +1,8 @@
 var gulp = require('gulp');
 var webpack = require('webpack');
-var fs      = require('fs')
-var rollup  = require('rollup')
-var babel   = require('rollup-plugin-babel')
+var fs = require('fs')
+var rollup = require('rollup')
+var babel = require('rollup-plugin-babel')
 var replace = require('rollup-plugin-replace')
 var version = process.env.VERSION;
 
@@ -11,9 +11,9 @@ var browserSync = require('browser-sync').create();
 var reload = browserSync.reload;
 
 
-var root     = './mini-ue'
-var src      = root + '/src'
-var dest     = root
+var root = './mini-ue'
+var src = root + '/src'
+var dest = root
 var packName = 'build'
 
 
@@ -23,16 +23,16 @@ var packName = 'build'
  */
 gulp.task('server', function() {
     browserSync.init({
-        server    : root,
-        index     : 'index.html',
-        port      : 3000,
-        logLevel  : "debug",
-        logPrefix : "Aaron",
-        open      : true,
+        server: root,
+        index: 'index.html',
+        port: 3000,
+        logLevel: "debug",
+        logPrefix: "Aaron",
+        open: false,
         files: [root + "/build.js", root + "/index.html"] //监控变化
     });
 })
- 
+
 function logError(e) {
     console.log(e)
 }
@@ -45,23 +45,24 @@ function logError(e) {
 var banner =
     '/*!\n' +
     ' * build.js v' + version + '\n' +
-    ' * (c) ' + new Date().getFullYear() + ' Evan You\n' +
+    ' * (c) ' + new Date().getFullYear() + ' Aaron\n' +
     ' * Released under the MIT License.\n' +
     ' */'
 
 gulp.task('rollup-pack', function() {
     rollup.rollup({
-            entry:  src +  '/index.js',
+            entry: src + '/index.js',
             plugins: [
                 replace({
                     'process.env.NODE_ENV': "'development'"
                 }),
-                babel()
+                babel({
+                    "presets": ["es2015-rollup"]
+                })
             ]
         })
         .then(function(bundle) {
-            console.log(bundle)
-            return write(dest +'/build.js', bundle.generate({
+            return write(dest + '/build.js', bundle.generate({
                 format: 'umd',
                 banner: banner,
                 moduleName: 'build'
