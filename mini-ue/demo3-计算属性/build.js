@@ -1158,8 +1158,6 @@
 	Watcher.prototype.beforeGet = function () {
 	    /**
 	     * 暴露出观察对象
-	     * get中
-	     *   getter中 
 	     * @type {[type]}
 	     */
 	    Dep.target = this;
@@ -1253,11 +1251,9 @@
 	 */
 	Watcher.prototype.evaluate = function () {
 	    //避免引用丢失
-	    //this.get中会做依赖处理，会覆盖Dep.target
-	    var current = Dep.target;
-	    //获取值
-	    //并且设置依赖
-	    this.value = this.get();
+	    //被覆盖
+	    // var current = Dep.target;
+	    // this.value = this.get();
 	    // this.dirty = false;
 	    // Dep.target = current;
 	};
@@ -1393,6 +1389,8 @@
 	    }
 	};
 
+	// import Dep from '../observer/dep'
+
 	function noop() {}
 
 	/**
@@ -1453,7 +1451,7 @@
 	    //构建原始数据的观察
 	    this._initData();
 	    //初始化计算属性
-	    this._initComputed();
+	    // this._initComputed();
 	};
 
 	/**
@@ -1502,9 +1500,9 @@
 	        //懒加载有依赖
 	        //所以先要求出依赖的值
 	        //指定依赖的观察
-	        if (watcher.dirty) {
-	            watcher.evaluate();
-	        }
+	        // if (watcher.dirty) {
+	        //     watcher.evaluate();
+	        // }
 	        // if (Dep.target) {
 	        //     watcher.depend();
 	        // }

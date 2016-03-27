@@ -107,8 +107,6 @@ Watcher.prototype.get = function() {
 Watcher.prototype.beforeGet = function() {
     /**
      * 暴露出观察对象
-     * get中
-     *   getter中 
      * @type {[type]}
      */
     Dep.target = this;
@@ -208,11 +206,9 @@ Watcher.prototype.run = function() {
  */
 Watcher.prototype.evaluate = function() {
     //避免引用丢失
-    //this.get中会做依赖处理，会覆盖Dep.target
-    var current = Dep.target;
-    //获取值
-    //并且设置依赖
-    this.value = this.get();
+    //被覆盖
+    // var current = Dep.target;
+    // this.value = this.get();
     // this.dirty = false;
     // Dep.target = current;
 };

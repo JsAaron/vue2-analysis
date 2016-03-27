@@ -17,7 +17,7 @@ from '../compiler/index'
 
 import Directive from '../directive'
 import Watcher from '../watcher'
-import Dep from '../observer/dep'
+// import Dep from '../observer/dep'
 
 function noop() {}
 
@@ -87,7 +87,7 @@ Ue.prototype._initState = function() {
         //构建原始数据的观察
     this._initData()
         //初始化计算属性
-    this._initComputed();
+    // this._initComputed();
 }
  
 
@@ -138,9 +138,9 @@ function makeComputedGetter(getter, owner) {
         //懒加载有依赖
         //所以先要求出依赖的值
         //指定依赖的观察
-        if (watcher.dirty) {
-            watcher.evaluate();
-        }
+        // if (watcher.dirty) {
+        //     watcher.evaluate();
+        // }
         // if (Dep.target) {
         //     watcher.depend();
         // }
