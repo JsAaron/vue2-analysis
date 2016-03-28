@@ -12,7 +12,7 @@ let uid = 0
  */
 export default function Dep() {
     this.id = uid++
-        this.subs = []
+    this.subs = []
 }
 
 
@@ -46,10 +46,10 @@ Dep.prototype.addSub = function(sub) {
  * @return {[type]} [description]
  */
 Dep.prototype.notify = function() {
-	//subs就是watcher对象的合集
+    //subs就是watcher对象的合集
     var subs = toArray(this.subs);
     for (var i = 0, l = subs.length; i < l; i++) {
-    	//watcher.update
+        //watcher.update
         subs[i].update();
     }
 };

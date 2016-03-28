@@ -126,6 +126,39 @@ Ue.prototype._initComputed = function() {
 
 /**
  * 制作一个计算的getter linker
+ *
+ * 计算属性
+ *  new Watcher
+ *     内部 new Watcher
+ *
+ *   computed: {
+ *       b: function() {
+ *           var a = this.name;
+ *           var b = this.message
+ *           return a +" " +b
+ *       }
+ *   }
+ *
+ *  b方法通过watcher包装,成为getter方法
+ *
+ * Directive._bind
+ *  建立b的 watcher对象,内部调用getter
+ *  getter其实是一个内建的watcher对象
+ *  用来收集 this.name, this.meassge的依赖
+ *
+ * this.name 
+ *   subs:订阅关系
+ *     watcher  {{}}文本节点
+ *     watcher  内建watcher对象
+ *     watcher  外建watcher对象
+ *
+ * 内建watcher对象
+ *     deps 
+ *       Dep this.name
+ *       Dep this.message  
+ *          
+ * 
+ * 
  * @param  {[type]} getter [description]
  * @param  {[type]} owner  [description]
  * @return {[type]}        [description]
@@ -139,26 +172,15 @@ function makeComputedGetter(getter, owner) {
         //懒加载有依赖
         //所以先要求出依赖的值
         //指定依赖的观察
-        //
-        //如：
-        // computed: {
-        //     b: function() {
-        //         return this.name + this.message
-        //     }
-        // }
-        // 
-        // Dep.target = watcher;
-        //    this.name   =》  watcher
-        //    this.message =》 wathcer
-        // 
-        // 
         if (watcher.dirty) {
             watcher.evaluate();
         }
-        // if (Dep.target) {
-        //     watcher.depend();
-        // }
-        // return watcher.value;
+
+        //让外watcher与子watcher产生的deps产生关系
+        if (Dep.target) {
+            watcher.depend();
+        }
+        return watcher.value;
     };
 }
 

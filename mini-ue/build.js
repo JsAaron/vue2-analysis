@@ -168,7 +168,7 @@
   /**
    * 配置文件
    */
-  var config$1 = {
+  var config = {
 
       /**
        * 组件列表类型
@@ -177,7 +177,7 @@
       _assetTypes: ['component', 'directive', 'elementDirective', 'filter', 'transition', 'partial']
   };
 
-  var strats = config$1.optionMergeStrategies = Object.create(null);
+  var strats = config.optionMergeStrategies = Object.create(null);
 
   /**
    * 助手递归合并两个数据对象在一起
@@ -210,7 +210,7 @@
       var res = Object.create(parentVal);
       return childVal ? extend(res, guardArrayAssets(childVal)) : res;
   }
-  config$1._assetTypes.forEach(function (type) {
+  config._assetTypes.forEach(function (type) {
       strats[type + 's'] = mergeAssets;
   });
 
@@ -996,14 +996,6 @@
           //清空标记
           has[id] = null;
           watcher.run();
-          // in dev build, check and stop circular updates.
-          if ('development' !== 'production' && has[id] != null) {
-              circular[id] = (circular[id] || 0) + 1;
-              if (circular[id] > config._maxUpdateCount) {
-                  queue.splice(has[id], 1);
-                  warn('You may have an infinite update loop for watcher ' + 'with expression: ' + watcher.expression);
-              }
-          }
       }
   }
 
@@ -1127,6 +1119,7 @@
       ///////////////////////////
       if (isFn) {
           //计算属性
+          //在编译的时候get == new Wathcher()
           this.getter = expOrFn;
           this.setter = undefined;
       } else {
@@ -1213,12 +1206,20 @@
    */
   Watcher.prototype.addDep = function (dep) {
       var id = dep.id;
+      //把更新的dep加入到当前的
+      //newDeps列表中
+      //求值函数
+      //可能是多个dep依赖到watcher上
+      //所以deps可能是组数
       if (!this.newDepIds[id]) {
           this.newDepIds[id] = true;
           this.newDeps.push(dep);
           if (!this.depIds[id]) {
               //把当前的watcher对象
-              //反向加入到数据计算的dep中
+              //反向加入到数据计算的dep中、
+              // this.subs.push(sub);
+              // 所以可以在setter的时候，派发这个sub任务
+              // 也就是setter的时候可以调用 wather
               dep.addSub(this);
           }
       }
@@ -1232,8 +1233,15 @@
    * @return {[type]}         [description]
    */
   Watcher.prototype.update = function (shallow) {
-      //加入water列表
-      pushWatcher(this);
+
+      //如果懒加载
+      //watcher是计算属性
+      if (this.lazy) {
+          this.dirty = true;
+      } else {
+          //加入water列表
+          pushWatcher(this);
+      }
   };
 
   /**
@@ -1263,7 +1271,8 @@
    *    return this.a + this.c
    * }
    *
-   * 因为b依赖a与c,所以需要建议依赖关系
+   * b 生成了watcher
+   * 建立a与c的依赖关系
    * 
    * @return {[type]} [description]
    */
@@ -1274,8 +1283,19 @@
       //获取值
       //并且设置依赖
       this.value = this.get();
-      // this.dirty = false;
-      // Dep.target = current;
+      this.dirty = false;
+      Dep.target = current;
+  };
+
+  /**
+   * 用当前的watcher收集所有的dess合集
+   */
+
+  Watcher.prototype.depend = function () {
+      var i = this.deps.length;
+      while (i--) {
+          this.deps[i].depend();
+      }
   };
 
   function noop$1() {}
@@ -1506,6 +1526,39 @@
 
   /**
    * 制作一个计算的getter linker
+   *
+   * 计算属性
+   *  new Watcher
+   *     内部 new Watcher
+   *
+   *   computed: {
+   *       b: function() {
+   *           var a = this.name;
+   *           var b = this.message
+   *           return a +" " +b
+   *       }
+   *   }
+   *
+   *  b方法通过watcher包装,成为getter方法
+   *
+   * Directive._bind
+   *  建立b的 watcher对象,内部调用getter
+   *  getter其实是一个内建的watcher对象
+   *  用来收集 this.name, this.meassge的依赖
+   *
+   * this.name 
+   *   subs:订阅关系
+   *     watcher  {{}}文本节点
+   *     watcher  内建watcher对象
+   *     watcher  外建watcher对象
+   *
+   * 内建watcher对象
+   *     deps 
+   *       Dep this.name
+   *       Dep this.message  
+   *          
+   * 
+   * 
    * @param  {[type]} getter [description]
    * @param  {[type]} owner  [description]
    * @return {[type]}        [description]
@@ -1519,26 +1572,15 @@
           //懒加载有依赖
           //所以先要求出依赖的值
           //指定依赖的观察
-          //
-          //如：
-          // computed: {
-          //     b: function() {
-          //         return this.name + this.message
-          //     }
-          // }
-          //
-          // Dep.target = watcher;
-          //    this.name   =》  watcher
-          //    this.message =》 wathcer
-          //
-          //
           if (watcher.dirty) {
               watcher.evaluate();
           }
-          // if (Dep.target) {
-          //     watcher.depend();
-          // }
-          // return watcher.value;
+
+          //让外watcher与子watcher产生的deps产生关系
+          if (Dep.target) {
+              watcher.depend();
+          }
+          return watcher.value;
       };
   }
 

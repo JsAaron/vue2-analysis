@@ -41,17 +41,6 @@ function runBatcherQueue(queue) {
         //清空标记
         has[id] = null
         watcher.run()
-            // in dev build, check and stop circular updates.
-        if (process.env.NODE_ENV !== 'production' && has[id] != null) {
-            circular[id] = (circular[id] || 0) + 1
-            if (circular[id] > config._maxUpdateCount) {
-                queue.splice(has[id], 1)
-                warn(
-                    'You may have an infinite update loop for watcher ' +
-                    'with expression: ' + watcher.expression
-                )
-            }
-        }
     }
 }
 

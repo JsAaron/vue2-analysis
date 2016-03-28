@@ -36,6 +36,7 @@ Dep.prototype.addSub = function (sub) {
  */
 
 Dep.prototype.removeSub = function (sub) {
+  console.log('removeSub',sub)
   this.subs.$remove(sub)
 }
 

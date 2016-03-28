@@ -12,32 +12,31 @@
 <div id="app">
     <a>{{ message }}</a>
     <ul>
-        <li> {{ name }} <a v-on:click="show()">点击</a> </li>
-        <li> {{ a }}, {{ b }} </li>
+        <li> {{ name }}</li>
+        <li> {{ b }} </li>
     </ul>
+    <button v-on:click="show()">点击测试</button>
 </div>
 <script type="text/javascript">
 new Ue({
     el: '#app',
     data: {
-        a: "计算属性",
-        name: "name",
-        message: 'Hello Vue.js!'
+        name: "Ue",
+        message: 'Hello!'
     },
     computed: {
-        // 一个计算属性的 getter
         b: function() {
-            // `this` 指向 vm 实例
-            return this.message
+            var a = this.name
+            var b = this.message
+            return a + ' ' + b
         }
     },
     methods: {
         show: function() {
-            this.message = "测试点击"
             this.name = "aaron"
+            this.message = "测试点击"
         }
     }
 })
 </script>
-
 </html>

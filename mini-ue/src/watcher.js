@@ -64,6 +64,7 @@ export default function Watcher(vm, expOrFn, cb, options) {
     ///////////////////////////
     if (isFn) {
         //计算属性
+        //在编译的时候get == new Wathcher()
         this.getter = expOrFn;
         this.setter = undefined;
     } else {
@@ -159,12 +160,20 @@ Watcher.prototype.afterGet = function() {
  */
 Watcher.prototype.addDep = function(dep) {
     var id = dep.id;
+    //把更新的dep加入到当前的
+    //newDeps列表中
+    //求值函数
+    //可能是多个dep依赖到watcher上
+    //所以deps可能是组数
     if (!this.newDepIds[id]) {
         this.newDepIds[id] = true;
         this.newDeps.push(dep);
         if (!this.depIds[id]) {
             //把当前的watcher对象
-            //反向加入到数据计算的dep中
+            //反向加入到数据计算的dep中、
+            // this.subs.push(sub);
+            // 所以可以在setter的时候，派发这个sub任务
+            // 也就是setter的时候可以调用 wather
             dep.addSub(this);
         }
     }
@@ -179,8 +188,16 @@ Watcher.prototype.addDep = function(dep) {
  * @return {[type]}         [description]
  */
 Watcher.prototype.update = function(shallow) {
-    //加入water列表
-    pushWatcher(this);
+
+    //如果懒加载
+    //watcher是计算属性
+    if (this.lazy) {
+        this.dirty = true;
+    } else {
+        //加入water列表
+        pushWatcher(this);
+    }
+
 };
 
 
@@ -213,7 +230,8 @@ Watcher.prototype.run = function() {
  *    return this.a + this.c
  * }
  *
- * 因为b依赖a与c,所以需要建议依赖关系
+ * b 生成了watcher
+ * 建立a与c的依赖关系
  * 
  * @return {[type]} [description]
  */
@@ -224,7 +242,20 @@ Watcher.prototype.evaluate = function() {
     //获取值
     //并且设置依赖
     this.value = this.get();
-    // this.dirty = false;
-    // Dep.target = current;
+    this.dirty = false;
+    Dep.target = current;
 };
  
+
+
+
+/**
+ * 用当前的watcher收集所有的dess合集
+ */
+
+Watcher.prototype.depend = function () {
+  var i = this.deps.length
+  while (i--) {
+    this.deps[i].depend()
+  }
+}

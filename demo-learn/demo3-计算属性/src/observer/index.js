@@ -83,6 +83,11 @@ export function defineReactive(obj, key, val, doNotObserve) {
             var value = val;
             //如果有依赖
             //增加依赖
+            //  
+            // Dep.target = this => new Watcher() 对象
+            // dep.depend
+            //    把当前dep加入到目标Dep.target中
+            //
             if (Dep.target) {
                 dep.depend();
             }

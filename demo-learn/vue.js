@@ -2572,6 +2572,8 @@
             if (options.el) {
                 this.$mount(options.el);
             }
+
+            console.log('vue实例对象',this)
         };
     }
 
