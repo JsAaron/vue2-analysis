@@ -28,51 +28,19 @@ new Vue({
         // 一个计算属性的 getter
         b: function() {
             // `this` 指向 vm 实例
-            return this.name + this.message
+            return  this.name + this.message
         }
     },
     methods: {
         show: function() {
+            // this.b = "测试"
+
             this.message = "测试点击"
             this.name = "aaron"
         }
     }
 })
 
-
-// Vue.config.async = false
-
-// var vm = new Vue({
-//     el: '#app',
-//     data: {
-//         msg:'test123',
-//         newTodo: '',
-//         todos: [{
-//             text: 'Add some todos'
-//         }]
-//     },
-//     methods: {
-//         show:function(index){
-//             alert(index)
-//         },
-//         addTodo: function() {
-//             var text = this.newTodo.trim()
-//             if (text) {
-//                 this.todos.push({
-//                     text: text
-//                 })
-//                 this.newTodo = ''
-//             }
-//         },
-//         removeTodo: function(index) {
-//             this.todos.splice(index, 1)
-//         }
-//     }
-// })
-
-// vm.$watch('newTodo', function (val) {
-//   console.log(val)
-// })
 </script>
 
 </html>

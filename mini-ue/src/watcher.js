@@ -79,6 +79,11 @@ export default function Watcher(vm, expOrFn, cb, options) {
 }
 
 
+/**
+ * 获取值
+ * 收集依赖
+ * @return {[type]} [description]
+ */
 Watcher.prototype.get = function() {
     this.beforeGet()
     var scope = this.scope || this.vm
@@ -142,10 +147,14 @@ Watcher.prototype.afterGet = function() {
  * 给这个指令增加一个依赖
  * Dep.target.addDep(this)
  *
+ * 计算属性在getter的时候处理
+ * 增加get的dep到当前指定的watcer对象中
+ * 
  * value 
  *   =>getter
  *   =>Dep.target
  *   =>dep.depend
+ * 
  * @param {Dep} dep
  */
 Watcher.prototype.addDep = function(dep) {
@@ -154,6 +163,8 @@ Watcher.prototype.addDep = function(dep) {
         this.newDepIds[id] = true;
         this.newDeps.push(dep);
         if (!this.depIds[id]) {
+            //把当前的watcher对象
+            //反向加入到数据计算的dep中
             dep.addSub(this);
         }
     }

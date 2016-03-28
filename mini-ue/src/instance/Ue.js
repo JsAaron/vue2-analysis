@@ -135,9 +135,23 @@ function makeComputedGetter(getter, owner) {
         lazy: true
     });
     return function computedGetter() {
+        //求值属性
         //懒加载有依赖
         //所以先要求出依赖的值
         //指定依赖的观察
+        //
+        //如：
+        // computed: {
+        //     b: function() {
+        //         return this.name + this.message
+        //     }
+        // }
+        // 
+        // Dep.target = watcher;
+        //    this.name   =》  watcher
+        //    this.message =》 wathcer
+        // 
+        // 
         if (watcher.dirty) {
             watcher.evaluate();
         }
