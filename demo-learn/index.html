@@ -3,42 +3,41 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Vue + Webpack</title>
+    <title>列表渲染v-for数组</title>
 </head>
 
 <body>
     <script type="text/javascript" src="vue.js"></script>
 </body>
-<div id="app">
-    <a>{{ message }}</a>
-    <ul> 
-        <li> {{ name }}</li>
-        <li>  {{ b }} </li>
-    </ul>
-   <button v-on:click="show()">点击测试</button>
 
-</div>
+<ul id="example-1">
+  <li v-for="item in items">
+    {{ parentMessage }} - {{ $index }} - {{ item.message }}
+  </li>
+  <button v-on:click="update">更新数组</button>
+</ul>
+
+
+
 <script type="text/javascript">
-new Vue({
-    el: '#app',
+
+var example1 = new Vue({
+    el: '#example-1',
     data: {
-        name :"Ue",
-        message: 'Hello!'
+        parentMessage: 'Parent',
+        items: [{
+            message: 'Foo'
+        }, {
+            message: 'Bar'
+        }]
     },
-    computed: {
-        b: function() {
-            var a = this.name;
-            var b = this.message
-            return a +" " +b
-        }
-    },
-    methods: {
-        show: function() {
-            this.name = "aaron"
-           this.message = "测试点击"
+    methods:{
+        update:function(){
+            this.items.push({ message: 'Aaron' })
         }
     }
 })
+
 
 </script>
 
