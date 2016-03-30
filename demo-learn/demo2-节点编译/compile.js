@@ -6,7 +6,49 @@ var onRE = /^v-on:|^@/;
 var dirAttrRE = /^v-([^:]+)(?:$|:(.*)$)/
 
 //存放指令
-var _directives = {}
+var _directives = []
+
+/**
+ * 转化数组
+ * @param  {[type]} list  [description]
+ * @param  {[type]} start [description]
+ * @return {[type]}       [description]
+ */
+var toArray = function(list, start) {
+    start = start || 0;
+    var i = list.length - start;
+    var ret = new Array(i);
+    while (i--) {
+        ret[i] = list[i + start];
+    }
+    return ret;
+}
+
+/**
+ * 替换节点
+ * @param  {[type]} target [description]
+ * @param  {[type]} el     [description]
+ * @return {[type]}        [description]
+ */
+function replace(target, el) {
+    var parent = target.parentNode;
+    if (parent) {
+        parent.replaceChild(el, target);
+    }
+}
+
+
+function Directive(descriptor, node) {
+    this.descriptor = descriptor;
+    this.node = node;
+}
+
+
+var _bindDir = function(descriptor, node) {
+    _directives.push(new Directive(descriptor, node));
+}
+
+
 
 /**
  * 节点编译
@@ -20,9 +62,9 @@ var compile = function(el) {
     var nodeLinkFn = compileNode(el, options)
     var childLinkFn = el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null;
 
-	var childNodes = util.toArray(el.childNodes);
-	if (nodeLinkFn) nodeLinkFn(el);
-	if (childLinkFn) childLinkFn(childNodes);
+    var childNodes = toArray(el.childNodes);
+    if (nodeLinkFn) nodeLinkFn(el);
+    if (childLinkFn) childLinkFn(childNodes);
 }
 
 
@@ -59,7 +101,7 @@ function compileElement(el, options) {
     var linkFn;
     //如果有属性
     var hasAttrs = el.hasAttributes();
-    var attrs = hasAttrs && util.toArray(el.attributes);
+    var attrs = hasAttrs && toArray(el.attributes);
 
     //如果有属性
     //可能是for 与 if指令
@@ -129,8 +171,8 @@ function processTextToken(token, options) {
  * @param  {[type]} frag   [description]
  * @return {[type]}        [description]
  */
-function makeTextNodeLinkFn(tokens, frag) {
-    return function textNodeLinkFn(vm, el, host, scope) {
+function makeTextNodeLinkFn(tokens, frag, options) {
+    return function textNodeLinkFn(el) {
         var fragClone = frag.cloneNode(true);
         var childNodes = toArray(fragClone.childNodes);
         var token, value, node;
@@ -140,7 +182,7 @@ function makeTextNodeLinkFn(tokens, frag) {
             if (token.tag) {
                 node = childNodes[i];
                 //创建指令
-                vm._bindDir(token.descriptor, node, host, scope);
+                _bindDir(token.descriptor, node);
             }
         }
         //拿文档碎片替换{{}}节点
@@ -166,12 +208,12 @@ function makeTextNodeLinkFn(tokens, frag) {
  * 规则
  * nodeLinkFn
  * childLinkFn [
- * 		nodeLinkFn 
- * 		childLinkFn [
- * 				nodeLinkFn
- * 				childLinkFn [].....
- * 		     ]
- * 		]
+ *      nodeLinkFn 
+ *      childLinkFn [
+ *              nodeLinkFn
+ *              childLinkFn [].....
+ *           ]
+ *      ]
  * 
  * [nodeLinkFn,childLinkFn,nodeLinkFn,childLinkFn...........]
  * 
@@ -210,21 +252,17 @@ function compileNodeList(nodeList, options) {
 function makeChildLinkFn(linkFns) {
     return function childLinkFn(nodes) {
         var node, nodeLinkFn, childrenLinkFn
-
         for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
             node = nodes[n]
             nodeLinkFn = linkFns[i++]
             childrenLinkFn = linkFns[i++]
-            var childNodes = util.toArray(node.childNodes)
-
-            // console.log(node)
-      
-            // if (nodeLinkFn) {
-            //     nodeLinkFn(vm, node, host, scope, frag)
-            // }
-            // if (childrenLinkFn) {
-            //     childrenLinkFn(vm, childNodes, host, scope, frag)
-            // }
+            var childNodes = toArray(node.childNodes)
+            if (nodeLinkFn) {
+                nodeLinkFn(node)
+            }
+            if (childrenLinkFn) {
+                childrenLinkFn(childNodes)
+            }
         }
     }
 }
@@ -304,12 +342,10 @@ function makeNodeLinkFn(directives) {
     return function nodeLinkFn(vm, el, host, scope, frag) {
         var i = directives.length;
         while (i--) {
-            vm._bindDir(directives[i], el, host, scope, frag);
+            _bindDir(directives[i], el);
         }
     }
 }
-
-
 
 
 
