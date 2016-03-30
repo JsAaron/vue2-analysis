@@ -5110,7 +5110,10 @@ var template = Object.freeze({
       if (this.iframeBind) {
         this.iframeBind();
       } else {
-        on(this.el, this.arg, this.handler, this.modifiers.capture);
+        var handler = this.handler
+        on(this.el, this.arg, function(e){
+           handler(e)
+        }, this.modifiers.capture);
       }
     },
 
