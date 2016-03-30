@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>test</title>
+    <title>处理用户输入</title>
 </head>
 
 <body>
@@ -13,7 +13,9 @@
 <div id="app">
     <a>{{ message }}</a>
     <ul>
-        <li> {{ name }} <a v-on:click="change">点击</a> </li>
+        <li> {{ name }} 
+            <a v-on:click="change">点击</a>
+         </li>
     </ul>
 </div>
 
@@ -24,11 +26,12 @@
 new Vue({
     el: '#app',
     data: {
-        name    : "name",
-        message : 'Hello Vue.js!'
+        name: "name",
+        message: 'Hello Vue.js!'
     },
     methods: {
         change: function(event) {
+            console.log(event)
             this.message = "测试点击"
             this.name = "aaron"
         }
