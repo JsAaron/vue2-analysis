@@ -13,7 +13,7 @@ gulp webpack
 >Gitub: <https://github.com/JsAaron/vue-learn/>
 
 ****
-
+### 分析
 
 <ol>
 <li>demo1-简单模拟</li>
