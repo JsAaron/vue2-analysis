@@ -1,3 +1,13 @@
+var tagRE = /\{\{\{(.+?)\}\}\}|\{\{(.+?)\}\}/g
+var htmlRE = /^\{\{\{.*\}\}\}$/
+    //v-on|@快捷方式
+var onRE = /^v-on:|^@/;
+//普通v-命令
+var dirAttrRE = /^v-([^:]+)(?:$|:(.*)$)/
+
+//存放指令
+var _directives = {}
+
 /**
  * 节点编译
  *  指令提取与编译
@@ -6,9 +16,13 @@
  */
 var compile = function(el) {
 
-	var options = {}
-	var nodeLinkFn = compileNode(el, options)
-	var childLinkFn = el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null;
+    var options = {}
+    var nodeLinkFn = compileNode(el, options)
+    var childLinkFn = el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null;
+
+	var childNodes = util.toArray(el.childNodes);
+	if (nodeLinkFn) nodeLinkFn(el);
+	if (childLinkFn) childLinkFn(childNodes);
 }
 
 
@@ -31,56 +45,6 @@ function compileNode(node, options) {
         return null;
     }
 }
-
-
-/**
- * 编译子节点列表
- * 返回子节点 函数链接
- * @param  {[type]} nodeList [description]
- * @param  {[type]} options  [description]
- * @return {[type]}          [description]
- *
- * 节点遍历需要考虑文本的情况
- * 0: text
- * 1: a
- * 2: text
- * 3: ul
- * 4: text
- *
- * 规则
- * nodeLinkFn
- * childLinkFn [
- * 		nodeLinkFn 
- * 		childLinkFn [
- * 				nodeLinkFn
- * 				childLinkFn [].....
- * 		     ]
- * 		]
- *
- * 
- * [nodeLinkFn,childLinkFn,nodeLinkFn,childLinkFn...........]
- * 
- */
-function compileNodeList(nodeList, options) {
-    var linkFns = [];
-    var nodeLinkFn, childLinkFn, node;
-    for (var i = 0, l = nodeList.length; i < l; i++) {
-        node = nodeList[i];
-        //本身节点
-        //nodeType = (1 || 3) 元素 文本节点
-        nodeLinkFn = compileNode(node, options);
-        //如果有子字节
-        if (node.hasChildNodes()) {
-            //递归
-            childLinkFn = compileNodeList(node.childNodes, options)
-        } else {
-            childLinkFn = null;
-        }
-        linkFns.push(nodeLinkFn, childLinkFn);
-    }
-    return linkFns.length ? makeChildLinkFn(linkFns) : null;
-}
-
 
 /**
  * 编译一个元素节点
@@ -111,13 +75,162 @@ function compileElement(el, options) {
     return linkFn;
 }
 
+/**
+ * 编译文本节点
+ * @return {[type]} [description]
+ */
+function compileTextNode(node, options) {
+    //保证必须正确的值
+    var tokens = parseText(node.wholeText);
+    if (!tokens) {
+        return null;
+    }
+
+    //创建文档碎片
+    var frag = document.createDocumentFragment();
+    var el, token;
+    for (var i = 0, l = tokens.length; i < l; i++) {
+        token = tokens[i];
+        el = token.tag ? processTextToken(token, options) : document.createTextNode(token.value);
+        frag.appendChild(el);
+    }
+    return makeTextNodeLinkFn(tokens, frag, options);
+}
 
 
 
-//v-on|@快捷方式
-var onRE = /^v-on:|^@/;
-//普通v-命令
-var dirAttrRE = /^v-([^:]+)(?:$|:(.*)$)/
+function processTextToken(token, options) {
+    var el;
+    el = document.createTextNode(' ');
+    setTokenType('text');
+
+    function setTokenType(type) {
+        if (token.descriptor) return;
+        if (!parseDirective[type]) {
+            console.log('指令没找到', type)
+        }
+        token.descriptor = {
+            name: type,
+            def: parseDirective[type],
+            expression: token.value
+        };
+    }
+    return el
+}
+
+
+/**
+ * 文本处理 {{ message}}
+ * 通过文档碎片
+ * 解析出tokens的数组合集
+ * 然后通过每一个tokens填充文档中每一个node
+ *  node = childNodes[i];
+ * @param  {[type]} tokens [description]
+ * @param  {[type]} frag   [description]
+ * @return {[type]}        [description]
+ */
+function makeTextNodeLinkFn(tokens, frag) {
+    return function textNodeLinkFn(vm, el, host, scope) {
+        var fragClone = frag.cloneNode(true);
+        var childNodes = toArray(fragClone.childNodes);
+        var token, value, node;
+        for (var i = 0, l = tokens.length; i < l; i++) {
+            token = tokens[i];
+            value = token.value;
+            if (token.tag) {
+                node = childNodes[i];
+                //创建指令
+                vm._bindDir(token.descriptor, node, host, scope);
+            }
+        }
+        //拿文档碎片替换{{}}节点
+        replace(el, fragClone);
+    };
+}
+
+
+/**
+ * 编译子节点列表
+ * 返回子节点 函数链接
+ * @param  {[type]} nodeList [description]
+ * @param  {[type]} options  [description]
+ * @return {[type]}          [description]
+ *
+ * 节点遍历需要考虑文本的情况
+ * 0: text
+ * 1: a
+ * 2: text
+ * 3: ul
+ * 4: text
+ *
+ * 规则
+ * nodeLinkFn
+ * childLinkFn [
+ * 		nodeLinkFn 
+ * 		childLinkFn [
+ * 				nodeLinkFn
+ * 				childLinkFn [].....
+ * 		     ]
+ * 		]
+ * 
+ * [nodeLinkFn,childLinkFn,nodeLinkFn,childLinkFn...........]
+ * 
+ */
+function compileNodeList(nodeList, options) {
+    var linkFns = [];
+    var nodeLinkFn, childLinkFn, node;
+    for (var i = 0, l = nodeList.length; i < l; i++) {
+        node = nodeList[i];
+        //本身节点
+        //nodeType = (1 || 3) 元素 文本节点
+        nodeLinkFn = compileNode(node, options);
+        //如果有子字节
+        if (node.hasChildNodes()) {
+            //递归
+            childLinkFn = compileNodeList(node.childNodes, options)
+        } else {
+            childLinkFn = null;
+        }
+        linkFns.push(nodeLinkFn, childLinkFn);
+    }
+    return linkFns.length ? makeChildLinkFn(linkFns) : null;
+}
+
+
+/**
+ * 生成子节点的link函数
+ * linkFns 
+ *     [nodeLinkFn,childrenLinkFn,nodeLinkFn,childrenLinkFn.......]
+ * linkFns的数组排列是一个父节点linnk一个子节点link
+ * 所以在遍历的时候通过i++的来0,1 | 2,3 这样双取值
+ * 
+ * @param  {[type]} linkFns [description]
+ * @return {[type]}         [description]
+ */
+function makeChildLinkFn(linkFns) {
+    return function childLinkFn(nodes) {
+        var node, nodeLinkFn, childrenLinkFn
+
+        for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
+            node = nodes[n]
+            nodeLinkFn = linkFns[i++]
+            childrenLinkFn = linkFns[i++]
+            var childNodes = util.toArray(node.childNodes)
+
+            // console.log(node)
+      
+            // if (nodeLinkFn) {
+            //     nodeLinkFn(vm, node, host, scope, frag)
+            // }
+            // if (childrenLinkFn) {
+            //     childrenLinkFn(vm, childNodes, host, scope, frag)
+            // }
+        }
+    }
+}
+
+
+
 
 /**
  *
@@ -144,11 +257,11 @@ function compileDirectives(attrs, options) {
         //v-on: | @
         if (onRE.test(name)) {
             arg = name.replace(onRE, '');
-            pushDir('on', publicDirectives.on);
+            pushDir('on', parseDirective.on);
         } else if (matched = name.match(dirAttrRE)) {
             // 普通指定
-			dirName = matched[1];
-			arg     = matched[2];
+            dirName = matched[1];
+            arg = matched[2];
             var assets = options['directives'];
             dirDef = assets[dirName];
             if (dirDef) {
@@ -178,6 +291,21 @@ function compileDirectives(attrs, options) {
     //假如有指令集合
     if (dirs.length) {
         return makeNodeLinkFn(dirs);
+    }
+}
+
+
+/**
+ * 给所有的单个节点构建一个link
+ * @param  {[type]} directives [description]
+ * @return {[type]}            [description]
+ */
+function makeNodeLinkFn(directives) {
+    return function nodeLinkFn(vm, el, host, scope, frag) {
+        var i = directives.length;
+        while (i--) {
+            vm._bindDir(directives[i], el, host, scope, frag);
+        }
     }
 }
 
