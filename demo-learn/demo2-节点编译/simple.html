@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>节点编译</title>
+</head>
+
+<body>
+</body>
+<div id="app">
+    <a v-on:click="event1">{{ message }}</a>
+    <ul>
+        <li v-on:click="event2">
+            <a> {{ name }} </a>
+        </li>
+    </ul>
+</div>
+<script type="text/javascript">
+var onRE = /^v-on:|^@/;
+var htmlRE = /^\{\{\{.*\}\}\}$/
+
+var el = document.querySelector('#app')
+
+//编译el本身
+var nodeLink = compileNode(el)
+    //编译el的子节点
+var childLinkFn = el.hasChildNodes() ? compileNodeList(el.childNodes) : null;
+
+
+
+function compileNodeList(nodeList) {
+    var node, nodeLinkFn;
+    var linkFns = []
+    for (var i = 0, l = nodeList.length; i < l; i++) {
+        node = nodeList[i];
+        //父节点
+        nodeLinkFn = compileNode(node);
+        //如果有子字节
+        if (node.hasChildNodes()) {
+            //递归
+            childLinkFn = compileNodeList(node.childNodes)
+        } else {
+            childLinkFn = null;
+        }
+        linkFns.push(nodeLinkFn, childLinkFn);
+    }
+    if (linkFns.length) {
+        return function makeChildLinkFn() {
+        }
+    } else {
+        return null;
+    }
+}
+
+
+
+
+function compileNode(node) {
+    var nodeType = node.nodeType
+    if (nodeType === 1) {
+        return compileElement(node);
+    }
+    if (nodeType === 3) {
+        return compileTextNode(node);
+    }
+    return null;
+}
+
+function compileElement(el) {
+    var attr, name, value;
+    var hasAttrs = el.hasAttributes()
+        //元素可能有多个属性绑定
+    var dirs = []
+        //解析元素属性指令
+        //可能是v-开头
+    if (hasAttrs) {
+        var attrs = el.attributes; //伪数组
+        attrs = toArray(attrs);
+        var i = attrs.length;
+        while (i--) {
+            //找到每一个属性
+            attr = attrs[i]
+            name = attr.name;
+            if (onRE.test(name)) {
+                dirs.push({
+                    name: name,
+                    attr: attr
+                });
+            }
+        }
+    }
+
+    if (dirs.length) {
+        return function makeNodeLinkFn() {
+            console.log(dirs)
+        }
+    }
+}
+
+function compileTextNode(node) {
+    var tokens = node.wholeText;
+    if (!tokens) {
+        return null;
+    }
+    return function makeTextNodeLinkFn() {
+        console.log(tokens)
+    }
+}
+
+
+
+
+/**
+ * 转化数组
+ * @param  {[type]} list  [description]
+ * @param  {[type]} start [description]
+ * @return {[type]}       [description]
+ */
+function toArray(list, start) {
+    start = start || 0;
+    var i = list.length - start;
+    var ret = new Array(i);
+    while (i--) {
+        ret[i] = list[i + start];
+    }
+    return ret;
+}
+</script>
+
+</html>
