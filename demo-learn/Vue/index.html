@@ -3,41 +3,44 @@
 
 <head>
     <meta charset="utf-8">
-    <title>处理用户输入</title>
+    <title>getter/setter计算属性</title>
 </head>
 
 <body>
     <script type="text/javascript" src="vue.js"></script>
 </body>
-
 <div id="app">
-    <a>{{ message }}</a>
-    <ul>
-        <li> {{ name }} 
-            <a v-on:click="change">点击</a>
-         </li>
-    </ul>
+    <a>{{ fullName }}</a>
+    <button>点击</button>
 </div>
-
-
 <script type="text/javascript">
-
-
-new Vue({
+var vm = new Vue({
     el: '#app',
     data: {
-        name: "name",
-        message: 'Hello Vue.js!'
+        firstName: 'Foo',
+        lastName: 'Bar',
+        fullName: 'aaaa'
     },
-    methods: {
-        change: function(event) {
-            console.log(event)
-            this.message = "测试点击"
-            this.name = "aaron"
+    computed: {
+        fullName: {
+            get: function() {
+                return this.firstName + ' ' + this.lastName
+            },
+            set: function(newValue) {
+                var names = newValue.split(' ')
+                this.firstName = names[0]
+                this.lastName = names[names.length - 1]
+            }
         }
     }
 })
 
+document.querySelector('button').addEventListener('click',function(){
+   vm.fullName = 'John Doe'
+   console.log(vm.fullName)
+},false)
+
+
 </script>
 
-</html>
+</html> 

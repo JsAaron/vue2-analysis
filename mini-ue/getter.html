@@ -26,6 +26,19 @@ new Ue({
         message: 'Hello!'
     },
     computed: {
+        //this.name
+        //  依赖的wathcer对象有三个
+        //  => watcher
+        //      name
+        //      b.get
+        //      b
+        //  
+        //  dep =>notify 触发3个订阅的watcher对象
+        //      只会加入队列  wathcher=> dom
+        //                    watcher=> b
+        //      修改b.get
+        //      watcher.lazy  => wathcer.dirty = true
+        //
         b: function() {
             var a = this.name;
             var b = this.message

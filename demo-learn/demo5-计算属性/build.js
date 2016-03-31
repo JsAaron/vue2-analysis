@@ -1515,7 +1515,8 @@
                   def.get = makeComputedGetter(userDef, this);
                   def.set = noop;
               } else {
-                  alert('计算属性不是函数');
+                  def.get = makeComputedGetter(userDef.get, this);
+                  def.set = userDef.set ? bind$1(userDef.set, this) : noop;
               }
 
               //计算属性挂到vue的实例上
@@ -1572,6 +1573,9 @@
           //懒加载有依赖
           //所以先要求出依赖的值
           //指定依赖的观察
+          //
+          //this.dirty在 watcher中被修改
+          //
           if (watcher.dirty) {
               watcher.evaluate();
           }

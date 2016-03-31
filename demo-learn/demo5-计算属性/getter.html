@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Vue + Webpack</title>
+    <title>计算属性getter</title>
 </head>
 
 <body>
-    <script type="text/javascript" src="vue.js"></script>
+    <script type="text/javascript" src="build.js"></script>
 </body>
 <div id="app">
     <a>{{ message }}</a>
@@ -19,13 +19,26 @@
 
 </div>
 <script type="text/javascript">
-new Vue({
+new Ue({
     el: '#app',
     data: {
         name :"Ue",
         message: 'Hello!'
     },
     computed: {
+        //this.name
+        //  依赖的wathcer对象有三个
+        //  => watcher
+        //      name
+        //      b.get
+        //      b
+        //  
+        //  dep =>notify 触发3个订阅的watcher对象
+        //      只会加入队列  wathcher=> dom
+        //                    watcher=> b
+        //      修改b.get
+        //      watcher.lazy  => wathcer.dirty = true
+        //
         b: function() {
             var a = this.name;
             var b = this.message
@@ -35,7 +48,7 @@ new Vue({
     methods: {
         show: function() {
             this.name = "aaron"
-           this.message = "测试点击"
+            this.message = "测试点击"
         }
     }
 })
