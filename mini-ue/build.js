@@ -1566,7 +1566,8 @@
    */
   function makeComputedGetter(getter, owner) {
       var watcher = new Watcher(owner, getter, null, {
-          lazy: true
+          lazy: true,
+          aaaaaaaaaaaaa: '_initComputed.get'
       });
       return function computedGetter() {
           //求值属性
