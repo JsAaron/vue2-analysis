@@ -11,8 +11,9 @@
 </body>
 
 <div id="example-1">
+  <a>{{ name }}</a>
   <li v-for="item in items">
-    {{ item.message }}
+    {{ item.message }} {{ name }}
   </li>
   <button v-on:click=add()>增加</button>
 <div>
@@ -23,6 +24,7 @@
 var example1 = new Vue({
   el: '#example-1',
   data: {
+    name:'Aaron',
     items: [
       { message: 'Foo' },
       { message: 'Bar' }
@@ -33,6 +35,7 @@ var example1 = new Vue({
         this.items.push({
             message: "haha"
         })
+        this.name = 'Up'
      }
   }
 })

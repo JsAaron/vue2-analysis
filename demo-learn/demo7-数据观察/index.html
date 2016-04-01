@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>数据观察</title>
+</head>
+
+<body>
+</body>
+<script type="text/javascript" src="observe.js"></script>
+<script type="text/javascript">
+//vm对象
+var vm = {};
+//数据
+var data = {
+    name: 'Aaron',
+    items: [{
+        message: 'Foo'
+    }, {
+        message: 'Bar'
+    }]
+}
+
+var ob = observe(data, vm)
+
+console.log(data)
+
+</script>
+
+</html>
