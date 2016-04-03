@@ -117,6 +117,7 @@ export function defineReactive(obj, key, val, doNotObserve) {
  * @return {[type]}       [description]
  */
 export function observe(value, vm) {
+
     //必须是对象
     if (!value || typeof value !== 'object') {
         return

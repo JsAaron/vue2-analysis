@@ -508,6 +508,7 @@
    * @return {[type]}       [description]
    */
   function observe(value, vm) {
+
       //必须是对象
       if (!value || (typeof value === 'undefined' ? 'undefined' : babelHelpers.typeof(value)) !== 'object') {
           return;
@@ -1566,8 +1567,7 @@
    */
   function makeComputedGetter(getter, owner) {
       var watcher = new Watcher(owner, getter, null, {
-          lazy: true,
-          aaaaaaaaaaaaa: '_initComputed.get'
+          lazy: true
       });
       return function computedGetter() {
           //求值属性

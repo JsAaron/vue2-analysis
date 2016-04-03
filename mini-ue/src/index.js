@@ -10,4 +10,3 @@ Ue.version = 'undefined'
 export default Ue
 
 window.Ue = Ue; 
-
