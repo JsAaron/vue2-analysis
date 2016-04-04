@@ -3,23 +3,23 @@
 
 <head>
     <meta charset="utf-8">
-    <title>案例调试</title>
+    <title>计算数组</title>
 </head>
 
 <body>
-    <script type="text/javascript" src="vue.js"></script>
+    <script type="text/javascript" src="build.js"></script>
 </body>
 
 <div id="example-1">
   <li v-for="item in items">
-    {{ item.message }} {{$index}}
+    {{ item.message }} {{ name }}
   </li>
 </div>
 
 
 <script type="text/javascript">
 
-var example1 = new Vue({
+var example1 = new Ue({
   el: '#example-1',
   data: {
     items: [

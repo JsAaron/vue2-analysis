@@ -28,7 +28,7 @@ gulp.task('server', function() {
         port: 3000,
       //  logLevel: "debug",
       //  logPrefix: "Aaron",
-        open:false,
+        open:true,
         files: [root + "/build.js", root + "/index.html"] //监控变化
     });
 })
