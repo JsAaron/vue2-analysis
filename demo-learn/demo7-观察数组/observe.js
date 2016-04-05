@@ -82,6 +82,7 @@ console.log(childOb)
           value.__proto__ = arrayMethods;
           //建立数组观察
           this.observeArray(value);
+
       } else {
           this.walk(value);
       }
@@ -91,14 +92,7 @@ console.log(childOb)
   //分解每一个元素建立观察
   Observer.prototype.observeArray = function(items) {
       for (var i = 0, l = items.length; i < l; i++) {
-          observe(items[i]);
-      }
-  };
-
-  Observer.prototype.walk = function(obj) {
-      var keys = Object.keys(obj);
-      for (var i = 0, l = keys.length; i < l; i++) {
-          this.convert(keys[i], obj[keys[i]]);
+             this.convert(keys[i], obj[keys[i]]);
       }
   };
 
