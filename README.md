@@ -22,6 +22,6 @@ gulp webpack
 <li>demo4-异步更新队列</li>
 <li>demo5-插值表达式与事件机制</li>
 <li>demo6-计算属性</li>
-<li>demo7-观察数组</li>
-<li>待更新...</li>
+<li>demo7-观察数组</li> 
 </ol>
+待更新…
