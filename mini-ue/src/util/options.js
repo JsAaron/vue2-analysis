@@ -124,3 +124,19 @@ export function mergeOptions(parent, child, vm) {
 
     return options
 }
+
+
+
+export function resolveAsset (options, type, id) {
+  if (typeof id !== 'string') {
+    return
+  }
+  var assets = options[type]
+  var camelizedId
+  return assets[id] ||
+    // camelCase ID
+    assets[camelizedId = camelize(id)] ||
+    // Pascal Case ID
+    assets[camelizedId.charAt(0).toUpperCase() + camelizedId.slice(1)]
+}
+

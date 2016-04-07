@@ -1,7 +1,8 @@
 import publicDirectives from '../directives/public/index'
 import {
     toArray,
-    replace
+    replace,
+    resolveAsset
 }
 from '../util/index'
 
@@ -16,10 +17,10 @@ const dirAttrRE = /^v-([^:]+)(?:$|:(.*)$)/
 //定义终端指令
 export const terminalDirectives = [
     'for',
-    'if'  
-]   
+    'if'
+]
 
-var tagRE =  /\{\{\{(.+?)\}\}\}|\{\{(.+?)\}\}/g
+var tagRE = /\{\{\{(.+?)\}\}\}|\{\{(.+?)\}\}/g
 var htmlRE = /^\{\{\{.*\}\}\}$/
 
 
@@ -60,7 +61,7 @@ function linkAndCapture(linker, vm) {
     //指令数
     var originalDirCount = vm._directives.length
     linker()
-    //拷贝指令
+        //拷贝指令
     var dirs = vm._directives.slice(originalDirCount);
     //指令初始化
     for (var i = 0, l = dirs.length; i < l; i++) {
@@ -177,7 +178,7 @@ function compileElement(el, options) {
     var attrs = hasAttrs && toArray(el.attributes);
     //检车是是否为if for指令
     if (hasAttrs) {
-        linkFn = checkTerminalDirectives(el, attrs,options);
+        linkFn = checkTerminalDirectives(el, attrs, options);
     }
     //正常指定编译
     if (!linkFn && hasAttrs) {
@@ -217,13 +218,13 @@ function processTextToken(token, options) {
 
     function setTokenType(type) {
         if (token.descriptor) return;
-        if(!publicDirectives[type]){
-            console.log('指令没找到',type)
+        if (!publicDirectives[type]) {
+            console.log('指令没找到', type)
         }
         token.descriptor = {
-            name       : type,
-            def        : publicDirectives[type],
-            expression : token.value
+            name: type,
+            def: publicDirectives[type],
+            expression: token.value
         };
     }
     return el
@@ -280,17 +281,17 @@ function parseText(text) {
     // "点击"=》text 就retrun
     if (!/\s*\{\{/.test(text)) {
         return null;
-    }      
+    }
 
     var tokens = [];
     var match, index, html, value, first, oneTime;
     while (match = tagRE.exec(text)) {
-        index   = match.index;
-        html    = htmlRE.test(match[0]);
-        value   = html ? match[1] : match[2];
-        first   = value.charCodeAt(0);
+        index = match.index;
+        html = htmlRE.test(match[0]);
+        value = html ? match[1] : match[2];
+        first = value.charCodeAt(0);
         oneTime = first === 42; // *
-        value   = oneTime ? value.slice(1) : value;
+        value = oneTime ? value.slice(1) : value;
         tokens.push({
             tag: true,
             value: value.trim(),
@@ -300,7 +301,7 @@ function parseText(text) {
     }
     return tokens;
 }
- 
+
 
 
 /**
@@ -314,11 +315,12 @@ function checkTerminalDirectives(el, attrs, options) {
     var attr, name, value, modifiers, matched, dirName, rawName, arg, def, termDef;
     for (var i = 0, j = attrs.length; i < j; i++) {
         attr = attrs[i];
-
-        console.log(attr)
+        if (matched = attr.name.match(dirAttrRE)) {
+            //找到对应的处理方法
+            def = resolveAsset(options, 'directives', matched[1])
+            console.log(def)
+        }
     }
- 
- 
 }
 
 
@@ -358,7 +360,7 @@ function compileDirectives(attrs, options) {
     while (i--) {
         //找到每一个属性
         attr = attrs[i]
-        //属性名
+            //属性名
         name = rawName = attr.name;
         //属性值
         value = rawValue = attr.value;

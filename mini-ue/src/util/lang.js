@@ -79,6 +79,15 @@ export function indexOf (arr, obj) {
 }
 
 
+var camelizeRE = /-(\w)/g
+export function camelize (str) {
+  return str.replace(camelizeRE, toUpper)
+}
+function toUpper (_, c) {
+  return c ? c.toUpperCase() : ''
+}
+
+
 /**
  * 定义一个属性
  *

@@ -70,6 +70,14 @@
       return value == null ? '' : value.toString();
   }
 
+  var camelizeRE = /-(\w)/g;
+  function camelize(str) {
+      return str.replace(camelizeRE, toUpper);
+  }
+  function toUpper(_, c) {
+      return c ? c.toUpperCase() : '';
+  }
+
   /**
    * 定义一个属性
    *
@@ -289,6 +297,19 @@
       }
 
       return options;
+  }
+
+  function resolveAsset(options, type, id) {
+      if (typeof id !== 'string') {
+          return;
+      }
+      var assets = options[type];
+      var camelizedId;
+      return assets[id] ||
+      // camelCase ID
+      assets[camelizedId = camelize(id)] ||
+      // Pascal Case ID
+      assets[camelizedId.charAt(0).toUpperCase() + camelizedId.slice(1)];
   }
 
   /**
@@ -943,8 +964,11 @@
       var attr, name, value, modifiers, matched, dirName, rawName, arg, def, termDef;
       for (var i = 0, j = attrs.length; i < j; i++) {
           attr = attrs[i];
-
-          console.log(attr);
+          if (matched = attr.name.match(dirAttrRE)) {
+              //找到对应的处理方法
+              def = resolveAsset(options, 'directives', matched[1]);
+              console.log(def);
+          }
       }
   }
 
