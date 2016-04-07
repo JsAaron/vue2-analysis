@@ -16,6 +16,7 @@ var src = root + '/src'
 var dest = root
 var packName = 'build'
 
+var browserTest = true;
 
 /**
  * web server
@@ -28,9 +29,10 @@ gulp.task('server', function() {
         port: 3000,
       //  logLevel: "debug",
       //  logPrefix: "Aaron",
-        open:true,
+        open: browserTest,
         files: [root + "/build.js", root + "/index.html"] //监控变化
     });
+    browserTest = false
 })
 
 function logError(e) {

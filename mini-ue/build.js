@@ -292,6 +292,12 @@
   }
 
   /**
+   * 对象是否有__proto__原型引用
+   * @type {String}
+   */
+  var hasProto = '__proto__' in {};
+
+  /**
    * 异步延迟一个任务来执行它
    * 我们利用MutationObserver来执行
    * 否则用setTimeout(0)
@@ -404,6 +410,38 @@
       }
   };
 
+  var arrayProto = Array.prototype;
+  var arrayMethods = Object.create(arrayProto)
+
+  /**
+   * 拦截数组的方法
+   * 重写并且触发事件
+   */
+  ;
+  ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'].forEach(function (method) {
+      //缓存原型方法
+      var original = arrayProto[method];
+
+      //方法拦截
+      def(arrayMethods, method, function mutator() {
+          //获取参数
+          //并且转化真正数组
+          var i = arguments.length;
+          var args = new Array(i);
+          while (i--) {
+              args[i] = arguments[i];
+          }
+          //通过call调用数组方法还原
+          //this =>调用的数组
+          var result = original.apply(this, args);
+          console.log(this.__ob__);
+          return result;
+      });
+  });
+
+  //扩充原型方法的属性名
+  var arrayKeys = Object.getOwnPropertyNames(arrayMethods);
+
   function Observer(value) {
       this.value = value;
       this.dep = new Dep();
@@ -414,11 +452,28 @@
       def(value, '__ob__', this);
       //值是数组
       if (isArray(value)) {
-          console.log('isArray为处理');
+          //针对数组的拦截混入
+          //__proto__ 存在,替换引用
+          var augment = hasProto ? protoAugment : copyAugment;
+          augment(value, arrayMethods, arrayKeys);
+          //数组观察
+          this.observeArray(value);
       } else {
           this.walk(value);
       }
   }
+
+  /**
+   * Observe的列表是数组
+   * 继续分解
+   * @param  {[type]} items [description]
+   * @return {[type]}       [description]
+   */
+  Observer.prototype.observeArray = function (items) {
+      for (var i = 0, l = items.length; i < l; i++) {
+          observe(items[i]);
+      }
+  };
 
   /**
    * 当值是对象的时候
@@ -470,6 +525,10 @@
       if (property && property.configurable === false) {
           return;
       }
+
+      //继续分解子数据
+      //给每一个子数组增加监控
+      var childOb = observe(val);
 
       Object.defineProperty(obj, key, {
           enumerable: true,
@@ -533,8 +592,25 @@
           ob.addVm(vm);
       }
 
-      console.log(ob);
+      // console.log(ob)
       return ob;
+  }
+
+  /**
+   * 扩充原型链
+   * @param  {[type]} target [description]
+   * @param  {[type]} src    [description]
+   * @return {[type]}        [description]
+   */
+  function protoAugment(target, src) {
+      target.__proto__ = src;
+  }
+
+  function copyAugment(target, src, keys) {
+      for (var i = 0, l = keys.length; i < l; i++) {
+          var key = keys[i];
+          def(target, key, src[key]);
+      }
   }
 
   var on$1 = {

@@ -1,5 +1,11 @@
 
 /**
+ * 对象是否有__proto__原型引用
+ * @type {String}
+ */
+export const hasProto = '__proto__' in {}
+
+/**
  * 异步延迟一个任务来执行它
  * 我们利用MutationObserver来执行
  * 否则用setTimeout(0)

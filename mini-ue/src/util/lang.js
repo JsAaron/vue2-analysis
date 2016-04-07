@@ -62,6 +62,23 @@ export function _toString (value) {
     : value.toString()
 }
 
+
+/**
+ * 数组快速比较
+ * 找到对应值的索引
+ * @param  {[type]} arr [description]
+ * @param  {[type]} obj [description]
+ * @return {[type]}     [description]
+ */
+export function indexOf (arr, obj) {
+  var i = arr.length
+  while (i--) {
+    if (arr[i] === obj) return i
+  }
+  return -1
+}
+
+
 /**
  * 定义一个属性
  *
