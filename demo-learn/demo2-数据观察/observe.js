@@ -7,24 +7,8 @@ function Observer(value) {
     this.dep = new Dep();
     //给value中定义一个__ob__引用父对应this
     def(value, '__ob__', this);
-
-    //如果值是数组
-	if (Array.isArray(value)) {
-		// 重写数组的观察方法
-		// 用于监听观察
-		// 0: "push"
-		// 1: "pop"
-		// 2: "shift"
-		// 3: "unshift"
-		// 4: "splice"
-		// 5: "sort"
-		// 6: "reverse"
-		this.observeArray(value);
-	} else {
-		//给value绑定数据观察
-		this.walk(value);
-	}
-
+    //建议数据观察
+    this.walk(value);
 }
 
 /**
@@ -40,16 +24,6 @@ Observer.prototype.walk = function(obj) {
     }
 };
 
-/**
- * 数组循环观察
- * @param  {[type]} items [description]
- * @return {[type]}       [description]
- */
-Observer.prototype.observeArray = function(items) {
-	for (var i = 0, l = items.length; i < l; i++) {
-		observe(items[i]);
-	}
-}
 
 Observer.prototype.convert = function(key, val) {
     defineReactive(this.value, key, val);

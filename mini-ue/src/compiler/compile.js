@@ -43,6 +43,7 @@ export function compile(el, options, partial) {
     var childLinkFn = el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null;
 
     return function compositeLinkFn(vm, el, host, scope, frag) {
+        return
         var childNodes = toArray(el.childNodes);
         //初始化link
         var dirs = linkAndCapture(function compositeLinkCapturer() {
@@ -172,9 +173,11 @@ function compileElement(el, options) {
     var linkFn;
     //如果有属性
     var hasAttrs = el.hasAttributes();
+    //拿到属性
+    var attrs = hasAttrs && toArray(el.attributes);
     //检车是是否为if for指令
     if (hasAttrs) {
-        linkFn = checkTerminalDirectives(el, options);
+        linkFn = checkTerminalDirectives(el, attrs,options);
     }
     //正常指定编译
     if (!linkFn && hasAttrs) {
@@ -306,15 +309,16 @@ function parseText(text) {
  * if for
  * @return {[type]} [description]
  */
-function checkTerminalDirectives(el, options) {
-    var value, dirName;
-    for (var i = 0, l = terminalDirectives.length; i < l; i++) {
-        dirName = terminalDirectives[i];
-        value = el.getAttribute('v-' + dirName);
-        if (value != null) {
-            return makeTerminalNodeLinkFn(el, dirName, value, options);
-        }
+function checkTerminalDirectives(el, attrs, options) {
+
+    var attr, name, value, modifiers, matched, dirName, rawName, arg, def, termDef;
+    for (var i = 0, j = attrs.length; i < j; i++) {
+        attr = attrs[i];
+
+        console.log(attr)
     }
+ 
+ 
 }
 
 

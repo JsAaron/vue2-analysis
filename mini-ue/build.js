@@ -665,9 +665,6 @@
   //普通v-命令
   var dirAttrRE = /^v-([^:]+)(?:$|:(.*)$)/;
 
-  //定义终端指令
-  var terminalDirectives = ['for', 'if'];
-
   var tagRE = /\{\{\{(.+?)\}\}\}|\{\{(.+?)\}\}/g;
   var htmlRE = /^\{\{\{.*\}\}\}$/;
 
@@ -691,6 +688,7 @@
       var childLinkFn = el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null;
 
       return function compositeLinkFn(vm, el, host, scope, frag) {
+          return;
           var childNodes = toArray(el.childNodes);
           //初始化link
           var dirs = linkAndCapture(function compositeLinkCapturer() {
@@ -811,9 +809,11 @@
       var linkFn;
       //如果有属性
       var hasAttrs = el.hasAttributes();
+      //拿到属性
+      var attrs = hasAttrs && toArray(el.attributes);
       //检车是是否为if for指令
       if (hasAttrs) {
-          linkFn = checkTerminalDirectives(el, options);
+          linkFn = checkTerminalDirectives(el, attrs, options);
       }
       //正常指定编译
       if (!linkFn && hasAttrs) {
@@ -938,36 +938,14 @@
    * if for
    * @return {[type]} [description]
    */
-  function checkTerminalDirectives(el, options) {
-      var value, dirName;
-      for (var i = 0, l = terminalDirectives.length; i < l; i++) {
-          dirName = terminalDirectives[i];
-          value = el.getAttribute('v-' + dirName);
-          if (value != null) {
-              return makeTerminalNodeLinkFn(el, dirName, value, options);
-          }
-      }
-  }
+  function checkTerminalDirectives(el, attrs, options) {
 
-  /**
-   * 构建终端link
-   * @param  {[type]} el      [description]
-   * @param  {[type]} dirName [description]
-   * @param  {[type]} value   [description]
-   * @param  {[type]} options [description]
-   * @param  {[type]} def     [description]
-   * @return {[type]}         [description]
-   */
-  function makeTerminalNodeLinkFn(el, dirName, value, options, def) {
-      var descriptor = {
-          name: dirName,
-          expression: value,
-          raw: value
-      };
-      var fn = function terminalNodeLinkFn(vm, el, host, scope, frag) {
-          vm._bindDir(descriptor, el, host, scope, frag);
-      };
-      return fn;
+      var attr, name, value, modifiers, matched, dirName, rawName, arg, def, termDef;
+      for (var i = 0, j = attrs.length; i < j; i++) {
+          attr = attrs[i];
+
+          console.log(attr);
+      }
   }
 
   /**
