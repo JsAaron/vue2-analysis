@@ -40,7 +40,6 @@
       //     message: 'Bar'
       // }]
       var childOb = observe(val);
-console.log(childOb)
       Object.defineProperty(obj, key, {
           enumerable: true,
           configurable: true,
@@ -82,7 +81,6 @@ console.log(childOb)
           value.__proto__ = arrayMethods;
           //建立数组观察
           this.observeArray(value);
-
       } else {
           this.walk(value);
       }
