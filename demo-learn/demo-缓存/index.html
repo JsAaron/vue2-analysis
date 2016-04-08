@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>缓存</title>
+</head>
+
+<body>
+    <script type="text/javascript" src="cache.js"></script>
+</body>
+<script type="text/javascript">
+
+
+var cache = new Cache(3)
+
+cache.put("v-on", {
+    expression: "click:show"
+})
+
+cache.put("v-for", {
+    expression: "item for itmes"
+})
+
+cache.put("v-if", {
+    expression: "a if b"
+})
+
+cache.put("test", {
+    expression: "test"
+})
+
+// var hit = cache.get("v-if");
+
+// console.log(hit)
+
+</script>
+
+</html>
