@@ -133,6 +133,7 @@ export function resolveAsset (options, type, id) {
   }
   var assets = options[type]
   var camelizedId
+
   return assets[id] ||
     // camelCase ID
     assets[camelizedId = camelize(id)] ||

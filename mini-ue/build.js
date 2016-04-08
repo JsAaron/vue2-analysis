@@ -305,6 +305,7 @@
       }
       var assets = options[type];
       var camelizedId;
+
       return assets[id] ||
       // camelCase ID
       assets[camelizedId = camelize(id)] ||
@@ -672,10 +673,17 @@
       unbind: function unbind() {}
   };
 
+  var vFor = {
+
+      terminal: true
+
+  };
+
   var directives = {
       on: on$1,
       model: model,
-      text: text
+      text: text,
+      'for': vFor
   };
 
   //特殊的绑定前缀
@@ -967,9 +975,43 @@
           if (matched = attr.name.match(dirAttrRE)) {
               //找到对应的处理方法
               def = resolveAsset(options, 'directives', matched[1]);
-              console.log(def);
+              //for指令设了terminal
+              if (def && def.terminal) {
+                  if (!termDef) {
+                      termDef = def;
+                      rawName = attr.name;
+                      value = attr.value;
+                      dirName = matched[1];
+                      arg = matched[2];
+                  }
+              }
           }
       }
+
+      if (termDef) {
+          return makeTerminalNodeLinkFn(el, dirName, value, options, termDef, rawName, arg, modifiers);
+      }
+  }
+
+  /**
+   * 构建终端link
+   * @param  {[type]} el      [description]
+   * @param  {[type]} dirName [description]
+   * @param  {[type]} value   [description]
+   * @param  {[type]} options [description]
+   * @param  {[type]} def     [description]
+   * @return {[type]}         [description]
+   */
+  function makeTerminalNodeLinkFn(el, dirName, value, options, def, rawName, arg, modifiers) {
+      var descriptor = {
+          name: dirName,
+          expression: value,
+          raw: value
+      };
+      var fn = function terminalNodeLinkFn(vm, el, host, scope, frag) {
+          vm._bindDir(descriptor, el, host, scope, frag);
+      };
+      return fn;
   }
 
   /**

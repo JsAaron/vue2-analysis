@@ -60,7 +60,7 @@ Ue.prototype._init = function(options) {
     console.log("####", this)
 }
 
-
+ 
 Object.defineProperty(Ue.prototype, '$data', {
     get: function() {
         return this._data
@@ -297,7 +297,7 @@ Ue.prototype.$mount = function(el) {
     //开始编译
     this._compile(el)
 }
-
+ 
 /**
  * Transclude,编译和链接元素
  * 
