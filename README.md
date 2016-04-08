@@ -16,12 +16,15 @@ gulp webpack
 ### 分析
 
 <ol>
-<li>demo1-简单模拟</li>
-<li>demo2-数据观察</li>
-<li>demo3-节点编译</li>
-<li>demo4-异步更新队列</li>
-<li>demo5-插值表达式与事件机制</li>
-<li>demo6-计算属性</li>
-<li>demo7-观察数组</li> 
+<li>demo-列表渲染</li>
+<li>demo-异步更新队列</li>
+<li>demo-指令解析</li>
+<li>demo-节点编译</li>
+<li>demo-插值表达式与事件机制</li>
+<li>demo-数据观察</li>
+<li>demz-缓存</li>
+<li>demo-节点编译</li> 
+<li>demo-观察数组</li> 
+<li>demo-计算属性</li> 
 </ol>
 待更新…
