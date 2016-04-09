@@ -10,7 +10,6 @@ gulp rollup
 
 gulp webpack
 
->Gitub: <https://github.com/JsAaron/vue-learn/>
 
 ****
 ### 分析
