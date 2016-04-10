@@ -2,7 +2,8 @@
 ###Vue源码学习  Vue.js v1.0.18
 
 ****
-npm install
+安装
+命令：npm install
 
 ######提供两种打包方案
 
