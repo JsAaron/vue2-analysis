@@ -40,18 +40,19 @@ export function compile(el, options, partial) {
 
     //编译节点本身
     var nodeLinkFn = compileNode(el, options);
-    //编译子节点
-    var childLinkFn = el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null;
+
+    var childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) &&
+        el.tagName !== 'SCRIPT' &&
+        el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null
 
     return function compositeLinkFn(vm, el, host, scope, frag) {
-        return
         var childNodes = toArray(el.childNodes);
         //初始化link
         var dirs = linkAndCapture(function compositeLinkCapturer() {
                 if (nodeLinkFn) nodeLinkFn(vm, el, host, scope, frag)
                 if (childLinkFn) childLinkFn(vm, childNodes, host, scope, frag)
             }, vm)
-            // return makeUnlinkFn(vm, dirs)
+        return makeUnlinkFn(vm, dirs)
     };
 
 }
@@ -96,12 +97,12 @@ function compileNodeList(nodeList, options) {
         //nodeType = (1 || 3) 元素 文本节点
         nodeLinkFn = compileNode(node, options);
         //如果有子字节
-        if (node.hasChildNodes()) {
-            //递归
-            childLinkFn = compileNodeList(node.childNodes, options)
-        } else {
-            childLinkFn = null;
-        }
+        //terminal  for...排除
+        childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) 
+                    && node.tagName !== 'SCRIPT' 
+                    && node.hasChildNodes() 
+                      ? compileNodeList(node.childNodes, options) 
+                      : null;
         linkFns.push(nodeLinkFn, childLinkFn);
     }
     return linkFns.length ? makeChildLinkFn(linkFns) : null;
@@ -355,6 +356,11 @@ function makeTerminalNodeLinkFn(el, dirName, value, options, def, rawName, arg, 
     var fn = function terminalNodeLinkFn(vm, el, host, scope, frag) {
         vm._bindDir(descriptor, el, host, scope, frag);
     };
+
+    //增加这个
+    //用来排除子节点递归
+    fn.terminal = true;
+
     return fn;
 }
 
