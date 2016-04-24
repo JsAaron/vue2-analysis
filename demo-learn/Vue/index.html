@@ -9,14 +9,15 @@
 <body>
     <script type="text/javascript" src="vue.js"></script>
 </body>
-<div id="example-1">
+<div id="example">
     <li v-for="item in items">
         {{ item.message }} {{$index}} {{name}}
     </li>
+    <button v-on:click="greet">点击</button>
 </div>
 <script type="text/javascript">
 var example1 = new Vue({
-    el: '#example-1',
+    el: '#example',
     data: {
         name: 'Aaron',
         items: [{
@@ -24,6 +25,11 @@ var example1 = new Vue({
         }, {
             message: 'Bar'
         }]
+    },
+    methods:{
+      greet: function (event) {
+            this.name = "chenwen"
+        }
     }
 })
 </script>
