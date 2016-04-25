@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>组件</title>
+</head>
+
+<body>
+    <script type="text/javascript" src="vue.js"></script>
+</body>
+<div id="example">
+    <my-component></my-component>
+</div>
+
+<script type="text/javascript">
+
+// 定义
+var MyComponent = Vue.extend({
+  template: '<div>A custom component!</div>'
+})
+
+// 注册
+Vue.component('my-component', MyComponent)
+
+// 创建根实例
+new Vue({
+  el: '#example'
+})
+
+</script>
+
+</html>

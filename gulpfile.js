@@ -11,7 +11,7 @@ var browserSync = require('browser-sync').create();
 var reload = browserSync.reload;
 
 
-var root = './mini-ue'
+var root = './ue'
 var src = root + '/src'
 var dest = root
 var packName = 'build'
