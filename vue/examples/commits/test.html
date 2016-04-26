@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vue.js commits example</title>
+    <style>
+    #demo {
+        font-family: 'Helvetica', Arial, sans-serif;
+    }
+    
+    a {
+        text-decoration: none;
+        color: #f66;
+    }
+    
+    li {
+        line-height: 1.5em;
+        margin-bottom: 20px;
+    }
+    
+    .author,
+    .date {
+        font-weight: bold;
+    }
+    </style>
+    <script src="../dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="demo">
+        <h1>Latest Vue.js Commits</h1>
+
+        <input type="checkbox" id="checkbox" v-model="checked">
+        <label for="checkbox">{{ checked }}</label>
+
+        <template v-for="branch in branches">
+
+        </template>
+    </div>
+    <script src="test.js"></script>
+</body>
+
+</html>
