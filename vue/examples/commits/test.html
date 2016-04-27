@@ -28,14 +28,19 @@
 
 <body>
     <div id="demo">
-        <h1>Latest Vue.js Commits</h1>
-
-        <input type="checkbox" id="checkbox" v-model="checked">
-        <label for="checkbox">{{ checked }}</label>
 
         <template v-for="branch in branches">
-
+            <input type="radio" :value="branch" v-model="currentBranch">
+            <label>{{branch}}</label>
         </template>
+
+        <ul>
+            <li v-for="record in commits">
+                <a>{{record.sha.slice(0, 7)}}</a>
+            </li>
+        </ul>
+
+
     </div>
     <script src="test.js"></script>
 </body>
