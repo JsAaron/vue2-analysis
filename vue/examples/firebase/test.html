@@ -21,14 +21,45 @@
                 <button v-on:click="removeUser(user)">X</button>
             </li>
         </ul>
+        <form id="form" v-on:submit.prevent="addUser">
+            <input v-model="newUser.name">
+            <input v-model="newUser.email">
+            <input type="submit" value="Add User">
+        </form>
+        <ul class="errors">
+            <li v-show="!validation.name">Name cannot be empty.</li>
+            <li v-show="!validation.email">Please provide a valid email address.</li>
+        </ul>
     </div>
 </body>
 <script type="text/javascript">
+// Firebase ref
+var usersRef = new Firebase('https://vue-demo.firebaseIO.com/users')
 var app = new Vue({
     data: {
-        user: {
+        newUser: {
             name: '',
-            email ''
+            email: ''
+        }
+    },
+    firebase: {
+        users: usersRef
+    },
+
+    computed: {
+        validation: function() {
+            return {
+                name: !!this.newUser.name.trim(),
+                email: emailRE.test(this.newUser.email)
+            }
+        }
+    },
+
+    // methods
+    methods: {
+        addUser: function() {
+
+            console.log(this.newUser)
         }
     }
 })
