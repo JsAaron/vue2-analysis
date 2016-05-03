@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Vue.js grid component example</title>
     <link rel="stylesheet" href="style.css">
-    <script src="../../dist/vue.js"></script>
+    <script src="../dist/vue.js"></script>
     </head>
   <body>
 
@@ -38,14 +38,17 @@
 
     <!-- demo root element -->
     <div id="demo">
+
       <form id="search">
         Search <input name="query" v-model="searchQuery">
       </form>
+
       <demo-grid
         :data="gridData"
         :columns="gridColumns"
         :filter-key="searchQuery">
       </demo-grid>
+      
     </div>
 
     <script src="grid.js"></script>
