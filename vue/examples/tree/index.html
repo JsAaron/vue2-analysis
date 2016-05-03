@@ -20,13 +20,14 @@
         list-style-type: dot;
       }
     </style>
-    <script src="../../dist/vue.js"></script>
+    <script src="../dist/vue.js"></script>
   </head>
   <body>
 
     <!-- item template -->
     <script type="text/x-template" id="item-template">
       <li>
+       
         <div
           :class="{bold: isFolder}"
           @click="toggle"
@@ -34,6 +35,7 @@
           {{model.name}}
           <span v-if="isFolder">[{{open ? '-' : '+'}}]</span>
         </div>
+      
         <ul v-show="open" v-if="isFolder">
           <item
             class="item"
@@ -52,7 +54,7 @@
       <item
         class="item"
         :model="treeData">
-      </item>
+      </item>           
     </ul>
 
     <!-- demo code -->
