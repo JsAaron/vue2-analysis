@@ -1,5 +1,5 @@
 
-###Vue源码学习  Vue.js v1.0.18
+###Vue源码学习  Vue.js v1.0.21
 
 ****
 安装
@@ -7,10 +7,8 @@
 
 ######提供两种打包方案
 
-gulp rollup
-
-gulp webpack
-
+* gulp rollup
+* gulp webpack
 
 ****
 ### 分析
