@@ -5,6 +5,7 @@
   "author": "jsAaron <401545553@qq.com>",
   "private": true,
   "scripts": {
+    "demo": "node build/demo.js",
     "dev": "node build/dev-server.js",
     "build": "node build/build.js",
     "unit": "karma start test/unit/karma.conf.js --single-run",
@@ -67,6 +68,7 @@
     "webpack": "^1.12.2",
     "webpack-dev-middleware": "^1.4.0",
     "webpack-hot-middleware": "^2.6.0",
-    "webpack-merge": "^0.8.3"
+    "webpack-merge": "^0.8.3",
+    "write-file-webpack-plugin": "^3.1.8"
   }
 }
