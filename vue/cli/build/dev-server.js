@@ -56,6 +56,8 @@ app.use(hotMiddleware)
 var staticPath = path.posix.join(config.build.assetsPublicPath, config.build.assetsSubDirectory)
 app.use(staticPath, express.static('./static'))
 
+app.use('/lib',express.static('lib'));
+
 module.exports = app.listen(port, function (err) {
   if (err) {
     console.log(err)
