@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>列表渲染</title>
+</head>
+
+<body>
+
+    <div id="example-1">
+        <li v-for="item in items">
+            {{ item.message }} {{$index}} {{name}}
+        </li>
+    </div>
+<script type="text/javascript" src="/app.js"></script></body>
+
+</html>
+
+<script type="text/javascript">
+    var example1 = new Ue({
+        el: '#example-1',
+        data: {
+            name: 'Aaron'
+        }
+    })
+</script>

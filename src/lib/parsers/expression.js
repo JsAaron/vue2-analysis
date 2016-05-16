@@ -1,7 +1,7 @@
 import {
     warn
 }
-from 'util/index'
+from '../util/index'
 
 //简单字符表达式
 const pathTestRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?'\]|\[".*?"\]|\[\d+\]|\[[A-Za-z_$][\w$]*\])*$/
