@@ -5,10 +5,9 @@
 安装
 命令：npm install
 
-######提供两种打包方案
+####运行
 
-* gulp rollup
-* gulp webpack
+* npm run dev
 
 ****
 ### 分析
