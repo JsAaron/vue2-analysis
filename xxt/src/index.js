@@ -178,7 +178,17 @@ class XXT {
     }
 
     $mount(el) {
+        el = query(el)
+        this._compile(el)
+    }
 
+
+    /**
+     * 编译与链接元素
+     */
+    _compile(el) {
+        let options = this.$options
+        console.log(options)
     }
 }
 
