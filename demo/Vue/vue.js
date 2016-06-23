@@ -1,14 +1,13 @@
 /*!
- * Vue.js v1.0.20
+ * Vue.js v1.0.25
  * (c) 2016 Evan You
  * Released under the MIT License.
  */
-(function(global, factory) {
+(function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-    typeof define === 'function' && define.amd ? define(factory) :
-    (global.Vue = factory());
-}(this, function() {
-  'use strict';
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global.Vue = factory());
+}(this, function () { 'use strict';
 
   function set(obj, key, val) {
     if (hasOwn(obj, key)) {
@@ -51,6 +50,10 @@
     delete obj[key];
     var ob = obj.__ob__;
     if (!ob) {
+      if (obj._isVue) {
+        delete obj._data[key];
+        obj._digest();
+      }
       return;
     }
     ob.dep.notify();
@@ -212,7 +215,7 @@
    */
 
   function bind(fn, ctx) {
-    return function(a) {
+    return function (a) {
       var l = arguments.length;
       return l ? l > 1 ? fn.apply(ctx, arguments) : fn.call(ctx, a) : fn.call(ctx);
     };
@@ -328,7 +331,7 @@
         if (!timeout) context = args = null;
       }
     };
-    return function() {
+    return function () {
       context = this;
       args = arguments;
       timestamp = Date.now();
@@ -368,7 +371,7 @@
         return fn.apply(this, arguments);
       }
     };
-    cb.cancel = function() {
+    cb.cancel = function () {
       cb.cancelled = true;
     };
     return cb;
@@ -399,8 +402,15 @@
 
   // UA sniffing for working around browser-specific quirks
   var UA = inBrowser && window.navigator.userAgent.toLowerCase();
+  var isIE = UA && UA.indexOf('trident') > 0;
   var isIE9 = UA && UA.indexOf('msie 9.0') > 0;
   var isAndroid = UA && UA.indexOf('android') > 0;
+  var isIos = UA && /(iphone|ipad|ipod|ios)/i.test(UA);
+  var iosVersionMatch = isIos && UA.match(/os ([\d_]+)/);
+  var iosVersion = iosVersionMatch && iosVersionMatch[1].split('_');
+
+  // detecting iOS UIWebView by indexedDB
+  var hasMutationObserverBug = iosVersion && Number(iosVersion[0]) >= 9 && Number(iosVersion[1]) >= 3 && !window.indexedDB;
 
   var transitionProp = undefined;
   var transitionEndEvent = undefined;
@@ -427,11 +437,10 @@
    * @param {Object} ctx
    */
 
-  var nextTick = (function() {
+  var nextTick = (function () {
     var callbacks = [];
     var pending = false;
     var timerFunc;
-
     function nextTickHandler() {
       pending = false;
       var copies = callbacks.slice(0);
@@ -442,14 +451,14 @@
     }
 
     /* istanbul ignore if */
-    if (typeof MutationObserver !== 'undefined') {
+    if (typeof MutationObserver !== 'undefined' && !hasMutationObserverBug) {
       var counter = 1;
       var observer = new MutationObserver(nextTickHandler);
       var textNode = document.createTextNode(counter);
       observer.observe(textNode, {
         characterData: true
       });
-      timerFunc = function() {
+      timerFunc = function () {
         counter = (counter + 1) % 2;
         textNode.data = counter;
       };
@@ -460,8 +469,8 @@
       var context = inBrowser ? window : typeof global !== 'undefined' ? global : {};
       timerFunc = context.setImmediate || setTimeout;
     }
-    return function(cb, ctx) {
-      var func = ctx ? function() {
+    return function (cb, ctx) {
+      var func = ctx ? function () {
         cb.call(ctx);
       } : cb;
       callbacks.push(func);
@@ -470,6 +479,27 @@
       timerFunc(nextTickHandler, 0);
     };
   })();
+
+  var _Set = undefined;
+  /* istanbul ignore if */
+  if (typeof Set !== 'undefined' && Set.toString().match(/native code/)) {
+    // use native Set when available.
+    _Set = Set;
+  } else {
+    // a non-standard Set polyfill that only works with primitive keys.
+    _Set = function () {
+      this.set = Object.create(null);
+    };
+    _Set.prototype.has = function (key) {
+      return this.set[key] !== undefined;
+    };
+    _Set.prototype.add = function (key) {
+      this.set[key] = 1;
+    };
+    _Set.prototype.clear = function () {
+      this.set = Object.create(null);
+    };
+  }
 
   function Cache(limit) {
     this.size = 0;
@@ -491,14 +521,14 @@
    * @return {Entry|undefined}
    */
 
-  p.put = function(key, value) {
+  p.put = function (key, value) {
     var removed;
-    if (this.size === this.limit) {
-      removed = this.shift();
-    }
 
     var entry = this.get(key, true);
     if (!entry) {
+      if (this.size === this.limit) {
+        removed = this.shift();
+      }
       entry = {
         key: key
       };
@@ -523,7 +553,7 @@
    * cache was empty.
    */
 
-  p.shift = function() {
+  p.shift = function () {
     var entry = this.head;
     if (entry) {
       this.head = this.head.newer;
@@ -544,7 +574,7 @@
    * @return {Entry|*}
    */
 
-  p.get = function(key, returnEntry) {
+  p.get = function (key, returnEntry) {
     var entry = this._keymap[key];
     if (entry === undefined) return;
     if (entry === this.tail) {
@@ -677,7 +707,7 @@
         // check double quote
         if (c === 0x22 && prev !== 0x5C) inDouble = !inDouble;
       } else if (c === 0x7C && // pipe
-        str.charCodeAt(i + 1) !== 0x7C && str.charCodeAt(i - 1) !== 0x7C) {
+      str.charCodeAt(i + 1) !== 0x7C && str.charCodeAt(i - 1) !== 0x7C) {
         if (dir.expression == null) {
           // first filter, end of expression
           lastFilterIndex = i + 1;
@@ -689,29 +719,21 @@
       } else {
         switch (c) {
           case 0x22:
-            inDouble = true;
-            break; // "
+            inDouble = true;break; // "
           case 0x27:
-            inSingle = true;
-            break; // '
+            inSingle = true;break; // '
           case 0x28:
-            paren++;
-            break; // (
+            paren++;break; // (
           case 0x29:
-            paren--;
-            break; // )
+            paren--;break; // )
           case 0x5B:
-            square++;
-            break; // [
+            square++;break; // [
           case 0x5D:
-            square--;
-            break; // ]
+            square--;break; // ]
           case 0x7B:
-            curly++;
-            break; // {
+            curly++;break; // {
           case 0x7D:
-            curly--;
-            break; // }
+            curly--;break; // }
         }
       }
     }
@@ -726,7 +748,7 @@
     return dir;
   }
 
-  var directive = Object.freeze({
+var directive = Object.freeze({
     parseDirective: parseDirective
   });
 
@@ -750,8 +772,8 @@
     var close = escapeRegex(config.delimiters[1]);
     var unsafeOpen = escapeRegex(config.unsafeDelimiters[0]);
     var unsafeClose = escapeRegex(config.unsafeDelimiters[1]);
-    tagRE = new RegExp(unsafeOpen + '(.+?)' + unsafeClose + '|' + open + '(.+?)' + close, 'g');
-    htmlRE = new RegExp('^' + unsafeOpen + '.*' + unsafeClose + '$');
+    tagRE = new RegExp(unsafeOpen + '((?:.|\\n)+?)' + unsafeClose + '|' + open + '((?:.|\\n)+?)' + close, 'g');
+    htmlRE = new RegExp('^' + unsafeOpen + '((?:.|\\n)+?)' + unsafeClose + '$');
     // reset cache
     cache = new Cache(1000);
   }
@@ -775,7 +797,6 @@
     if (hit) {
       return hit;
     }
-    text = text.replace(/\n/g, '');
     if (!tagRE.test(text)) {
       return null;
     }
@@ -827,7 +848,7 @@
 
   function tokensToExp(tokens, vm) {
     if (tokens.length > 1) {
-      return tokens.map(function(token) {
+      return tokens.map(function (token) {
         return formatToken(token, vm);
       }).join('+');
     } else {
@@ -862,7 +883,6 @@
    */
 
   var filterRE = /[^|]\|[^|]/;
-
   function inlineFilters(exp, single) {
     if (!filterRE.test(exp)) {
       return single ? exp : '(' + exp + ')';
@@ -872,14 +892,14 @@
         return '(' + exp + ')';
       } else {
         return 'this._applyFilters(' + dir.expression + // value
-          ',null,' + // oldValue (null for read)
-          JSON.stringify(dir.filters) + // filter descriptors
-          ',false)'; // write?
+        ',null,' + // oldValue (null for read)
+        JSON.stringify(dir.filters) + // filter descriptors
+        ',false)'; // write?
       }
     }
   }
 
-  var text = Object.freeze({
+var text = Object.freeze({
     compileRegex: compileRegex,
     parseText: parseText,
     tokensToExp: tokensToExp
@@ -961,13 +981,12 @@
     _maxUpdateCount: 100
 
   }, {
-    delimiters: {
-      /**
-       * Interpolation delimiters. Changing these would trigger
-       * the text parser to re-compile the regular expressions.
-       *
-       * @type {Array<String>}
-       */
+    delimiters: { /**
+                   * Interpolation delimiters. Changing these would trigger
+                   * the text parser to re-compile the regular expressions.
+                   *
+                   * @type {Array<String>}
+                   */
 
       get: function get() {
         return delimiters;
@@ -993,22 +1012,21 @@
   });
 
   var warn = undefined;
+  var formatComponentName = undefined;
 
   if ('development' !== 'production') {
-    (function() {
+    (function () {
       var hasConsole = typeof console !== 'undefined';
-      warn = function(msg, e) {
-        if (hasConsole && (!config.silent || config.debug)) {
-          console.warn('[Vue warn]: ' + msg);
-          /* istanbul ignore if */
-          if (config.debug) {
-            if (e) {
-              throw e;
-            } else {
-              console.warn(new Error('Warning Stack Trace').stack);
-            }
-          }
+
+      warn = function (msg, vm) {
+        if (hasConsole && !config.silent) {
+          console.error('[Vue warn]: ' + msg + (vm ? formatComponentName(vm) : ''));
         }
+      };
+
+      formatComponentName = function (vm) {
+        var name = vm._isVue ? vm.$options.name : vm.name;
+        return name ? ' (found in component: <' + hyphenate(name) + '>)' : '';
       };
     })();
   }
@@ -1023,7 +1041,7 @@
    */
 
   function appendWithTransition(el, target, vm, cb) {
-    applyTransition(el, 1, function() {
+    applyTransition(el, 1, function () {
       target.appendChild(el);
     }, vm, cb);
   }
@@ -1038,7 +1056,7 @@
    */
 
   function beforeWithTransition(el, target, vm, cb) {
-    applyTransition(el, 1, function() {
+    applyTransition(el, 1, function () {
       before(el, target);
     }, vm, cb);
   }
@@ -1052,7 +1070,7 @@
    */
 
   function removeWithTransition(el, vm, cb) {
-    applyTransition(el, -1, function() {
+    applyTransition(el, -1, function () {
       remove(el);
     }, vm, cb);
   }
@@ -1072,15 +1090,15 @@
   function applyTransition(el, direction, op, vm, cb) {
     var transition = el.__v_trans;
     if (!transition ||
-      // skip if there are no js hooks and CSS transition is
-      // not supported
-      !transition.hooks && !transitionEndEvent ||
-      // skip transitions for initial compile
-      !vm._isCompiled ||
-      // if the vm is being manipulated by a parent directive
-      // during the parent's compilation phase, skip the
-      // animation.
-      vm.$parent && !vm.$parent._isCompiled) {
+    // skip if there are no js hooks and CSS transition is
+    // not supported
+    !transition.hooks && !transitionEndEvent ||
+    // skip transitions for initial compile
+    !vm._isCompiled ||
+    // if the vm is being manipulated by a parent directive
+    // during the parent's compilation phase, skip the
+    // animation.
+    vm.$parent && !vm.$parent._isCompiled) {
       op();
       if (cb) cb();
       return;
@@ -1089,7 +1107,7 @@
     transition[action](op, cb);
   }
 
-  var transition = Object.freeze({
+var transition = Object.freeze({
     appendWithTransition: appendWithTransition,
     beforeWithTransition: beforeWithTransition,
     removeWithTransition: removeWithTransition,
@@ -1127,8 +1145,9 @@
    */
 
   function inDoc(node) {
-    var doc = document.documentElement;
-    var parent = node && node.parentNode;
+    if (!node) return false;
+    var doc = node.ownerDocument.documentElement;
+    var parent = node.parentNode;
     return doc === node || doc === parent || !!(parent && parent.nodeType === 1 && doc.contains(parent));
   }
 
@@ -1483,12 +1502,11 @@
     var done = false;
     var removed = 0;
     var nodes = [];
-    mapNodeRange(start, end, function(node) {
+    mapNodeRange(start, end, function (node) {
       if (node === end) done = true;
       nodes.push(node);
       removeWithTransition(node, vm, onRemoved);
     });
-
     function onRemoved() {
       removed++;
       if (done && removed >= nodes.length) {
@@ -1534,7 +1552,7 @@
 
   var isUnknownElement = undefined;
   if ('development' !== 'production') {
-    isUnknownElement = function(el, tag) {
+    isUnknownElement = function (el, tag) {
       if (tag.indexOf('-') > -1) {
         // http://stackoverflow.com/a/28210364/1070244
         return el.constructor === window.HTMLUnknownElement || el.constructor === window.HTMLElement;
@@ -1542,7 +1560,8 @@
         return (/HTMLUnknownElement/.test(el.toString()) &&
           // Chrome returns unknown for several HTML5 elements.
           // https://code.google.com/p/chromium/issues/detail?id=540526
-          !/^(data|time|rtc|rb)$/.test(tag)
+          // Firefox returns unknown for some "Interactive elements."
+          !/^(data|time|rtc|rb|details|dialog|summary)$/.test(tag)
         );
       }
     };
@@ -1562,11 +1581,9 @@
     var hasAttrs = el.hasAttributes();
     if (!commonTagRE.test(tag) && !reservedTagRE.test(tag)) {
       if (resolveAsset(options, 'components', tag)) {
-        return {
-          id: tag
-        };
+        return { id: tag };
       } else {
-        var is = hasAttrs && getIsBinding(el);
+        var is = hasAttrs && getIsBinding(el, options);
         if (is) {
           return is;
         } else if ('development' !== 'production') {
@@ -1579,7 +1596,7 @@
         }
       }
     } else if (hasAttrs) {
-      return getIsBinding(el);
+      return getIsBinding(el, options);
     }
   }
 
@@ -1587,23 +1604,22 @@
    * Get "is" binding from an element.
    *
    * @param {Element} el
+   * @param {Object} options
    * @return {Object|undefined}
    */
 
-  function getIsBinding(el) {
+  function getIsBinding(el, options) {
     // dynamic syntax
-    var exp = getAttr(el, 'is');
+    var exp = el.getAttribute('is');
     if (exp != null) {
-      return {
-        id: exp
-      };
+      if (resolveAsset(options, 'components', exp)) {
+        el.removeAttribute('is');
+        return { id: exp };
+      }
     } else {
       exp = getBindAttr(el, 'is');
       if (exp != null) {
-        return {
-          id: exp,
-          dynamic: true
-        };
+        return { id: exp, dynamic: true };
       }
     }
   }
@@ -1644,14 +1660,14 @@
    * Data
    */
 
-  strats.data = function(parentVal, childVal, vm) {
+  strats.data = function (parentVal, childVal, vm) {
     if (!vm) {
       // in a Vue.extend merge, both should be functions
       if (!childVal) {
         return parentVal;
       }
       if (typeof childVal !== 'function') {
-        'development' !== 'production' && warn('The "data" option should be a function ' + 'that returns a per-instance value in component ' + 'definitions.');
+        'development' !== 'production' && warn('The "data" option should be a function ' + 'that returns a per-instance value in component ' + 'definitions.', vm);
         return parentVal;
       }
       if (!parentVal) {
@@ -1683,9 +1699,9 @@
    * El
    */
 
-  strats.el = function(parentVal, childVal, vm) {
+  strats.el = function (parentVal, childVal, vm) {
     if (!vm && childVal && typeof childVal !== 'function') {
-      'development' !== 'production' && warn('The "el" option should be a function ' + 'that returns a per-instance value in component ' + 'definitions.');
+      'development' !== 'production' && warn('The "el" option should be a function ' + 'that returns a per-instance value in component ' + 'definitions.', vm);
       return;
     }
     var ret = childVal || parentVal;
@@ -1697,17 +1713,8 @@
    * Hooks and param attributes are merged as arrays.
    */
 
-  strats.init = strats.created = strats.ready = strats.attached = strats.detached = strats.beforeCompile = strats.compiled = strats.beforeDestroy = strats.destroyed = strats.activate = function(parentVal, childVal) {
+  strats.init = strats.created = strats.ready = strats.attached = strats.detached = strats.beforeCompile = strats.compiled = strats.beforeDestroy = strats.destroyed = strats.activate = function (parentVal, childVal) {
     return childVal ? parentVal ? parentVal.concat(childVal) : isArray(childVal) ? childVal : [childVal] : parentVal;
-  };
-
-  /**
-   * 0.11 deprecation warning
-   */
-
-  strats.paramAttributes = function() {
-    /* istanbul ignore next */
-    'development' !== 'production' && warn('"paramAttributes" option has been deprecated in 0.12. ' + 'Use "props" instead.');
   };
 
   /**
@@ -1719,11 +1726,11 @@
    */
 
   function mergeAssets(parentVal, childVal) {
-    var res = Object.create(parentVal);
+    var res = Object.create(parentVal || null);
     return childVal ? extend(res, guardArrayAssets(childVal)) : res;
   }
 
-  config._assetTypes.forEach(function(type) {
+  config._assetTypes.forEach(function (type) {
     strats[type + 's'] = mergeAssets;
   });
 
@@ -1734,7 +1741,7 @@
    * another, so we merge them as arrays.
    */
 
-  strats.watch = strats.events = function(parentVal, childVal) {
+  strats.watch = strats.events = function (parentVal, childVal) {
     if (!childVal) return parentVal;
     if (!parentVal) return childVal;
     var ret = {};
@@ -1754,7 +1761,7 @@
    * Other object hashes.
    */
 
-  strats.props = strats.methods = strats.computed = function(parentVal, childVal) {
+  strats.props = strats.methods = strats.computed = function (parentVal, childVal) {
     if (!childVal) return parentVal;
     if (!parentVal) return childVal;
     var ret = Object.create(null);
@@ -1832,9 +1839,7 @@
       while (i--) {
         val = props[keys[i]];
         if (typeof val === 'function') {
-          props[keys[i]] = {
-            type: val
-          };
+          props[keys[i]] = { type: val };
         }
       }
     }
@@ -1880,11 +1885,21 @@
   function mergeOptions(parent, child, vm) {
     guardComponents(child);
     guardProps(child);
+    if ('development' !== 'production') {
+      if (child.propsData && !vm) {
+        warn('propsData can only be used as an instantiation option.');
+      }
+    }
     var options = {};
     var key;
+    if (child['extends']) {
+      parent = typeof child['extends'] === 'function' ? mergeOptions(parent, child['extends'].options, vm) : mergeOptions(parent, child['extends'], vm);
+    }
     if (child.mixins) {
       for (var i = 0, l = child.mixins.length; i < l; i++) {
-        parent = mergeOptions(parent, child.mixins[i], vm);
+        var mixin = child.mixins[i];
+        var mixinOptions = mixin.prototype instanceof Vue ? mixin.options : mixin;
+        parent = mergeOptions(parent, mixinOptions, vm);
       }
     }
     for (key in parent) {
@@ -1895,7 +1910,6 @@
         mergeField(key);
       }
     }
-
     function mergeField(key) {
       var strat = strats[key] || defaultStrat;
       options[key] = strat(parent[key], child[key], vm, key);
@@ -1911,31 +1925,26 @@
    * @param {Object} options
    * @param {String} type
    * @param {String} id
+   * @param {Boolean} warnMissing
    * @return {Object|Function}
    */
 
-  function resolveAsset(options, type, id) {
+  function resolveAsset(options, type, id, warnMissing) {
     /* istanbul ignore if */
     if (typeof id !== 'string') {
       return;
     }
     var assets = options[type];
     var camelizedId;
-    return assets[id] ||
-      // camelCase ID
-      assets[camelizedId = camelize(id)] ||
-      // Pascal Case ID
-      assets[camelizedId.charAt(0).toUpperCase() + camelizedId.slice(1)];
-  }
-
-  /**
-   * Assert asset exists
-   */
-
-  function assertAsset(val, type, id) {
-    if (!val) {
-      'development' !== 'production' && warn('Failed to resolve ' + type + ': ' + id);
+    var res = assets[id] ||
+    // camelCase ID
+    assets[camelizedId = camelize(id)] ||
+    // Pascal Case ID
+    assets[camelizedId.charAt(0).toUpperCase() + camelizedId.slice(1)];
+    if ('development' !== 'production' && warnMissing && !res) {
+      warn('Failed to resolve ' + type.slice(0, -1) + ': ' + id, options);
     }
+    return res;
   }
 
   var uid$1 = 0;
@@ -1962,7 +1971,7 @@
    * @param {Directive} sub
    */
 
-  Dep.prototype.addSub = function(sub) {
+  Dep.prototype.addSub = function (sub) {
     this.subs.push(sub);
   };
 
@@ -1972,7 +1981,7 @@
    * @param {Directive} sub
    */
 
-  Dep.prototype.removeSub = function(sub) {
+  Dep.prototype.removeSub = function (sub) {
     this.subs.$remove(sub);
   };
 
@@ -1980,7 +1989,7 @@
    * Add self as a dependency to the target watcher.
    */
 
-  Dep.prototype.depend = function() {
+  Dep.prototype.depend = function () {
     Dep.target.addDep(this);
   };
 
@@ -1988,7 +1997,7 @@
    * Notify all subscribers of a new value.
    */
 
-  Dep.prototype.notify = function() {
+  Dep.prototype.notify = function () {
     // stablize the subscriber list first
     var subs = toArray(this.subs);
     for (var i = 0, l = subs.length; i < l; i++) {
@@ -2003,8 +2012,7 @@
    * Intercept mutating methods and emit events
    */
 
-  ;
-  ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'].forEach(function(method) {
+  ;['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'].forEach(function (method) {
     // cache original method
     var original = arrayProto[method];
     def(arrayMethods, method, function mutator() {
@@ -2053,10 +2061,9 @@
   });
 
   /**
-   * Convenience method to remove the element at given index.
+   * Convenience method to remove the element at given index or target element reference.
    *
-   * @param {Number} index
-   * @param {*} val
+   * @param {*} item
    */
 
   def(arrayProto, '$remove', function $remove(item) {
@@ -2121,7 +2128,7 @@
    * @param {Object} obj
    */
 
-  Observer.prototype.walk = function(obj) {
+  Observer.prototype.walk = function (obj) {
     var keys = Object.keys(obj);
     for (var i = 0, l = keys.length; i < l; i++) {
       this.convert(keys[i], obj[keys[i]]);
@@ -2134,7 +2141,7 @@
    * @param {Array} items
    */
 
-  Observer.prototype.observeArray = function(items) {
+  Observer.prototype.observeArray = function (items) {
     for (var i = 0, l = items.length; i < l; i++) {
       observe(items[i]);
     }
@@ -2148,7 +2155,7 @@
    * @param {*} val
    */
 
-  Observer.prototype.convert = function(key, val) {
+  Observer.prototype.convert = function (key, val) {
     defineReactive(this.value, key, val);
   };
 
@@ -2161,7 +2168,7 @@
    * @param {Vue} vm
    */
 
-  Observer.prototype.addVm = function(vm) {
+  Observer.prototype.addVm = function (vm) {
     (this.vms || (this.vms = [])).push(vm);
   };
 
@@ -2172,7 +2179,7 @@
    * @param {Vue} vm
    */
 
-  Observer.prototype.removeVm = function(vm) {
+  Observer.prototype.removeVm = function (vm) {
     this.vms.$remove(vm);
   };
 
@@ -2293,86 +2300,81 @@
 
 
   var util = Object.freeze({
-    defineReactive: defineReactive,
-    set: set,
-    del: del,
-    hasOwn: hasOwn,
-    isLiteral: isLiteral,
-    isReserved: isReserved,
-    _toString: _toString,
-    toNumber: toNumber,
-    toBoolean: toBoolean,
-    stripQuotes: stripQuotes,
-    camelize: camelize,
-    hyphenate: hyphenate,
-    classify: classify,
-    bind: bind,
-    toArray: toArray,
-    extend: extend,
-    isObject: isObject,
-    isPlainObject: isPlainObject,
-    def: def,
-    debounce: _debounce,
-    indexOf: indexOf,
-    cancellable: cancellable,
-    looseEqual: looseEqual,
-    isArray: isArray,
-    hasProto: hasProto,
-    inBrowser: inBrowser,
-    devtools: devtools,
-    isIE9: isIE9,
-    isAndroid: isAndroid,
-    get transitionProp() {
-      return transitionProp;
-    },
-    get transitionEndEvent() {
-      return transitionEndEvent;
-    },
-    get animationProp() {
-      return animationProp;
-    },
-    get animationEndEvent() {
-      return animationEndEvent;
-    },
-    nextTick: nextTick,
-    query: query,
-    inDoc: inDoc,
-    getAttr: getAttr,
-    getBindAttr: getBindAttr,
-    hasBindAttr: hasBindAttr,
-    before: before,
-    after: after,
-    remove: remove,
-    prepend: prepend,
-    replace: replace,
-    on: on,
-    off: off,
-    setClass: setClass,
-    addClass: addClass,
-    removeClass: removeClass,
-    extractContent: extractContent,
-    trimNode: trimNode,
-    isTemplate: isTemplate,
-    createAnchor: createAnchor,
-    findRef: findRef,
-    mapNodeRange: mapNodeRange,
-    removeNodeRange: removeNodeRange,
-    isFragment: isFragment,
-    getOuterHTML: getOuterHTML,
-    mergeOptions: mergeOptions,
-    resolveAsset: resolveAsset,
-    assertAsset: assertAsset,
-    checkComponentAttr: checkComponentAttr,
-    commonTagRE: commonTagRE,
-    reservedTagRE: reservedTagRE,
-    get warn() {
-      return warn;
-    }
+  	defineReactive: defineReactive,
+  	set: set,
+  	del: del,
+  	hasOwn: hasOwn,
+  	isLiteral: isLiteral,
+  	isReserved: isReserved,
+  	_toString: _toString,
+  	toNumber: toNumber,
+  	toBoolean: toBoolean,
+  	stripQuotes: stripQuotes,
+  	camelize: camelize,
+  	hyphenate: hyphenate,
+  	classify: classify,
+  	bind: bind,
+  	toArray: toArray,
+  	extend: extend,
+  	isObject: isObject,
+  	isPlainObject: isPlainObject,
+  	def: def,
+  	debounce: _debounce,
+  	indexOf: indexOf,
+  	cancellable: cancellable,
+  	looseEqual: looseEqual,
+  	isArray: isArray,
+  	hasProto: hasProto,
+  	inBrowser: inBrowser,
+  	devtools: devtools,
+  	isIE: isIE,
+  	isIE9: isIE9,
+  	isAndroid: isAndroid,
+  	isIos: isIos,
+  	iosVersionMatch: iosVersionMatch,
+  	iosVersion: iosVersion,
+  	hasMutationObserverBug: hasMutationObserverBug,
+  	get transitionProp () { return transitionProp; },
+  	get transitionEndEvent () { return transitionEndEvent; },
+  	get animationProp () { return animationProp; },
+  	get animationEndEvent () { return animationEndEvent; },
+  	nextTick: nextTick,
+  	get _Set () { return _Set; },
+  	query: query,
+  	inDoc: inDoc,
+  	getAttr: getAttr,
+  	getBindAttr: getBindAttr,
+  	hasBindAttr: hasBindAttr,
+  	before: before,
+  	after: after,
+  	remove: remove,
+  	prepend: prepend,
+  	replace: replace,
+  	on: on,
+  	off: off,
+  	setClass: setClass,
+  	addClass: addClass,
+  	removeClass: removeClass,
+  	extractContent: extractContent,
+  	trimNode: trimNode,
+  	isTemplate: isTemplate,
+  	createAnchor: createAnchor,
+  	findRef: findRef,
+  	mapNodeRange: mapNodeRange,
+  	removeNodeRange: removeNodeRange,
+  	isFragment: isFragment,
+  	getOuterHTML: getOuterHTML,
+  	mergeOptions: mergeOptions,
+  	resolveAsset: resolveAsset,
+  	checkComponentAttr: checkComponentAttr,
+  	commonTagRE: commonTagRE,
+  	reservedTagRE: reservedTagRE,
+  	get warn () { return warn; }
   });
 
   var uid = 0;
 
-  function initMixin(Vue) {
+  function initMixin (Vue) {
     /**
      * The main init sequence. This is called for every
      * instance, including ones that are created from extended
@@ -2384,7 +2386,7 @@
      *                           in to the constructor.
      */
 
-    Vue.prototype._init = function(options) {
+    Vue.prototype._init = function (options) {
       options = options || {};
 
       this.$el = null;
@@ -2409,8 +2411,8 @@
       // fragment instance properties
       this._isFragment = false;
       this._fragment = // @type {DocumentFragment}
-        this._fragmentStart = // @type {Text|Comment}
-        this._fragmentEnd = null; // @type {Text|Comment}
+      this._fragmentStart = // @type {Text|Comment}
+      this._fragmentEnd = null; // @type {Text|Comment}
 
       // lifecycle state
       this._isCompiled = this._isDestroyed = this._isReady = this._isAttached = this._isBeingDestroyed = this._vForRemoving = false;
@@ -2450,13 +2452,8 @@
       this._updateRef();
 
       // initialize data as empty object.
-      // it will be filled up in _initScope().
+      // it will be filled up in _initData().
       this._data = {};
-
-      // save raw constructor data before merge
-      // so that we know which properties are provided at
-      // instantiation.
-      this._runtimeData = options.data;
 
       // call init hook
       this._callHook('init');
@@ -2636,14 +2633,14 @@
 
     var actions = [];
 
-    actions[PUSH] = function() {
+    actions[PUSH] = function () {
       if (key !== undefined) {
         keys.push(key);
         key = undefined;
       }
     };
 
-    actions[APPEND] = function() {
+    actions[APPEND] = function () {
       if (key === undefined) {
         key = newChar;
       } else {
@@ -2651,12 +2648,12 @@
       }
     };
 
-    actions[INC_SUB_PATH_DEPTH] = function() {
+    actions[INC_SUB_PATH_DEPTH] = function () {
       actions[APPEND]();
       subPathDepth++;
     };
 
-    actions[PUSH_SUB_PATH] = function() {
+    actions[PUSH_SUB_PATH] = function () {
       if (subPathDepth > 0) {
         subPathDepth--;
         mode = IN_SUB_PATH;
@@ -2750,8 +2747,8 @@
 
   var warnNonExistent;
   if ('development' !== 'production') {
-    warnNonExistent = function(path) {
-      warn('You are setting a non-existent path "' + path.raw + '" ' + 'on a vm instance. Consider pre-initializing the property ' + 'with the "data" option for more reliable reactivity ' + 'and better performance.');
+    warnNonExistent = function (path, vm) {
+      warn('You are setting a non-existent path "' + path.raw + '" ' + 'on a vm instance. Consider pre-initializing the property ' + 'with the "data" option for more reliable reactivity ' + 'and better performance.', vm);
     };
   }
 
@@ -2783,7 +2780,7 @@
         if (!isObject(obj)) {
           obj = {};
           if ('development' !== 'production' && last._isVue) {
-            warnNonExistent(path);
+            warnNonExistent(path, last);
           }
           set(last, key, obj);
         }
@@ -2794,7 +2791,7 @@
           obj[key] = val;
         } else {
           if ('development' !== 'production' && obj._isVue) {
-            warnNonExistent(path);
+            warnNonExistent(path, obj);
           }
           set(obj, key, val);
         }
@@ -2803,7 +2800,7 @@
     return true;
   }
 
-  var path = Object.freeze({
+var path = Object.freeze({
     parsePath: parsePath,
     getPath: getPath,
     setPath: setPath
@@ -2824,7 +2821,9 @@
   var restoreRE = /"(\d+)"/g;
   var pathTestRE = /^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?'\]|\[".*?"\]|\[\d+\]|\[[A-Za-z_$][\w$]*\])*$/;
   var identRE = /[^\w$\.](?:[A-Za-z_$][\w$]*)/g;
-  var booleanLiteralRE = /^(?:true|false)$/;
+  var literalValueRE$1 = /^(?:true|false|null|undefined|Infinity|NaN)$/;
+
+  function noop() {}
 
   /**
    * Save / Rewrite / Restore
@@ -2906,7 +2905,7 @@
     // save strings and object literal keys
     var body = exp.replace(saveRE, save).replace(wsRE, '');
     // rewrite all paths
-    // pad 1 space here becaue the regex matches 1 extra char
+    // pad 1 space here because the regex matches 1 extra char
     body = (' ' + body).replace(identRE, rewrite).replace(restoreRE, restore);
     return makeGetterFn(body);
   }
@@ -2927,7 +2926,15 @@
       return new Function('scope', 'return ' + body + ';');
       /* eslint-enable no-new-func */
     } catch (e) {
-      'development' !== 'production' && warn('Invalid expression. ' + 'Generated function body: ' + body);
+      if ('development' !== 'production') {
+        /* istanbul ignore if */
+        if (e.toString().match(/unsafe-eval|CSP/)) {
+          warn('It seems you are using the default build of Vue.js in an environment ' + 'with Content Security Policy that prohibits unsafe-eval. ' + 'Use the CSP-compliant build instead: ' + 'http://vuejs.org/guide/installation.html#CSP-compliant-build');
+        } else {
+          warn('Invalid expression. ' + 'Generated function body: ' + body);
+        }
+      }
+      return noop;
     }
   }
 
@@ -2941,7 +2948,7 @@
   function compileSetter(exp) {
     var path = parsePath(exp);
     if (path) {
-      return function(scope, val) {
+      return function (scope, val) {
         setPath(scope, path, val);
       };
     } else {
@@ -2967,14 +2974,12 @@
       }
       return hit;
     }
-    var res = {
-      exp: exp
-    };
+    var res = { exp: exp };
     res.get = isSimplePath(exp) && exp.indexOf('[') < 0
-      // optimized super simple getter
-      ? makeGetterFn('scope.' + exp)
-      // dynamic getter
-      : compileGetter(exp);
+    // optimized super simple getter
+    ? makeGetterFn('scope.' + exp)
+    // dynamic getter
+    : compileGetter(exp);
     if (needSet) {
       res.set = compileSetter(exp);
     }
@@ -2991,13 +2996,13 @@
 
   function isSimplePath(exp) {
     return pathTestRE.test(exp) &&
-      // don't treat true/false as paths
-      !booleanLiteralRE.test(exp) &&
-      // Math constants e.g. Math.PI, Math.E etc.
-      exp.slice(0, 5) !== 'Math.';
+    // don't treat literal values as paths
+    !literalValueRE$1.test(exp) &&
+    // Math constants e.g. Math.PI, Math.E etc.
+    exp.slice(0, 5) !== 'Math.';
   }
 
-  var expression = Object.freeze({
+var expression = Object.freeze({
     parseExpression: parseExpression,
     isSimplePath: isSimplePath
   });
@@ -3009,24 +3014,22 @@
   // triggered, the DOM would have already been in updated
   // state.
 
-  var queueIndex;
   var queue = [];
   var userQueue = [];
   var has = {};
   var circular = {};
   var waiting = false;
-  var internalQueueDepleted = false;
 
   /**
    * Reset the batcher's state.
    */
 
   function resetBatcherState() {
-    queue = [];
-    userQueue = [];
+    queue.length = 0;
+    userQueue.length = 0;
     has = {};
     circular = {};
-    waiting = internalQueueDepleted = false;
+    waiting = false;
   }
 
   /**
@@ -3034,15 +3037,26 @@
    */
 
   function flushBatcherQueue() {
-    runBatcherQueue(queue);
-    internalQueueDepleted = true;
-    runBatcherQueue(userQueue);
-    // dev tool hook
-    /* istanbul ignore if */
-    if (devtools && config.devtools) {
-      devtools.emit('flush');
+    var _again = true;
+
+    _function: while (_again) {
+      _again = false;
+
+      runBatcherQueue(queue);
+      runBatcherQueue(userQueue);
+      // user watchers triggered more watchers,
+      // keep flushing until it depletes
+      if (queue.length) {
+        _again = true;
+        continue _function;
+      }
+      // dev tool hook
+      /* istanbul ignore if */
+      if (devtools && config.devtools) {
+        devtools.emit('flush');
+      }
+      resetBatcherState();
     }
-    resetBatcherState();
   }
 
   /**
@@ -3054,8 +3068,8 @@
   function runBatcherQueue(queue) {
     // do not cache length because more watchers might be pushed
     // as we run existing watchers
-    for (queueIndex = 0; queueIndex < queue.length; queueIndex++) {
-      var watcher = queue[queueIndex];
+    for (var i = 0; i < queue.length; i++) {
+      var watcher = queue[i];
       var id = watcher.id;
       has[id] = null;
       watcher.run();
@@ -3063,11 +3077,12 @@
       if ('development' !== 'production' && has[id] != null) {
         circular[id] = (circular[id] || 0) + 1;
         if (circular[id] > config._maxUpdateCount) {
-          queue.splice(has[id], 1);
-          warn('You may have an infinite update loop for watcher ' + 'with expression: ' + watcher.expression);
+          warn('You may have an infinite update loop for watcher ' + 'with expression "' + watcher.expression + '"', watcher.vm);
+          break;
         }
       }
     }
+    queue.length = 0;
   }
 
   /**
@@ -3084,20 +3099,14 @@
   function pushWatcher(watcher) {
     var id = watcher.id;
     if (has[id] == null) {
-      if (internalQueueDepleted && !watcher.user) {
-        // an internal watcher triggered by a user watcher...
-        // let's run it immediately after current user watcher is done.
-        userQueue.splice(queueIndex + 1, 0, watcher);
-      } else {
-        // push watcher into appropriate queue
-        var q = watcher.user ? userQueue : queue;
-        has[id] = q.length;
-        q.push(watcher);
-        // queue the flush
-        if (!waiting) {
-          waiting = true;
-          nextTick(flushBatcherQueue);
-        }
+      // push watcher into appropriate queue
+      var q = watcher.user ? userQueue : queue;
+      has[id] = q.length;
+      q.push(watcher);
+      // queue the flush
+      if (!waiting) {
+        waiting = true;
+        nextTick(flushBatcherQueue);
       }
     }
   }
@@ -3138,8 +3147,8 @@
     this.dirty = this.lazy; // for lazy watchers
     this.deps = [];
     this.newDeps = [];
-    this.depIds = Object.create(null);
-    this.newDepIds = null;
+    this.depIds = new _Set();
+    this.newDepIds = new _Set();
     this.prevError = null; // for async error stacks
     // parse expression for getter/setter
     if (isFn) {
@@ -3160,7 +3169,7 @@
    * Evaluate the getter, and re-collect dependencies.
    */
 
-  Watcher.prototype.get = function() {
+  Watcher.prototype.get = function () {
     this.beforeGet();
     var scope = this.scope || this.vm;
     var value;
@@ -3168,7 +3177,7 @@
       value = this.getter.call(scope, scope);
     } catch (e) {
       if ('development' !== 'production' && config.warnExpressionErrors) {
-        warn('Error when evaluating expression "' + this.expression + '". ' + (config.debug ? '' : 'Turn on debug mode to see stack trace.'), e);
+        warn('Error when evaluating expression ' + '"' + this.expression + '": ' + e.toString(), this.vm);
       }
     }
     // "touch" every property so they are all tracked as
@@ -3195,7 +3204,7 @@
    * @param {*} value
    */
 
-  Watcher.prototype.set = function(value) {
+  Watcher.prototype.set = function (value) {
     var scope = this.scope || this.vm;
     if (this.filters) {
       value = scope._applyFilters(value, this.value, this.filters, true);
@@ -3204,17 +3213,17 @@
       this.setter.call(scope, scope, value);
     } catch (e) {
       if ('development' !== 'production' && config.warnExpressionErrors) {
-        warn('Error when evaluating setter "' + this.expression + '"', e);
+        warn('Error when evaluating setter ' + '"' + this.expression + '": ' + e.toString(), this.vm);
       }
     }
     // two-way sync for v-for alias
     var forContext = scope.$forContext;
     if (forContext && forContext.alias === this.expression) {
       if (forContext.filters) {
-        'development' !== 'production' && warn('It seems you are using two-way binding on ' + 'a v-for alias (' + this.expression + '), and the ' + 'v-for has filters. This will not work properly. ' + 'Either remove the filters or use an array of ' + 'objects and bind to object properties instead.');
+        'development' !== 'production' && warn('It seems you are using two-way binding on ' + 'a v-for alias (' + this.expression + '), and the ' + 'v-for has filters. This will not work properly. ' + 'Either remove the filters or use an array of ' + 'objects and bind to object properties instead.', this.vm);
         return;
       }
-      forContext._withLock(function() {
+      forContext._withLock(function () {
         if (scope.$key) {
           // original is an object
           forContext.rawValue[scope.$key] = value;
@@ -3229,10 +3238,8 @@
    * Prepare for dependency collection.
    */
 
-  Watcher.prototype.beforeGet = function() {
+  Watcher.prototype.beforeGet = function () {
     Dep.target = this;
-    this.newDepIds = Object.create(null);
-    this.newDeps.length = 0;
   };
 
   /**
@@ -3241,12 +3248,12 @@
    * @param {Dep} dep
    */
 
-  Watcher.prototype.addDep = function(dep) {
+  Watcher.prototype.addDep = function (dep) {
     var id = dep.id;
-    if (!this.newDepIds[id]) {
-      this.newDepIds[id] = true;
+    if (!this.newDepIds.has(id)) {
+      this.newDepIds.add(id);
       this.newDeps.push(dep);
-      if (!this.depIds[id]) {
+      if (!this.depIds.has(id)) {
         dep.addSub(this);
       }
     }
@@ -3256,19 +3263,23 @@
    * Clean up for dependency collection.
    */
 
-  Watcher.prototype.afterGet = function() {
+  Watcher.prototype.afterGet = function () {
     Dep.target = null;
     var i = this.deps.length;
     while (i--) {
       var dep = this.deps[i];
-      if (!this.newDepIds[dep.id]) {
+      if (!this.newDepIds.has(dep.id)) {
         dep.removeSub(this);
       }
     }
+    var tmp = this.depIds;
     this.depIds = this.newDepIds;
-    var tmp = this.deps;
+    this.newDepIds = tmp;
+    this.newDepIds.clear();
+    tmp = this.deps;
     this.deps = this.newDeps;
     this.newDeps = tmp;
+    this.newDeps.length = 0;
   };
 
   /**
@@ -3278,7 +3289,7 @@
    * @param {Boolean} shallow
    */
 
-  Watcher.prototype.update = function(shallow) {
+  Watcher.prototype.update = function (shallow) {
     if (this.lazy) {
       this.dirty = true;
     } else if (this.sync || !config.async) {
@@ -3302,15 +3313,15 @@
    * Will be called by the batcher.
    */
 
-  Watcher.prototype.run = function() {
+  Watcher.prototype.run = function () {
     if (this.active) {
       var value = this.get();
       if (value !== this.value ||
-        // Deep watchers and watchers on Object/Arrays should fire even
-        // when the value is the same, because the value may
-        // have mutated; but only do so if this is a
-        // non-shallow update (caused by a vm digest).
-        (isObject(value) || this.deep) && !this.shallow) {
+      // Deep watchers and watchers on Object/Arrays should fire even
+      // when the value is the same, because the value may
+      // have mutated; but only do so if this is a
+      // non-shallow update (caused by a vm digest).
+      (isObject(value) || this.deep) && !this.shallow) {
         // set new value
         var oldValue = this.value;
         this.value = value;
@@ -3324,7 +3335,7 @@
           try {
             this.cb.call(this.vm, value, oldValue);
           } catch (e) {
-            nextTick(function() {
+            nextTick(function () {
               throw prevError;
             }, 0);
             throw e;
@@ -3342,7 +3353,7 @@
    * This only gets called for lazy watchers.
    */
 
-  Watcher.prototype.evaluate = function() {
+  Watcher.prototype.evaluate = function () {
     // avoid overwriting another watcher that is being
     // collected.
     var current = Dep.target;
@@ -3355,7 +3366,7 @@
    * Depend on all deps collected by this watcher.
    */
 
-  Watcher.prototype.depend = function() {
+  Watcher.prototype.depend = function () {
     var i = this.deps.length;
     while (i--) {
       this.deps[i].depend();
@@ -3366,7 +3377,7 @@
    * Remove self from all dependencies' subcriber list.
    */
 
-  Watcher.prototype.teardown = function() {
+  Watcher.prototype.teardown = function () {
     if (this.active) {
       // remove self from vm's watcher list
       // this is a somewhat expensive operation so we skip it
@@ -3392,15 +3403,33 @@
    * @param {*} val
    */
 
-  function traverse(val) {
-    var i, keys;
-    if (isArray(val)) {
-      i = val.length;
-      while (i--) traverse(val[i]);
-    } else if (isObject(val)) {
-      keys = Object.keys(val);
-      i = keys.length;
-      while (i--) traverse(val[keys[i]]);
+  var seenObjects = new _Set();
+  function traverse(val, seen) {
+    var i = undefined,
+        keys = undefined;
+    if (!seen) {
+      seen = seenObjects;
+      seen.clear();
+    }
+    var isA = isArray(val);
+    var isO = isObject(val);
+    if (isA || isO) {
+      if (val.__ob__) {
+        var depId = val.__ob__.dep.id;
+        if (seen.has(depId)) {
+          return;
+        } else {
+          seen.add(depId);
+        }
+      }
+      if (isA) {
+        i = val.length;
+        while (i--) traverse(val[i], seen);
+      } else if (isO) {
+        keys = Object.keys(val);
+        i = keys.length;
+        while (i--) traverse(val[keys[i]], seen);
+      }
     }
   }
 
@@ -3447,6 +3476,7 @@
 
   var tagRE$1 = /<([\w:-]+)/;
   var entityRE = /&#?\w+?;/;
+  var commentRE = /<!--/;
 
   /**
    * Convert a string template to a DocumentFragment.
@@ -3469,8 +3499,9 @@
     var frag = document.createDocumentFragment();
     var tagMatch = templateString.match(tagRE$1);
     var entityMatch = entityRE.test(templateString);
+    var commentMatch = commentRE.test(templateString);
 
-    if (!tagMatch && !entityMatch) {
+    if (!tagMatch && !entityMatch && !commentMatch) {
       // text only, return a single text node.
       frag.appendChild(document.createTextNode(templateString));
     } else {
@@ -3509,10 +3540,13 @@
 
   function nodeToFragment(node) {
     // if its a template tag and the browser supports it,
-    // its content is already a document fragment.
+    // its content is already a document fragment. However, iOS Safari has
+    // bug when using directly cloned template content with touch
+    // events and can cause crashes when the nodes are removed from DOM, so we
+    // have to treat template elements as string templates. (#2805)
+    /* istanbul ignore if */
     if (isRealTemplate(node)) {
-      trimNode(node.content);
-      return node.content;
+      return stringToFragment(node.innerHTML);
     }
     // script template
     if (node.tagName === 'SCRIPT') {
@@ -3533,7 +3567,7 @@
 
   // Test for the presence of the Safari template cloning bug
   // https://bugs.webkit.org/showug.cgi?id=137755
-  var hasBrokenTemplate = (function() {
+  var hasBrokenTemplate = (function () {
     /* istanbul ignore else */
     if (inBrowser) {
       var a = document.createElement('div');
@@ -3545,7 +3579,7 @@
   })();
 
   // Test for IE10/11 textarea placeholder clone bug
-  var hasTextareaCloneBug = (function() {
+  var hasTextareaCloneBug = (function () {
     /* istanbul ignore else */
     if (inBrowser) {
       var t = document.createElement('textarea');
@@ -3660,7 +3694,7 @@
     return frag && shouldClone ? cloneNode(frag) : frag;
   }
 
-  var template = Object.freeze({
+var template = Object.freeze({
     cloneNode: cloneNode,
     parseTemplate: parseTemplate
   });
@@ -3726,8 +3760,8 @@
     }
     this.unlink = linker(vm, frag, host, scope, this);
     var single = this.single = frag.childNodes.length === 1 &&
-      // do not go single mode if the only node is an anchor
-      !frag.childNodes[0].__v_anchor;
+    // do not go single mode if the only node is an anchor
+    !frag.childNodes[0].__v_anchor;
     if (single) {
       this.node = frag.childNodes[0];
       this.before = singleBefore;
@@ -3752,7 +3786,7 @@
    * @param {Function} hook
    */
 
-  Fragment.prototype.callHook = function(hook) {
+  Fragment.prototype.callHook = function (hook) {
     var i, l;
     for (i = 0, l = this.childFrags.length; i < l; i++) {
       this.childFrags[i].callHook(hook);
@@ -3787,7 +3821,7 @@
     var shouldCallRemove = inDoc(this.node);
     var self = this;
     this.beforeRemove();
-    removeWithTransition(this.node, this.vm, function() {
+    removeWithTransition(this.node, this.vm, function () {
       if (shouldCallRemove) {
         self.callHook(detach);
       }
@@ -3806,7 +3840,7 @@
     this.inserted = true;
     var vm = this.vm;
     var method = withTransition !== false ? beforeWithTransition : before;
-    mapNodeRange(this.node, this.end, function(node) {
+    mapNodeRange(this.node, this.end, function (node) {
       method(node, target, vm);
     });
     if (inDoc(this.node)) {
@@ -3823,7 +3857,7 @@
     var self = this;
     var shouldCallRemove = inDoc(this.node);
     this.beforeRemove();
-    removeNodeRange(this.node, this.end, this.vm, this.frag, function() {
+    removeNodeRange(this.node, this.end, this.vm, this.frag, function () {
       if (shouldCallRemove) {
         self.callHook(detach);
       }
@@ -3835,7 +3869,7 @@
    * Prepare the fragment for removal.
    */
 
-  Fragment.prototype.beforeRemove = function() {
+  Fragment.prototype.beforeRemove = function () {
     var i, l;
     for (i = 0, l = this.childFrags.length; i < l; i++) {
       // call the same method recursively on child
@@ -3863,7 +3897,7 @@
    * Destroy the fragment.
    */
 
-  Fragment.prototype.destroy = function() {
+  Fragment.prototype.destroy = function () {
     if (this.parentFrag) {
       this.parentFrag.childFrags.$remove(this);
     }
@@ -3908,7 +3942,7 @@
     this.vm = vm;
     var template;
     var isString = typeof el === 'string';
-    if (isString || isTemplate(el)) {
+    if (isString || isTemplate(el) && !el.hasAttribute('v-if')) {
       template = parseTemplate(el, true);
     } else {
       template = document.createDocumentFragment();
@@ -3939,7 +3973,7 @@
    * @param {Fragment} parentFrag
    */
 
-  FragmentFactory.prototype.create = function(host, scope, parentFrag) {
+  FragmentFactory.prototype.create = function (host, scope, parentFrag) {
     var frag = cloneNode(this.template);
     return new Fragment(this.linker, this.vm, frag, host, scope, parentFrag);
   };
@@ -3951,9 +3985,9 @@
   var EL = 1500;
   var COMPONENT = 1500;
   var PARTIAL = 1750;
-  var FOR = 2000;
-  var IF = 2000;
-  var SLOT = 2100;
+  var IF = 2100;
+  var FOR = 2200;
+  var SLOT = 2300;
 
   var uid$3 = 0;
 
@@ -3979,7 +4013,7 @@
       }
 
       if (!this.alias) {
-        'development' !== 'production' && warn('Alias is required in v-for.');
+        'development' !== 'production' && warn('Invalid v-for expression "' + this.descriptor.raw + '": ' + 'alias is required.', this.vm);
         return;
       }
 
@@ -4070,7 +4104,7 @@
           // update data for track-by, object repeat &
           // primitive values.
           if (trackByKey || convertedFromObject || primitive) {
-            withoutConversion(function() {
+            withoutConversion(function () {
               frag.scope[alias] = value;
             });
           }
@@ -4108,7 +4142,7 @@
       }
       this.vm._vForRemoving = false;
       if (removalIndex) {
-        this.vm._watchers = this.vm._watchers.filter(function(w) {
+        this.vm._watchers = this.vm._watchers.filter(function (w) {
           return w.active;
         });
       }
@@ -4125,9 +4159,9 @@
         if (frag.reused && !frag.staggerCb) {
           currentPrev = findPrevFrag(frag, start, this.id);
           if (currentPrev !== targetPrev && (!currentPrev ||
-              // optimization for moving a single item.
-              // thanks to suggestions by @livoras in #1807
-              findPrevFrag(currentPrev, start, this.id) !== targetPrev)) {
+          // optimization for moving a single item.
+          // thanks to suggestions by @livoras in #1807
+          findPrevFrag(currentPrev, start, this.id) !== targetPrev)) {
             this.move(frag, prevEl);
           }
         } else {
@@ -4164,7 +4198,7 @@
       // define scope properties
       // important: define the scope alias without forced conversion
       // so that frozen data structures remain non-reactive.
-      withoutConversion(function() {
+      withoutConversion(function () {
         defineReactive(scope, alias, value);
       });
       defineReactive(scope, '$index', index);
@@ -4196,7 +4230,7 @@
         refs = this.frags.map(findVmFromFrag);
       } else {
         refs = {};
-        this.frags.forEach(function(frag) {
+        this.frags.forEach(function (frag) {
           refs[frag.scope.$key] = findVmFromFrag(frag);
         });
       }
@@ -4243,14 +4277,22 @@
           anchor.__v_frag = frag;
         }
         after(anchor, prevEl);
-        var op = frag.staggerCb = cancellable(function() {
+        var op = frag.staggerCb = cancellable(function () {
           frag.staggerCb = null;
           frag.before(anchor);
           remove(anchor);
         });
         setTimeout(op, staggerAmount);
       } else {
-        frag.before(prevEl.nextSibling);
+        var target = prevEl.nextSibling;
+        /* istanbul ignore if */
+        if (!target) {
+          // reset end anchor position in case the position was messed up
+          // by an external drag-n-drop library.
+          after(this.end, prevEl);
+          target = this.end;
+        }
+        frag.before(target);
       }
     },
 
@@ -4276,7 +4318,7 @@
       }
       var staggerAmount = this.getStagger(frag, index, total, 'leave');
       if (inDocument && staggerAmount) {
-        var op = frag.staggerCb = cancellable(function() {
+        var op = frag.staggerCb = cancellable(function () {
           frag.staggerCb = null;
           frag.remove();
         });
@@ -4321,7 +4363,7 @@
       var primitive = !isObject(value);
       var id;
       if (key || trackByKey || primitive) {
-        id = trackByKey ? trackByKey === '$index' ? index : value[trackByKey] : key || value;
+        id = getTrackByKey(index, key, value, trackByKey);
         if (!cache[id]) {
           cache[id] = frag;
         } else if (trackByKey !== '$index') {
@@ -4335,8 +4377,10 @@
           } else {
             'development' !== 'production' && this.warnDuplicate(value);
           }
-        } else {
+        } else if (Object.isExtensible(value)) {
           def(value, id, frag);
+        } else if ('development' !== 'production') {
+          warn('Frozen v-for objects cannot be automatically tracked, make sure to ' + 'provide a track-by key.');
         }
       }
       frag.raw = value;
@@ -4356,7 +4400,7 @@
       var primitive = !isObject(value);
       var frag;
       if (key || trackByKey || primitive) {
-        var id = trackByKey ? trackByKey === '$index' ? index : value[trackByKey] : key || value;
+        var id = getTrackByKey(index, key, value, trackByKey);
         frag = this.cache[id];
       } else {
         frag = value[this.id];
@@ -4383,7 +4427,7 @@
       var key = hasOwn(scope, '$key') && scope.$key;
       var primitive = !isObject(value);
       if (trackByKey || key || primitive) {
-        var id = trackByKey ? trackByKey === '$index' ? index : value[trackByKey] : key || value;
+        var id = getTrackByKey(index, key, value, trackByKey);
         this.cache[id] = null;
       } else {
         value[this.id] = null;
@@ -4424,7 +4468,7 @@
      * the filters. This is passed to and called by the watcher.
      *
      * It is necessary for this to be called during the
-     * wathcer's dependency collection phase because we want
+     * watcher's dependency collection phase because we want
      * the v-for to update when the source Object is mutated.
      */
 
@@ -4533,9 +4577,22 @@
     return ret;
   }
 
+  /**
+   * Get the track by key for an item.
+   *
+   * @param {Number} index
+   * @param {String} key
+   * @param {*} value
+   * @param {String} [trackByKey]
+   */
+
+  function getTrackByKey(index, key, value, trackByKey) {
+    return trackByKey ? trackByKey === '$index' ? index : trackByKey.charAt(0).match(/\w/) ? getPath(value, trackByKey) : value[trackByKey] : key || value;
+  }
+
   if ('development' !== 'production') {
-    vFor.warnDuplicate = function(value) {
-      warn('Duplicate value found in v-for="' + this.descriptor.raw + '": ' + JSON.stringify(value) + '. Use track-by="$index" if ' + 'you are expecting duplicate values.');
+    vFor.warnDuplicate = function (value) {
+      warn('Duplicate value found in v-for="' + this.descriptor.raw + '": ' + JSON.stringify(value) + '. Use track-by="$index" if ' + 'you are expecting duplicate values.', this.vm);
     };
   }
 
@@ -4557,7 +4614,7 @@
         this.anchor = createAnchor('v-if');
         replace(el, this.anchor);
       } else {
-        'development' !== 'production' && warn('v-if="' + this.expression + '" cannot be ' + 'used on an instance root element.');
+        'development' !== 'production' && warn('v-if="' + this.expression + '" cannot be ' + 'used on an instance root element.', this.vm);
         this.invalid = true;
       }
     },
@@ -4633,7 +4690,6 @@
       } else {
         toggle();
       }
-
       function toggle() {
         el.style.display = value ? '' : 'none';
       }
@@ -4659,10 +4715,10 @@
       // suggestions... (see Discussion/#162)
       var composing = false;
       if (!isAndroid && !isRange) {
-        this.on('compositionstart', function() {
+        this.on('compositionstart', function () {
           composing = true;
         });
-        this.on('compositionend', function() {
+        this.on('compositionend', function () {
           composing = false;
           // in IE11 the "compositionend" event fires AFTER
           // the "input" event, so the input handler is blocked
@@ -4679,10 +4735,10 @@
       // and force update on blur.
       this.focused = false;
       if (!isRange && !lazy) {
-        this.on('focus', function() {
+        this.on('focus', function () {
           self.focused = true;
         });
-        this.on('blur', function() {
+        this.on('blur', function () {
           self.focused = false;
           // do not sync value after fragment removal (#2017)
           if (!self._frag || self._frag.inserted) {
@@ -4692,7 +4748,7 @@
       }
 
       // Now attach the main listener
-      this.listener = this.rawListener = function() {
+      this.listener = this.rawListener = function () {
         if (composing || !self._bound) {
           return;
         }
@@ -4700,7 +4756,7 @@
         self.set(val);
         // force update on next tick to avoid lock & same value
         // also only update when user is not typing
-        nextTick(function() {
+        nextTick(function () {
           if (self._bound && !self.focused) {
             self.update(self._watcher.value);
           }
@@ -4738,10 +4794,10 @@
 
       // IE9 doesn't fire input event on backspace/del/cut
       if (!lazy && isIE9) {
-        this.on('cut', function() {
+        this.on('cut', function () {
           nextTick(self.listener);
         });
-        this.on('keyup', function(e) {
+        this.on('keyup', function (e) {
           if (e.keyCode === 46 || e.keyCode === 8) {
             self.listener();
           }
@@ -4755,7 +4811,10 @@
     },
 
     update: function update(value) {
-      this.el.value = _toString(value);
+      // #3029 only update when the value changes. This prevent
+      // browsers from overwriting values like selectionStart
+      value = _toString(value);
+      if (value !== this.el.value) this.el.value = value;
     },
 
     unbind: function unbind() {
@@ -4774,7 +4833,7 @@
       var self = this;
       var el = this.el;
 
-      this.getValue = function() {
+      this.getValue = function () {
         // value overwrite via v-bind:value
         if (el.hasOwnProperty('_value')) {
           return el._value;
@@ -4786,7 +4845,7 @@
         return val;
       };
 
-      this.listener = function() {
+      this.listener = function () {
         self.set(self.getValue());
       };
       this.on('change', this.listener);
@@ -4804,11 +4863,13 @@
   var select = {
 
     bind: function bind() {
+      var _this = this;
+
       var self = this;
       var el = this.el;
 
       // method to force update DOM using latest value.
-      this.forceUpdate = function() {
+      this.forceUpdate = function () {
         if (self._watcher) {
           self.update(self._watcher.get());
         }
@@ -4818,7 +4879,7 @@
       var multiple = this.multiple = el.hasAttribute('multiple');
 
       // attach listener
-      this.listener = function() {
+      this.listener = function () {
         var value = getValue(el, multiple);
         value = self.params.number ? isArray(value) ? value.map(toNumber) : toNumber(value) : value;
         self.set(value);
@@ -4835,11 +4896,16 @@
       // selectedIndex with value -1 to 0 when the element
       // is appended to a new parent, therefore we have to
       // force a DOM update whenever that happens...
-      this.vm.$on('hook:attached', this.forceUpdate);
+      this.vm.$on('hook:attached', function () {
+        nextTick(_this.forceUpdate);
+      });
     },
 
     update: function update(value) {
       var el = this.el;
+      if (!inDoc(el)) {
+        return nextTick(this.forceUpdate);
+      }
       el.selectedIndex = -1;
       var multi = this.multiple && isArray(value);
       var options = el.options;
@@ -4911,7 +4977,7 @@
       var self = this;
       var el = this.el;
 
-      this.getValue = function() {
+      this.getValue = function () {
         return el.hasOwnProperty('_value') ? el._value : self.params.number ? toNumber(el.value) : el.value;
       };
 
@@ -4926,7 +4992,7 @@
         return val;
       }
 
-      this.listener = function() {
+      this.listener = function () {
         var model = self._watcher.value;
         if (isArray(model)) {
           var val = self.getValue();
@@ -4991,7 +5057,7 @@
       // friendly warning...
       this.checkFilters();
       if (this.hasRead && !this.hasWrite) {
-        'development' !== 'production' && warn('It seems you are using a read-only filter with ' + 'v-model. You might want to use a two-way filter ' + 'to ensure correct behavior.');
+        'development' !== 'production' && warn('It seems you are using a read-only filter with ' + 'v-model="' + this.descriptor.raw + '". ' + 'You might want to use a two-way filter to ensure correct behavior.', this.vm);
       }
       var el = this.el;
       var tag = el.tagName;
@@ -5003,7 +5069,7 @@
       } else if (tag === 'TEXTAREA') {
         handler = handlers.text;
       } else {
-        'development' !== 'production' && warn('v-model does not support element type: ' + tag);
+        'development' !== 'production' && warn('v-model does not support element type: ' + tag, this.vm);
         return;
       }
       el.__v_model = this;
@@ -5051,7 +5117,7 @@
   };
 
   function keyFilter(handler, keys) {
-    var codes = keys.map(function(key) {
+    var codes = keys.map(function (key) {
       var charCode = key.charCodeAt(0);
       if (charCode > 47 && charCode < 58) {
         return parseInt(key, 10);
@@ -5104,7 +5170,7 @@
       // deal with iframes
       if (this.el.tagName === 'IFRAME' && this.arg !== 'load') {
         var self = this;
-        this.iframeBind = function() {
+        this.iframeBind = function () {
           on(self.el.contentWindow, self.arg, self.handler, self.modifiers.capture);
         };
         this.on('load', this.iframeBind);
@@ -5115,11 +5181,11 @@
       // stub a noop for v-on with no value,
       // e.g. @mousedown.prevent
       if (!this.descriptor.raw) {
-        handler = function() {};
+        handler = function () {};
       }
 
       if (typeof handler !== 'function') {
-        'development' !== 'production' && warn('v-on:' + this.arg + '="' + this.expression + '" expects a function value, ' + 'got ' + handler);
+        'development' !== 'production' && warn('v-on:' + this.arg + '="' + this.expression + '" expects a function value, ' + 'got ' + handler, this.vm);
         return;
       }
 
@@ -5134,8 +5200,8 @@
         handler = selfFilter(handler);
       }
       // key filter
-      var keys = Object.keys(this.modifiers).filter(function(key) {
-        return key !== 'stop' && key !== 'prevent' && key !== 'self';
+      var keys = Object.keys(this.modifiers).filter(function (key) {
+        return key !== 'stop' && key !== 'prevent' && key !== 'self' && key !== 'capture';
       });
       if (keys.length) {
         handler = keyFilter(handler, keys);
@@ -5147,10 +5213,7 @@
       if (this.iframeBind) {
         this.iframeBind();
       } else {
-        var handler = this.handler
-        on(this.el, this.arg, function(e) {
-          handler(e)
-        }, this.modifiers.capture);
+        on(this.el, this.arg, this.handler, this.modifiers.capture);
       }
     },
 
@@ -5215,11 +5278,17 @@
       if (value) {
         var isImportant = importantRE.test(value) ? 'important' : '';
         if (isImportant) {
+          /* istanbul ignore if */
+          if ('development' !== 'production') {
+            warn('It\'s probably a bad idea to use !important with inline rules. ' + 'This feature will be deprecated in a future version of Vue.');
+          }
           value = value.replace(importantRE, '').trim();
+          this.el.style.setProperty(prop.kebab, value, isImportant);
+        } else {
+          this.el.style[prop.camel] = value;
         }
-        this.el.style.setProperty(prop, value, isImportant);
       } else {
-        this.el.style.removeProperty(prop);
+        this.el.style[prop.camel] = '';
       }
     }
 
@@ -5261,14 +5330,20 @@
     }
     var i = prefixes.length;
     var prefixed;
+    if (camel !== 'filter' && camel in testEl.style) {
+      return {
+        kebab: prop,
+        camel: camel
+      };
+    }
     while (i--) {
       prefixed = camelPrefixes[i] + upper;
       if (prefixed in testEl.style) {
-        return prefixes[i] + prop;
+        return {
+          kebab: prefixes[i] + prop,
+          camel: prefixed
+        };
       }
-    }
-    if (camel in testEl.style) {
-      return prop;
     }
   }
 
@@ -5315,7 +5390,7 @@
 
         // only allow binding on native attributes
         if (disallowedInterpAttrRE.test(attr) || attr === 'name' && (tag === 'PARTIAL' || tag === 'SLOT')) {
-          'development' !== 'production' && warn(attr + '="' + descriptor.raw + '": ' + 'attribute interpolation is not allowed in Vue.js ' + 'directives and special attributes.');
+          'development' !== 'production' && warn(attr + '="' + descriptor.raw + '": ' + 'attribute interpolation is not allowed in Vue.js ' + 'directives and special attributes.', this.vm);
           this.el.removeAttribute(attr);
           this.invalid = true;
         }
@@ -5325,12 +5400,12 @@
           var raw = attr + '="' + descriptor.raw + '": ';
           // warn src
           if (attr === 'src') {
-            warn(raw + 'interpolation in "src" attribute will cause ' + 'a 404 request. Use v-bind:src instead.');
+            warn(raw + 'interpolation in "src" attribute will cause ' + 'a 404 request. Use v-bind:src instead.', this.vm);
           }
 
           // warn style
           if (attr === 'style') {
-            warn(raw + 'interpolation in "style" attribute will cause ' + 'the attribute to be discarded in Internet Explorer. ' + 'Use v-bind:style instead.');
+            warn(raw + 'interpolation in "style" attribute will cause ' + 'the attribute to be discarded in Internet Explorer. ' + 'Use v-bind:style instead.', this.vm);
           }
         }
       }
@@ -5358,8 +5433,12 @@
         attr = camelize(attr);
       }
       if (!interp && attrWithPropsRE.test(attr) && attr in el) {
-        el[attr] = attr === 'value' ? value == null // IE9 will set input.value to "null" for null...
-          ? '' : value : value;
+        var attrValue = attr === 'value' ? value == null // IE9 will set input.value to "null" for null...
+        ? '' : value : value;
+
+        if (el[attr] !== attrValue) {
+          el[attr] = attrValue;
+        }
       }
       // set model props
       var modelProp = modelProps[attr];
@@ -5426,14 +5505,14 @@
 
   var ref = {
     bind: function bind() {
-      'development' !== 'production' && warn('v-ref:' + this.arg + ' must be used on a child ' + 'component. Found on <' + this.el.tagName.toLowerCase() + '>.');
+      'development' !== 'production' && warn('v-ref:' + this.arg + ' must be used on a child ' + 'component. Found on <' + this.el.tagName.toLowerCase() + '>.', this.vm);
     }
   };
 
   var cloak = {
     bind: function bind() {
       var el = this.el;
-      this.vm.$once('pre-hook:compiled', function() {
+      this.vm.$once('pre-hook:compiled', function () {
         el.removeAttribute('v-cloak');
       });
     }
@@ -5459,73 +5538,94 @@
     deep: true,
 
     update: function update(value) {
-      if (value && typeof value === 'string') {
-        this.handleObject(stringToObject(value));
-      } else if (isPlainObject(value)) {
-        this.handleObject(value);
-      } else if (isArray(value)) {
-        this.handleArray(value);
-      } else {
+      if (!value) {
         this.cleanup();
+      } else if (typeof value === 'string') {
+        this.setClass(value.trim().split(/\s+/));
+      } else {
+        this.setClass(normalize$1(value));
       }
     },
 
-    handleObject: function handleObject(value) {
-      this.cleanup(value);
-      this.prevKeys = Object.keys(value);
-      setObjectClasses(this.el, value);
-    },
-
-    handleArray: function handleArray(value) {
+    setClass: function setClass(value) {
       this.cleanup(value);
       for (var i = 0, l = value.length; i < l; i++) {
         var val = value[i];
-        if (val && isPlainObject(val)) {
-          setObjectClasses(this.el, val);
-        } else if (val && typeof val === 'string') {
-          addClass(this.el, val);
+        if (val) {
+          apply(this.el, val, addClass);
         }
       }
-      this.prevKeys = value.slice();
+      this.prevKeys = value;
     },
 
     cleanup: function cleanup(value) {
-      if (this.prevKeys) {
-        var i = this.prevKeys.length;
-        while (i--) {
-          var key = this.prevKeys[i];
-          if (!key) continue;
-          if (isPlainObject(key)) {
-            var keys = Object.keys(key);
-            for (var k = 0; k < keys.length; k++) {
-              removeClass(this.el, keys[k]);
-            }
-          } else {
-            removeClass(this.el, key);
-          }
+      var prevKeys = this.prevKeys;
+      if (!prevKeys) return;
+      var i = prevKeys.length;
+      while (i--) {
+        var key = prevKeys[i];
+        if (!value || value.indexOf(key) < 0) {
+          apply(this.el, key, removeClass);
         }
       }
     }
   };
 
-  function setObjectClasses(el, obj) {
-    var keys = Object.keys(obj);
-    for (var i = 0, l = keys.length; i < l; i++) {
-      var key = keys[i];
-      if (obj[key]) {
-        addClass(el, key);
+  /**
+   * Normalize objects and arrays (potentially containing objects)
+   * into array of strings.
+   *
+   * @param {Object|Array<String|Object>} value
+   * @return {Array<String>}
+   */
+
+  function normalize$1(value) {
+    var res = [];
+    if (isArray(value)) {
+      for (var i = 0, l = value.length; i < l; i++) {
+        var _key = value[i];
+        if (_key) {
+          if (typeof _key === 'string') {
+            res.push(_key);
+          } else {
+            for (var k in _key) {
+              if (_key[k]) res.push(k);
+            }
+          }
+        }
+      }
+    } else if (isObject(value)) {
+      for (var key in value) {
+        if (value[key]) res.push(key);
       }
     }
+    return res;
   }
 
-  function stringToObject(value) {
-    var res = {};
-    var keys = value.trim().split(/\s+/);
-    var i = keys.length;
-    while (i--) {
-      res[keys[i]] = true;
+  /**
+   * Add or remove a class/classes on an element
+   *
+   * @param {Element} el
+   * @param {String} key The class name. This may or may not
+   *                     contain a space character, in such a
+   *                     case we'll deal with multiple class
+   *                     names at once.
+   * @param {Function} fn
+   */
+
+  function apply(el, key, fn) {
+    key = key.trim();
+    if (key.indexOf(' ') === -1) {
+      fn(el, key);
+      return;
     }
-    return res;
+    // The key contains one or more space characters.
+    // Since a class name doesn't accept such characters, we
+    // treat it as multiple classes.
+    var keys = key.split(/\s+/);
+    for (var i = 0, l = keys.length; i < l; i++) {
+      fn(el, keys[i]);
+    }
   }
 
   var component = {
@@ -5569,6 +5669,7 @@
         // cached, when the component is used elsewhere this attribute
         // will remain at link time.
         this.el.removeAttribute('is');
+        this.el.removeAttribute(':is');
         // remove ref, same as above
         if (this.descriptor.ref) {
           this.el.removeAttribute('v-ref:' + hyphenate(this.descriptor.ref));
@@ -5615,7 +5716,7 @@
         this.childVM = null;
       } else {
         var self = this;
-        this.resolveComponent(value, function() {
+        this.resolveComponent(value, function () {
           self.mountComponent(cb);
         });
       }
@@ -5631,7 +5732,7 @@
 
     resolveComponent: function resolveComponent(value, cb) {
       var self = this;
-      this.pendingComponentCb = cancellable(function(Component) {
+      this.pendingComponentCb = cancellable(function (Component) {
         self.ComponentName = Component.options.name || (typeof value === 'string' ? value : null);
         self.Component = Component;
         cb();
@@ -5657,7 +5758,7 @@
       var newComponent = this.build();
       if (activateHooks && !cached) {
         this.waitingFor = newComponent;
-        callActivateHooks(activateHooks, newComponent, function() {
+        callActivateHooks(activateHooks, newComponent, function () {
           if (self.waitingFor !== newComponent) {
             return;
           }
@@ -5743,7 +5844,7 @@
         }
         /* istanbul ignore if */
         if ('development' !== 'production' && this.el.hasAttribute('transition') && child._isFragment) {
-          warn('Transitions will not work on a fragment instance. ' + 'Template: ' + child.$options.template);
+          warn('Transitions will not work on a fragment instance. ' + 'Template: ' + child.$options.template, child);
         }
         return child;
       }
@@ -5805,7 +5906,7 @@
         this.pendingRemovals++;
         this.pendingRemovalCb = cb;
         var self = this;
-        child.$remove(function() {
+        child.$remove(function () {
           self.pendingRemovals--;
           if (!keepAlive) child._cleanup();
           if (!self.pendingRemovals && self.pendingRemovalCb) {
@@ -5835,12 +5936,12 @@
       this.childVM = target;
       switch (self.params.transitionMode) {
         case 'in-out':
-          target.$before(self.anchor, function() {
+          target.$before(self.anchor, function () {
             self.remove(current, cb);
           });
           break;
         case 'out-in':
-          self.remove(current, function() {
+          self.remove(current, function () {
             target.$before(self.anchor, cb);
           });
           break;
@@ -5880,7 +5981,6 @@
     var total = hooks.length;
     var called = 0;
     hooks[0].call(vm, next);
-
     function next() {
       if (++called >= total) {
         cb();
@@ -5903,10 +6003,11 @@
    *
    * @param {Element|DocumentFragment} el
    * @param {Array} propOptions
+   * @param {Vue} vm
    * @return {Function} propsLinkFn
    */
 
-  function compileProps(el, propOptions) {
+  function compileProps(el, propOptions, vm) {
     var props = [];
     var names = Object.keys(propOptions);
     var i = names.length;
@@ -5916,7 +6017,7 @@
       options = propOptions[name] || empty;
 
       if ('development' !== 'production' && name === '$data') {
-        warn('Do not use $data as prop.');
+        warn('Do not use $data as prop.', vm);
         continue;
       }
 
@@ -5925,7 +6026,7 @@
       // so we need to camelize the path here
       path = camelize(name);
       if (!identRE$1.test(path)) {
-        'development' !== 'production' && warn('Invalid prop key: "' + name + '". Prop keys ' + 'must be valid identifiers.');
+        'development' !== 'production' && warn('Invalid prop key: "' + name + '". Prop keys ' + 'must be valid identifiers.', vm);
         continue;
       }
 
@@ -5963,14 +6064,14 @@
           // check non-settable path for two-way bindings
           if ('development' !== 'production' && prop.mode === propBindingModes.TWO_WAY && !settablePathRE.test(value)) {
             prop.mode = propBindingModes.ONE_WAY;
-            warn('Cannot bind two-way prop with non-settable ' + 'parent path: ' + value);
+            warn('Cannot bind two-way prop with non-settable ' + 'parent path: ' + value, vm);
           }
         }
         prop.parentPath = value;
 
         // warn required two-way
         if ('development' !== 'production' && options.twoWay && prop.mode !== propBindingModes.TWO_WAY) {
-          warn('Prop "' + name + '" expects a two-way binding type.');
+          warn('Prop "' + name + '" expects a two-way binding type.', vm);
         }
       } else if ((value = getAttr(el, attr)) !== null) {
         // has literal binding!
@@ -5980,10 +6081,10 @@
         var lowerCaseName = path.toLowerCase();
         value = /[A-Z\-]/.test(name) && (el.getAttribute(lowerCaseName) || el.getAttribute(':' + lowerCaseName) || el.getAttribute('v-bind:' + lowerCaseName) || el.getAttribute(':' + lowerCaseName + '.once') || el.getAttribute('v-bind:' + lowerCaseName + '.once') || el.getAttribute(':' + lowerCaseName + '.sync') || el.getAttribute('v-bind:' + lowerCaseName + '.sync'));
         if (value) {
-          warn('Possible usage error for prop `' + lowerCaseName + '` - ' + 'did you mean `' + attr + '`? HTML is case-insensitive, remember to use ' + 'kebab-case for props in templates.');
+          warn('Possible usage error for prop `' + lowerCaseName + '` - ' + 'did you mean `' + attr + '`? HTML is case-insensitive, remember to use ' + 'kebab-case for props in templates.', vm);
         } else if (options.required) {
           // warn missing required
-          warn('Missing required prop: ' + name);
+          warn('Missing required prop: ' + name, vm);
         }
       }
       // push prop
@@ -6003,6 +6104,7 @@
     return function propsLinkFn(vm, scope) {
       // store resolved props info
       vm._props = {};
+      var inlineProps = vm.$options.propsData;
       var i = props.length;
       var prop, path, options, value, raw;
       while (i--) {
@@ -6011,7 +6113,9 @@
         path = prop.path;
         options = prop.options;
         vm._props[path] = prop;
-        if (raw === null) {
+        if (inlineProps && hasOwn(inlineProps, path)) {
+          initProp(vm, prop, inlineProps[path]);
+        }if (raw === null) {
           // initialize absent prop
           initProp(vm, prop, undefined);
         } else if (prop.dynamic) {
@@ -6029,9 +6133,9 @@
                 prop: prop
               }, null, null, scope); // el, host, scope
             } else {
-              // root instance
-              initProp(vm, prop, vm.$get(prop.parentPath));
-            }
+                // root instance
+                initProp(vm, prop, vm.$get(prop.parentPath));
+              }
           }
         } else if (prop.optimizedLiteral) {
           // optimized literal, cast it and just set once
@@ -6051,6 +6155,37 @@
   }
 
   /**
+   * Process a prop with a rawValue, applying necessary coersions,
+   * default values & assertions and call the given callback with
+   * processed value.
+   *
+   * @param {Vue} vm
+   * @param {Object} prop
+   * @param {*} rawValue
+   * @param {Function} fn
+   */
+
+  function processPropValue(vm, prop, rawValue, fn) {
+    var isSimple = prop.dynamic && isSimplePath(prop.parentPath);
+    var value = rawValue;
+    if (value === undefined) {
+      value = getPropDefaultValue(vm, prop);
+    }
+    value = coerceProp(prop, value, vm);
+    var coerced = value !== rawValue;
+    if (!assertProp(prop, value, vm)) {
+      value = undefined;
+    }
+    if (isSimple && !coerced) {
+      withoutConversion(function () {
+        fn(value);
+      });
+    } else {
+      fn(value);
+    }
+  }
+
+  /**
    * Set a prop's initial value on a vm and its data object.
    *
    * @param {Vue} vm
@@ -6059,26 +6194,36 @@
    */
 
   function initProp(vm, prop, value) {
-    var key = prop.path;
-    value = coerceProp(prop, value);
-    if (value === undefined) {
-      value = getPropDefaultValue(vm, prop.options);
-    }
-    if (assertProp(prop, value)) {
-      defineReactive(vm, key, value);
-    }
+    processPropValue(vm, prop, value, function (value) {
+      defineReactive(vm, prop.path, value);
+    });
+  }
+
+  /**
+   * Update a prop's value on a vm.
+   *
+   * @param {Vue} vm
+   * @param {Object} prop
+   * @param {*} value
+   */
+
+  function updateProp(vm, prop, value) {
+    processPropValue(vm, prop, value, function (value) {
+      vm[prop.path] = value;
+    });
   }
 
   /**
    * Get the default value of a prop.
    *
    * @param {Vue} vm
-   * @param {Object} options
+   * @param {Object} prop
    * @return {*}
    */
 
-  function getPropDefaultValue(vm, options) {
+  function getPropDefaultValue(vm, prop) {
     // no default, return undefined
+    var options = prop.options;
     if (!hasOwn(options, 'default')) {
       // absent boolean value defaults to false
       return options.type === Boolean ? false : undefined;
@@ -6086,7 +6231,7 @@
     var def = options['default'];
     // warn against non-factory defaults for Object & Array
     if (isObject(def)) {
-      'development' !== 'production' && warn('Object/Array as default prop values will be shared ' + 'across multiple instances. Use a factory function ' + 'to return the default value instead.');
+      'development' !== 'production' && warn('Invalid default value for prop "' + prop.name + '": ' + 'Props with type Object/Array must use a factory function ' + 'to return the default value.', vm);
     }
     // call factory function for non-Function types
     return typeof def === 'function' && options.type !== Function ? def.call(vm) : def;
@@ -6097,50 +6242,40 @@
    *
    * @param {Object} prop
    * @param {*} value
+   * @param {Vue} vm
    */
 
-  function assertProp(prop, value) {
+  function assertProp(prop, value, vm) {
     if (!prop.options.required && ( // non-required
-        prop.raw === null || // abscent
-        value == null) // null or undefined
+    prop.raw === null || // abscent
+    value == null) // null or undefined
     ) {
-      return true;
-    }
+        return true;
+      }
     var options = prop.options;
     var type = options.type;
-    var valid = true;
-    var expectedType;
+    var valid = !type;
+    var expectedTypes = [];
     if (type) {
-      if (type === String) {
-        expectedType = 'string';
-        valid = typeof value === expectedType;
-      } else if (type === Number) {
-        expectedType = 'number';
-        valid = typeof value === 'number';
-      } else if (type === Boolean) {
-        expectedType = 'boolean';
-        valid = typeof value === 'boolean';
-      } else if (type === Function) {
-        expectedType = 'function';
-        valid = typeof value === 'function';
-      } else if (type === Object) {
-        expectedType = 'object';
-        valid = isPlainObject(value);
-      } else if (type === Array) {
-        expectedType = 'array';
-        valid = isArray(value);
-      } else {
-        valid = value instanceof type;
+      if (!isArray(type)) {
+        type = [type];
+      }
+      for (var i = 0; i < type.length && !valid; i++) {
+        var assertedType = assertType(value, type[i]);
+        expectedTypes.push(assertedType.expectedType);
+        valid = assertedType.valid;
       }
     }
     if (!valid) {
-      'development' !== 'production' && warn('Invalid prop: type check failed for ' + prop.path + '="' + prop.raw + '".' + ' Expected ' + formatType(expectedType) + ', got ' + formatValue(value) + '.');
+      if ('development' !== 'production') {
+        warn('Invalid prop: type check failed for prop "' + prop.name + '".' + ' Expected ' + expectedTypes.map(formatType).join(', ') + ', got ' + formatValue(value) + '.', vm);
+      }
       return false;
     }
     var validator = options.validator;
     if (validator) {
       if (!validator(value)) {
-        'development' !== 'production' && warn('Invalid prop: custom validator check failed for ' + prop.path + '="' + prop.raw + '"');
+        'development' !== 'production' && warn('Invalid prop: custom validator check failed for prop "' + prop.name + '".', vm);
         return false;
       }
     }
@@ -6155,18 +6290,74 @@
    * @return {*}
    */
 
-  function coerceProp(prop, value) {
+  function coerceProp(prop, value, vm) {
     var coerce = prop.options.coerce;
     if (!coerce) {
       return value;
     }
-    // coerce is a function
-    return coerce(value);
+    if (typeof coerce === 'function') {
+      return coerce(value);
+    } else {
+      'development' !== 'production' && warn('Invalid coerce for prop "' + prop.name + '": expected function, got ' + typeof coerce + '.', vm);
+      return value;
+    }
   }
 
-  function formatType(val) {
-    return val ? val.charAt(0).toUpperCase() + val.slice(1) : 'custom type';
+  /**
+   * Assert the type of a value
+   *
+   * @param {*} value
+   * @param {Function} type
+   * @return {Object}
+   */
+
+  function assertType(value, type) {
+    var valid;
+    var expectedType;
+    if (type === String) {
+      expectedType = 'string';
+      valid = typeof value === expectedType;
+    } else if (type === Number) {
+      expectedType = 'number';
+      valid = typeof value === expectedType;
+    } else if (type === Boolean) {
+      expectedType = 'boolean';
+      valid = typeof value === expectedType;
+    } else if (type === Function) {
+      expectedType = 'function';
+      valid = typeof value === expectedType;
+    } else if (type === Object) {
+      expectedType = 'object';
+      valid = isPlainObject(value);
+    } else if (type === Array) {
+      expectedType = 'array';
+      valid = isArray(value);
+    } else {
+      valid = value instanceof type;
+    }
+    return {
+      valid: valid,
+      expectedType: expectedType
+    };
   }
+
+  /**
+   * Format type for output
+   *
+   * @param {String} type
+   * @return {String}
+   */
+
+  function formatType(type) {
+    return type ? type.charAt(0).toUpperCase() + type.slice(1) : 'custom type';
+  }
+
+  /**
+   * Format value
+   *
+   * @param {*} value
+   * @return {String}
+   */
 
   function formatValue(val) {
     return Object.prototype.toString.call(val).slice(8, -1);
@@ -6184,19 +6375,9 @@
       var childKey = prop.path;
       var parentKey = prop.parentPath;
       var twoWay = prop.mode === bindingModes.TWO_WAY;
-      var isSimple = isSimplePath(parentKey);
 
-      var parentWatcher = this.parentWatcher = new Watcher(parent, parentKey, function(val) {
-        val = coerceProp(prop, val);
-        if (assertProp(prop, val)) {
-          if (isSimple) {
-            withoutConversion(function() {
-              child[childKey] = val;
-            });
-          } else {
-            child[childKey] = val;
-          }
-        }
+      var parentWatcher = this.parentWatcher = new Watcher(parent, parentKey, function (val) {
+        updateProp(child, prop, val);
       }, {
         twoWay: twoWay,
         filters: prop.filters,
@@ -6206,22 +6387,15 @@
       });
 
       // set the child initial value.
-      var value = parentWatcher.value;
-      if (isSimple && value !== undefined) {
-        withoutConversion(function() {
-          initProp(child, prop, value);
-        });
-      } else {
-        initProp(child, prop, value);
-      }
+      initProp(child, prop, parentWatcher.value);
 
       // setup two-way binding
       if (twoWay) {
         // important: defer the child watcher creation until
         // the created hook (after data observation)
         var self = this;
-        child.$once('pre-hook:created', function() {
-          self.childWatcher = new Watcher(child, childKey, function(val) {
+        child.$once('pre-hook:created', function () {
+          self.childWatcher = new Watcher(child, childKey, function (val) {
             parentWatcher.set(val);
           }, {
             // ensure sync upward before parent sync down.
@@ -6298,14 +6472,14 @@
 
   var raf = inBrowser && window.requestAnimationFrame;
   var waitForTransitionStart = raf
-    /* istanbul ignore next */
-    ? function(fn) {
-      raf(function() {
-        raf(fn);
-      });
-    } : function(fn) {
-      setTimeout(fn, 50);
-    };
+  /* istanbul ignore next */
+  ? function (fn) {
+    raf(function () {
+      raf(fn);
+    });
+  } : function (fn) {
+    setTimeout(fn, 50);
+  };
 
   /**
    * A Transition object that encapsulates the state and logic
@@ -6333,12 +6507,11 @@
     /* istanbul ignore if */
     if ('development' !== 'production') {
       if (this.type && this.type !== TYPE_TRANSITION && this.type !== TYPE_ANIMATION) {
-        warn('invalid CSS transition type for transition="' + this.id + '": ' + this.type);
+        warn('invalid CSS transition type for transition="' + this.id + '": ' + this.type, vm);
       }
     }
     // bind
-    var self = this;
-    ['enterNextTick', 'enterDone', 'leaveNextTick', 'leaveDone'].forEach(function(m) {
+    var self = this;['enterNextTick', 'enterDone', 'leaveNextTick', 'leaveDone'].forEach(function (m) {
       self[m] = bind(self[m], self);
     });
   }
@@ -6370,7 +6543,7 @@
    * @param {Function} [cb]
    */
 
-  p$1.enter = function(op, cb) {
+  p$1.enter = function (op, cb) {
     this.cancelPending();
     this.callHook('beforeEnter');
     this.cb = cb;
@@ -6391,12 +6564,12 @@
    * that removing the class can trigger a CSS transition.
    */
 
-  p$1.enterNextTick = function() {
+  p$1.enterNextTick = function () {
     var _this = this;
 
     // prevent transition skipping
     this.justEntered = true;
-    waitForTransitionStart(function() {
+    waitForTransitionStart(function () {
       _this.justEntered = false;
     });
     var enterDone = this.enterDone;
@@ -6420,7 +6593,7 @@
    * The "cleanup" phase of an entering transition.
    */
 
-  p$1.enterDone = function() {
+  p$1.enterDone = function () {
     this.entered = true;
     this.cancel = this.pendingJsCb = null;
     removeClass(this.el, this.enterClass);
@@ -6449,7 +6622,7 @@
    * @param {Function} [cb]
    */
 
-  p$1.leave = function(op, cb) {
+  p$1.leave = function (op, cb) {
     this.cancelPending();
     this.callHook('beforeLeave');
     this.op = op;
@@ -6481,7 +6654,7 @@
    * The "nextTick" phase of a leaving transition.
    */
 
-  p$1.leaveNextTick = function() {
+  p$1.leaveNextTick = function () {
     var type = this.getCssTransitionType(this.leaveClass);
     if (type) {
       var event = type === TYPE_TRANSITION ? transitionEndEvent : animationEndEvent;
@@ -6495,7 +6668,7 @@
    * The "cleanup" phase of a leaving transition.
    */
 
-  p$1.leaveDone = function() {
+  p$1.leaveDone = function () {
     this.left = true;
     this.cancel = this.pendingJsCb = null;
     this.op();
@@ -6510,7 +6683,7 @@
    * but not finished transition.
    */
 
-  p$1.cancelPending = function() {
+  p$1.cancelPending = function () {
     this.op = this.cb = null;
     var hasPending = false;
     if (this.pendingCssCb) {
@@ -6539,7 +6712,7 @@
    * @param {String} type
    */
 
-  p$1.callHook = function(type) {
+  p$1.callHook = function (type) {
     if (this.hooks && this.hooks[type]) {
       this.hooks[type].call(this.vm, this.el);
     }
@@ -6556,7 +6729,7 @@
    * @param {String} type
    */
 
-  p$1.callHookWithCb = function(type) {
+  p$1.callHookWithCb = function (type) {
     var hook = this.hooks && this.hooks[type];
     if (hook) {
       if (hook.length > 1) {
@@ -6574,19 +6747,19 @@
    * @return {Number}
    */
 
-  p$1.getCssTransitionType = function(className) {
+  p$1.getCssTransitionType = function (className) {
     /* istanbul ignore if */
     if (!transitionEndEvent ||
-      // skip CSS transitions if page is not visible -
-      // this solves the issue of transitionend events not
-      // firing until the page is visible again.
-      // pageVisibility API is supported in IE10+, same as
-      // CSS transitions.
-      document.hidden ||
-      // explicit js-only transition
-      this.hooks && this.hooks.css === false ||
-      // element is hidden
-      isHidden(this.el)) {
+    // skip CSS transitions if page is not visible -
+    // this solves the issue of transitionend events not
+    // firing until the page is visible again.
+    // pageVisibility API is supported in IE10+, same as
+    // CSS transitions.
+    document.hidden ||
+    // explicit js-only transition
+    this.hooks && this.hooks.css === false ||
+    // element is hidden
+    isHidden(this.el)) {
       return;
     }
     var type = this.type || this.typeCache[className];
@@ -6615,11 +6788,11 @@
    * @param {Function} cb
    */
 
-  p$1.setupCssCb = function(event, cb) {
+  p$1.setupCssCb = function (event, cb) {
     this.pendingCssEvent = event;
     var self = this;
     var el = this.el;
-    var onEnd = this.pendingCssCb = function(e) {
+    var onEnd = this.pendingCssCb = function (e) {
       if (e.target === el) {
         off(el, event, onEnd);
         self.pendingCssEvent = self.pendingCssCb = null;
@@ -6659,10 +6832,9 @@
       // resolve on owner vm
       var hooks = resolveAsset(this.vm.$options, 'transitions', id);
       id = id || 'v';
+      oldId = oldId || 'v';
       el.__v_trans = new Transition(el, id, hooks, this.vm);
-      if (oldId) {
-        removeClass(el, oldId + '-transition');
-      }
+      removeClass(el, oldId + '-transition');
       addClass(el, id + '-transition');
     }
   };
@@ -6704,18 +6876,10 @@
    */
 
   function compile(el, options, partial) {
-
-    // link function for the node itself.1
-    var nodeLinkFn = partial || !options._asComponent 
-                      ? compileNode(el, options)
-                      : null;
-
+    // link function for the node itself.
+    var nodeLinkFn = partial || !options._asComponent ? compileNode(el, options) : null;
     // link function for the childNodes
-    var childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) 
-                      && el.tagName !== 'SCRIPT' 
-                      && el.hasChildNodes() 
-                        ? compileNodeList(el.childNodes, options) 
-                        : null;
+    var childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) && !isScript(el) && el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null;
 
     /**
      * A composite linker function to be called on a already
@@ -6832,8 +6996,8 @@
    */
 
   function compileAndLinkProps(vm, el, props, scope) {
-    var propsLinkFn = compileProps(el, props);
-    var propDirs = linkAndCapture(function() {
+    var propsLinkFn = compileProps(el, props, vm);
+    var propDirs = linkAndCapture(function () {
       propsLinkFn(vm, scope);
     }, vm);
     return makeUnlinkFn(vm, propDirs);
@@ -6879,19 +7043,19 @@
       }
     } else if ('development' !== 'production' && containerAttrs) {
       // warn container directives for fragment instances
-      var names = containerAttrs.filter(function(attr) {
+      var names = containerAttrs.filter(function (attr) {
         // allow vue-loader/vueify scoped css attributes
         return attr.name.indexOf('_v-') < 0 &&
-          // allow event listeners
-          !onRE.test(attr.name) &&
-          // allow slots
-          attr.name !== 'slot';
-      }).map(function(attr) {
+        // allow event listeners
+        !onRE.test(attr.name) &&
+        // allow slots
+        attr.name !== 'slot';
+      }).map(function (attr) {
         return '"' + attr.name + '"';
       });
       if (names.length) {
         var plural = names.length > 1;
-        warn('Attribute' + (plural ? 's ' : ' ') + names.join(', ') + (plural ? ' are' : ' is') + ' ignored on component ' + '<' + options.el.tagName.toLowerCase() + '> because ' + 'the component is a fragment instance: ' + 'http://vuejs.org/guide/components.html#Fragment_Instance');
+        warn('Attribute' + (plural ? 's ' : ' ') + names.join(', ') + (plural ? ' are' : ' is') + ' ignored on component ' + '<' + options.el.tagName.toLowerCase() + '> because ' + 'the component is a fragment instance: ' + 'http://vuejs.org/guide/components.html#Fragment-Instance');
       }
     }
 
@@ -6901,13 +7065,13 @@
       var context = vm._context;
       var contextDirs;
       if (context && contextLinkFn) {
-        contextDirs = linkAndCapture(function() {
+        contextDirs = linkAndCapture(function () {
           contextLinkFn(context, el, null, scope);
         }, context);
       }
 
       // link self
-      var selfDirs = linkAndCapture(function() {
+      var selfDirs = linkAndCapture(function () {
         if (replacerLinkFn) replacerLinkFn(vm, el);
       }, vm);
 
@@ -6928,7 +7092,7 @@
 
   function compileNode(node, options) {
     var type = node.nodeType;
-    if (type === 1 && node.tagName !== 'SCRIPT') {
+    if (type === 1 && !isScript(node)) {
       return compileElement(node, options);
     } else if (type === 3 && node.data.trim()) {
       return compileTextNode(node, options);
@@ -7053,7 +7217,6 @@
         setTokenType('text');
       }
     }
-
     function setTokenType(type) {
       if (token.descriptor) return;
       var parsed = parseDirective(token.value);
@@ -7089,7 +7252,7 @@
             if (token.html) {
               replace(node, parseTemplate(value, true));
             } else {
-              node.data = value;
+              node.data = _toString(value);
             }
           } else {
             vm._bindDir(token.descriptor, node, host, scope);
@@ -7108,21 +7271,17 @@
    * @return {Function|undefined}
    */
 
-    function compileNodeList(nodeList, options) {
-      var linkFns = [];
-      var nodeLinkFn, childLinkFn, node;
-      for (var i = 0, l = nodeList.length; i < l; i++) {
-        node = nodeList[i];
-        nodeLinkFn = compileNode(node, options);
-        childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) 
-                    && node.tagName !== 'SCRIPT' 
-                    && node.hasChildNodes() 
-                      ? compileNodeList(node.childNodes, options) 
-                      : null;
-        linkFns.push(nodeLinkFn, childLinkFn);
-      }
-      return linkFns.length ? makeChildLinkFn(linkFns) : null;
+  function compileNodeList(nodeList, options) {
+    var linkFns = [];
+    var nodeLinkFn, childLinkFn, node;
+    for (var i = 0, l = nodeList.length; i < l; i++) {
+      node = nodeList[i];
+      nodeLinkFn = compileNode(node, options);
+      childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) && node.tagName !== 'SCRIPT' && node.hasChildNodes() ? compileNodeList(node.childNodes, options) : null;
+      linkFns.push(nodeLinkFn, childLinkFn);
     }
+    return linkFns.length ? makeChildLinkFn(linkFns) : null;
+  }
 
   /**
    * Make a child link function for a node's childNodes.
@@ -7228,7 +7387,6 @@
     var attr, name, value, modifiers, matched, dirName, rawName, arg, def, termDef;
     for (var i = 0, j = attrs.length; i < j; i++) {
       attr = attrs[i];
-      modifiers = parseModifiers(attr.name);
       name = attr.name.replace(modifierRE, '');
       if (matched = name.match(dirAttrRE)) {
         def = resolveAsset(options, 'directives', matched[1]);
@@ -7236,6 +7394,7 @@
           if (!termDef || (def.priority || DEFAULT_TERMINAL_PRIORITY) > termDef.priority) {
             termDef = def;
             rawName = attr.name;
+            modifiers = parseModifiers(attr.name);
             value = attr.value;
             dirName = matched[1];
             arg = matched[2];
@@ -7325,57 +7484,52 @@
         pushDir('bind', directives.bind, tokens);
         // warn against mixing mustaches with v-bind
         if ('development' !== 'production') {
-          if (name === 'class' && Array.prototype.some.call(attrs, function(attr) {
-              return attr.name === ':class' || attr.name === 'v-bind:class';
-            })) {
-            warn('class="' + rawValue + '": Do not mix mustache interpolation ' + 'and v-bind for "class" on the same element. Use one or the other.');
+          if (name === 'class' && Array.prototype.some.call(attrs, function (attr) {
+            return attr.name === ':class' || attr.name === 'v-bind:class';
+          })) {
+            warn('class="' + rawValue + '": Do not mix mustache interpolation ' + 'and v-bind for "class" on the same element. Use one or the other.', options);
           }
         }
       } else
 
-      // special attribute: transition
-      if (transitionRE.test(name)) {
-        modifiers.literal = !bindRE.test(name);
-        pushDir('transition', internalDirectives.transition);
-      } else
+        // special attribute: transition
+        if (transitionRE.test(name)) {
+          modifiers.literal = !bindRE.test(name);
+          pushDir('transition', internalDirectives.transition);
+        } else
 
-      // event handlers
-      if (onRE.test(name)) {
-        arg = name.replace(onRE, '');
-        pushDir('on', directives.on);
-      } else
+          // event handlers
+          if (onRE.test(name)) {
+            arg = name.replace(onRE, '');
+            pushDir('on', directives.on);
+          } else
 
-      // attribute bindings
-      if (bindRE.test(name)) {
-        dirName = name.replace(bindRE, '');
-        if (dirName === 'style' || dirName === 'class') {
-          pushDir(dirName, internalDirectives[dirName]);
-        } else {
-          arg = dirName;
-          pushDir('bind', directives.bind);
-        }
-      } else
+            // attribute bindings
+            if (bindRE.test(name)) {
+              dirName = name.replace(bindRE, '');
+              if (dirName === 'style' || dirName === 'class') {
+                pushDir(dirName, internalDirectives[dirName]);
+              } else {
+                arg = dirName;
+                pushDir('bind', directives.bind);
+              }
+            } else
 
-      // normal directives
-      if (matched = name.match(dirAttrRE)) {
-        dirName = matched[1];
-        arg = matched[2];
+              // normal directives
+              if (matched = name.match(dirAttrRE)) {
+                dirName = matched[1];
+                arg = matched[2];
 
-        // skip v-else (when used with v-show)
-        if (dirName === 'else') {
-          continue;
-        }
+                // skip v-else (when used with v-show)
+                if (dirName === 'else') {
+                  continue;
+                }
 
-        dirDef = resolveAsset(options, 'directives', dirName);
-
-        if ('development' !== 'production') {
-          assertAsset(dirDef, 'directive', dirName);
-        }
-
-        if (dirDef) {
-          pushDir(dirName, dirDef);
-        }
-      }
+                dirDef = resolveAsset(options, 'directives', dirName, true);
+                if (dirDef) {
+                  pushDir(dirName, dirDef);
+                }
+              }
     }
 
     /**
@@ -7461,6 +7615,10 @@
     }
   }
 
+  function isScript(el) {
+    return el.tagName === 'SCRIPT' && (!el.hasAttribute('type') || el.getAttribute('type') === 'text/javascript');
+  }
+
   var specialCharRE = /[^\w\-:\.]/;
 
   /**
@@ -7532,18 +7690,18 @@
         // become a fragment instance: basically anything that
         // can create more than 1 root nodes.
         if (
-          // multi-children template
-          frag.childNodes.length > 1 ||
-          // non-element template
-          replacer.nodeType !== 1 ||
-          // single nested component
-          tag === 'component' || resolveAsset(options, 'components', tag) || hasBindAttr(replacer, 'is') ||
-          // element directive
-          resolveAsset(options, 'elementDirectives', tag) ||
-          // for block
-          replacer.hasAttribute('v-for') ||
-          // if block
-          replacer.hasAttribute('v-if')) {
+        // multi-children template
+        frag.childNodes.length > 1 ||
+        // non-element template
+        replacer.nodeType !== 1 ||
+        // single nested component
+        tag === 'component' || resolveAsset(options, 'components', tag) || hasBindAttr(replacer, 'is') ||
+        // element directive
+        resolveAsset(options, 'elementDirectives', tag) ||
+        // for block
+        replacer.hasAttribute('v-for') ||
+        // if block
+        replacer.hasAttribute('v-if')) {
           return frag;
         } else {
           options._replacerAttrs = extractAttrs(replacer);
@@ -7590,8 +7748,8 @@
       value = attrs[i].value;
       if (!to.hasAttribute(name) && !specialCharRE.test(name)) {
         to.setAttribute(name, value);
-      } else if (name === 'class' && !parseText(value)) {
-        value.trim().split(/\s+/).forEach(function(cls) {
+      } else if (name === 'class' && !parseText(value) && (value = value.trim())) {
+        value.split(/\s+/).forEach(function (cls) {
           addClass(to, cls);
         });
       }
@@ -7623,13 +7781,17 @@
       }
       /* eslint-enable no-cond-assign */
       if ('development' !== 'production' && getBindAttr(el, 'slot')) {
-        warn('The "slot" attribute must be static.');
+        warn('The "slot" attribute must be static.', vm.$parent);
       }
     }
     for (name in contents) {
       contents[name] = extractFragment(contents[name], content);
     }
     if (content.hasChildNodes()) {
+      var nodes = content.childNodes;
+      if (nodes.length === 1 && nodes[0].nodeType === 3 && !nodes[0].data.trim()) {
+        return;
+      }
       contents['default'] = extractFragment(content.childNodes, content);
     }
   }
@@ -7648,7 +7810,7 @@
       var node = nodes[i];
       if (isTemplate(node) && !node.hasAttribute('v-if') && !node.hasAttribute('v-for')) {
         parent.removeChild(node);
-        node = parseTemplate(node);
+        node = parseTemplate(node, true);
       }
       frag.appendChild(node);
     }
@@ -7658,14 +7820,14 @@
 
 
   var compiler = Object.freeze({
-    compile: compile,
-    compileAndLinkProps: compileAndLinkProps,
-    compileRoot: compileRoot,
-    transclude: transclude,
-    resolveSlots: resolveSlots
+  	compile: compile,
+  	compileAndLinkProps: compileAndLinkProps,
+  	compileRoot: compileRoot,
+  	transclude: transclude,
+  	resolveSlots: resolveSlots
   });
 
-  function stateMixin(Vue) {
+  function stateMixin (Vue) {
     /**
      * Accessor for `$data` property, since setting $data
      * requires observing the new object and updating
@@ -7691,7 +7853,7 @@
      * - meta properties
      */
 
-    Vue.prototype._initState = function() {
+    Vue.prototype._initState = function () {
       this._initProps();
       this._initMeta();
       this._initMethods();
@@ -7703,33 +7865,32 @@
      * Initialize props.
      */
 
-    Vue.prototype._initProps = function() {
+    Vue.prototype._initProps = function () {
       var options = this.$options;
       var el = options.el;
       var props = options.props;
       if (props && !el) {
-        'development' !== 'production' && warn('Props will not be compiled if no `el` option is ' + 'provided at instantiation.');
+        'development' !== 'production' && warn('Props will not be compiled if no `el` option is ' + 'provided at instantiation.', this);
       }
       // make sure to convert string selectors into element now
       el = options.el = query(el);
       this._propsUnlinkFn = el && el.nodeType === 1 && props
-        // props must be linked in proper scope if inside v-for
-        ? compileAndLinkProps(this, el, props, this._scope) : null;
+      // props must be linked in proper scope if inside v-for
+      ? compileAndLinkProps(this, el, props, this._scope) : null;
     };
 
     /**
      * Initialize the data.
      */
 
-    Vue.prototype._initData = function() {
+    Vue.prototype._initData = function () {
       var dataFn = this.$options.data;
       var data = this._data = dataFn ? dataFn() : {};
       if (!isPlainObject(data)) {
         data = {};
-        'development' !== 'production' && warn('data functions should return an object.');
+        'development' !== 'production' && warn('data functions should return an object.', this);
       }
       var props = this._props;
-      var runtimeData = this._runtimeData ? typeof this._runtimeData === 'function' ? this._runtimeData() : this._runtimeData : null;
       // proxy data on instance
       var keys = Object.keys(data);
       var i, key;
@@ -7740,10 +7901,10 @@
         // 1. it's not already defined as a prop
         // 2. it's provided via a instantiation option AND there are no
         //    template prop present
-        if (!props || !hasOwn(props, key) || runtimeData && hasOwn(runtimeData, key) && props[key].raw === null) {
+        if (!props || !hasOwn(props, key)) {
           this._proxy(key);
         } else if ('development' !== 'production') {
-          warn('Data field "' + key + '" is already defined ' + 'as a prop. Use prop default value instead.');
+          warn('Data field "' + key + '" is already defined ' + 'as a prop. To provide default value for a prop, use the "default" ' + 'prop option; if you want to pass prop values to an instantiation ' + 'call, use the "propsData" option.', this);
         }
       }
       // observe data
@@ -7756,7 +7917,7 @@
      * @param {Object} newData
      */
 
-    Vue.prototype._setData = function(newData) {
+    Vue.prototype._setData = function (newData) {
       newData = newData || {};
       var oldData = this._data;
       this._data = newData;
@@ -7793,7 +7954,7 @@
      * @param {String} key
      */
 
-    Vue.prototype._proxy = function(key) {
+    Vue.prototype._proxy = function (key) {
       if (!isReserved(key)) {
         // need to store ref to self here
         // because these getter/setters might
@@ -7819,7 +7980,7 @@
      * @param {String} key
      */
 
-    Vue.prototype._unproxy = function(key) {
+    Vue.prototype._unproxy = function (key) {
       if (!isReserved(key)) {
         delete this[key];
       }
@@ -7829,7 +7990,7 @@
      * Force update on every watcher in scope.
      */
 
-    Vue.prototype._digest = function() {
+    Vue.prototype._digest = function () {
       for (var i = 0, l = this._watchers.length; i < l; i++) {
         this._watchers[i].update(true); // shallow updates
       }
@@ -7841,7 +8002,7 @@
      */
 
     function noop() {}
-    Vue.prototype._initComputed = function() {
+    Vue.prototype._initComputed = function () {
       var computed = this.$options.computed;
       if (computed) {
         for (var key in computed) {
@@ -7883,7 +8044,7 @@
      * child components.
      */
 
-    Vue.prototype._initMethods = function() {
+    Vue.prototype._initMethods = function () {
       var methods = this.$options.methods;
       if (methods) {
         for (var key in methods) {
@@ -7896,7 +8057,7 @@
      * Initialize meta information like $index, $key & $value.
      */
 
-    Vue.prototype._initMeta = function() {
+    Vue.prototype._initMeta = function () {
       var metas = this.$options._meta;
       if (metas) {
         for (var key in metas) {
@@ -7908,14 +8069,14 @@
 
   var eventRE = /^v-on:|^@/;
 
-  function eventsMixin(Vue) {
+  function eventsMixin (Vue) {
     /**
      * Setup the instance's option events & watchers.
      * If the value is a string, we pull it from the
      * instance's methods by name.
      */
 
-    Vue.prototype._initEvents = function() {
+    Vue.prototype._initEvents = function () {
       var options = this.$options;
       if (options._asComponent) {
         registerComponentEvents(this, options.el);
@@ -7933,18 +8094,21 @@
 
     function registerComponentEvents(vm, el) {
       var attrs = el.attributes;
-      var name, handler;
+      var name, value, handler;
       for (var i = 0, l = attrs.length; i < l; i++) {
         name = attrs[i].name;
         if (eventRE.test(name)) {
           name = name.replace(eventRE, '');
-          handler = (vm._scope || vm._context).$eval(attrs[i].value, true);
-          if (typeof handler === 'function') {
-            handler._fromParent = true;
-            vm.$on(name.replace(eventRE), handler);
-          } else if ('development' !== 'production') {
-            warn('v-on:' + name + '="' + attrs[i].value + '"' + (vm.$options.name ? ' on component <' + vm.$options.name + '>' : '') + ' expects a function value, got ' + handler);
+          // force the expression into a statement so that
+          // it always dynamically resolves the method to call (#2670)
+          // kinda ugly hack, but does the job.
+          value = attrs[i].value;
+          if (isSimplePath(value)) {
+            value += '.apply(this, $arguments)';
           }
+          handler = (vm._scope || vm._context).$eval(value, true);
+          handler._fromParent = true;
+          vm.$on(name.replace(eventRE), handler);
         }
       }
     }
@@ -7992,7 +8156,7 @@
         if (method) {
           vm[action](key, method, options);
         } else {
-          'development' !== 'production' && warn('Unknown method: "' + handler + '" when ' + 'registering callback for ' + action + ': "' + key + '".');
+          'development' !== 'production' && warn('Unknown method: "' + handler + '" when ' + 'registering callback for ' + action + ': "' + key + '".', vm);
         }
       } else if (handler && type === 'object') {
         register(vm, action, key, handler.handler, handler);
@@ -8003,7 +8167,7 @@
      * Setup recursive attached/detached calls
      */
 
-    Vue.prototype._initDOMHooks = function() {
+    Vue.prototype._initDOMHooks = function () {
       this.$on('hook:attached', onAttached);
       this.$on('hook:detached', onDetached);
     };
@@ -8060,7 +8224,7 @@
      * @param {String} hook
      */
 
-    Vue.prototype._callHook = function(hook) {
+    Vue.prototype._callHook = function (hook) {
       this.$emit('pre-hook:' + hook);
       var handlers = this.$options[hook];
       if (handlers) {
@@ -8072,7 +8236,7 @@
     };
   }
 
-  function noop() {}
+  function noop$1() {}
 
   /**
    * A directive links a DOM element with a piece of data,
@@ -8132,7 +8296,7 @@
    * if present.
    */
 
-  Directive.prototype._bind = function() {
+  Directive.prototype._bind = function () {
     var name = this.name;
     var descriptor = this.descriptor;
 
@@ -8165,25 +8329,25 @@
       // wrapped updater for context
       var dir = this;
       if (this.update) {
-        this._update = function(val, oldVal) {
+        this._update = function (val, oldVal) {
           if (!dir._locked) {
             dir.update(val, oldVal);
           }
         };
       } else {
-        this._update = noop;
+        this._update = noop$1;
       }
       var preProcess = this._preProcess ? bind(this._preProcess, this) : null;
       var postProcess = this._postProcess ? bind(this._postProcess, this) : null;
       var watcher = this._watcher = new Watcher(this.vm, this.expression, this._update, // callback
-        {
-          filters: this.filters,
-          twoWay: this.twoWay,
-          deep: this.deep,
-          preProcess: preProcess,
-          postProcess: postProcess,
-          scope: this._scope
-        });
+      {
+        filters: this.filters,
+        twoWay: this.twoWay,
+        deep: this.deep,
+        preProcess: preProcess,
+        postProcess: postProcess,
+        scope: this._scope
+      });
       // v-model with inital inline value need to sync back to
       // model instead of update to DOM on init. They would
       // set the afterBind hook to indicate that.
@@ -8200,7 +8364,7 @@
    * transition-mode, etc...
    */
 
-  Directive.prototype._setupParams = function() {
+  Directive.prototype._setupParams = function () {
     if (!this.params) {
       return;
     }
@@ -8233,10 +8397,10 @@
    * @param {String} expression
    */
 
-  Directive.prototype._setupParamWatcher = function(key, expression) {
+  Directive.prototype._setupParamWatcher = function (key, expression) {
     var self = this;
     var called = false;
-    var unwatch = (this._scope || this.vm).$watch(expression, function(val, oldVal) {
+    var unwatch = (this._scope || this.vm).$watch(expression, function (val, oldVal) {
       self.params[key] = val;
       // since we are in immediate mode,
       // only call the param change callbacks if this is not the first update.
@@ -8251,8 +8415,7 @@
     }, {
       immediate: true,
       user: false
-    });
-    (this._paramUnwatchFns || (this._paramUnwatchFns = [])).push(unwatch);
+    });(this._paramUnwatchFns || (this._paramUnwatchFns = [])).push(unwatch);
   };
 
   /**
@@ -8266,7 +8429,7 @@
    * @return {Boolean}
    */
 
-  Directive.prototype._checkStatement = function() {
+  Directive.prototype._checkStatement = function () {
     var expression = this.expression;
     if (expression && this.acceptStatement && !isSimplePath(expression)) {
       var fn = parseExpression(expression).get;
@@ -8293,10 +8456,10 @@
    * @public
    */
 
-  Directive.prototype.set = function(value) {
+  Directive.prototype.set = function (value) {
     /* istanbul ignore else */
     if (this.twoWay) {
-      this._withLock(function() {
+      this._withLock(function () {
         this._watcher.set(value);
       });
     } else if ('development' !== 'production') {
@@ -8311,11 +8474,11 @@
    * @param {Function} fn
    */
 
-  Directive.prototype._withLock = function(fn) {
+  Directive.prototype._withLock = function (fn) {
     var self = this;
     self._locked = true;
     fn.call(self);
-    nextTick(function() {
+    nextTick(function () {
       self._locked = false;
     });
   };
@@ -8330,16 +8493,15 @@
    * @param {Boolean} [useCapture]
    */
 
-  Directive.prototype.on = function(event, handler, useCapture) {
-    on(this.el, event, handler, useCapture);
-    (this._listeners || (this._listeners = [])).push([event, handler]);
+  Directive.prototype.on = function (event, handler, useCapture) {
+    on(this.el, event, handler, useCapture);(this._listeners || (this._listeners = [])).push([event, handler]);
   };
 
   /**
    * Teardown the watcher and call unbind.
    */
 
-  Directive.prototype._teardown = function() {
+  Directive.prototype._teardown = function () {
     if (this._bound) {
       this._bound = false;
       if (this.unbind) {
@@ -8370,14 +8532,14 @@
     }
   };
 
-  function lifecycleMixin(Vue) {
+  function lifecycleMixin (Vue) {
     /**
      * Update v-ref for component.
      *
      * @param {Boolean} remove
      */
 
-    Vue.prototype._updateRef = function(remove) {
+    Vue.prototype._updateRef = function (remove) {
       var ref = this.$options._ref;
       if (ref) {
         var refs = (this._scope || this._context).$refs;
@@ -8403,7 +8565,7 @@
      * @param {Element} el
      */
 
-    Vue.prototype._compile = function(el) {
+    Vue.prototype._compile = function (el) {
       var options = this.$options;
 
       // transclude and init element
@@ -8447,7 +8609,7 @@
 
       // register composite unlink function
       // to be called during instance destruction
-      this._unlinkFn = function() {
+      this._unlinkFn = function () {
         rootUnlinkFn();
         // passing destroying: true to avoid searching and
         // splicing the directives
@@ -8470,7 +8632,7 @@
      * @param {Element} el
      */
 
-    Vue.prototype._initElement = function(el) {
+    Vue.prototype._initElement = function (el) {
       if (isFragment(el)) {
         this._isFragment = true;
         this.$el = this._fragmentStart = el.firstChild;
@@ -8497,7 +8659,7 @@
      * @param {Fragment} [frag] - owner fragment
      */
 
-    Vue.prototype._bindDir = function(descriptor, node, host, scope, frag) {
+    Vue.prototype._bindDir = function (descriptor, node, host, scope, frag) {
       this._directives.push(new Directive(descriptor, this, node, host, scope, frag));
     };
 
@@ -8510,7 +8672,7 @@
      *                                 be called later
      */
 
-    Vue.prototype._destroy = function(remove, deferCleanup) {
+    Vue.prototype._destroy = function (remove, deferCleanup) {
       if (this._isBeingDestroyed) {
         if (!deferCleanup) {
           this._cleanup();
@@ -8535,7 +8697,7 @@
       // remove DOM element
       if (remove && this.$el) {
         pendingRemoval = true;
-        this.$remove(function() {
+        this.$remove(function () {
           pendingRemoval = false;
           cleanupIfPossible();
         });
@@ -8585,7 +8747,7 @@
      * is any.
      */
 
-    Vue.prototype._cleanup = function() {
+    Vue.prototype._cleanup = function () {
       if (this._isDestroyed) {
         return;
       }
@@ -8597,7 +8759,7 @@
       }
       // remove reference from data ob
       // frozen object may not have observer.
-      if (this._data.__ob__) {
+      if (this._data && this._data.__ob__) {
         this._data.__ob__.removeVm(this);
       }
       // Clean up references to private properties and other
@@ -8617,7 +8779,7 @@
     };
   }
 
-  function miscMixin(Vue) {
+  function miscMixin (Vue) {
     /**
      * Apply a list of filter (descriptors) to a value.
      * Using plain for loops here because this will be called in
@@ -8631,14 +8793,11 @@
      * @return {*}
      */
 
-    Vue.prototype._applyFilters = function(value, oldValue, filters, write) {
+    Vue.prototype._applyFilters = function (value, oldValue, filters, write) {
       var filter, fn, args, arg, offset, i, l, j, k;
       for (i = 0, l = filters.length; i < l; i++) {
         filter = filters[write ? l - i - 1 : i];
-        fn = resolveAsset(this.$options, 'filters', filter.name);
-        if ('development' !== 'production') {
-          assertAsset(fn, 'filter', filter.name);
-        }
+        fn = resolveAsset(this.$options, 'filters', filter.name, true);
         if (!fn) continue;
         fn = write ? fn.write : fn.read || fn;
         if (typeof fn !== 'function') continue;
@@ -8666,16 +8825,14 @@
      * @param {Function} cb
      */
 
-    Vue.prototype._resolveComponent = function(value, cb) {
+    Vue.prototype._resolveComponent = function (value, cb) {
       var factory;
       if (typeof value === 'function') {
         factory = value;
       } else {
-        factory = resolveAsset(this.$options, 'components', value);
-        if ('development' !== 'production') {
-          assertAsset(factory, 'component', value);
-        }
+        factory = resolveAsset(this.$options, 'components', value, true);
       }
+      /* istanbul ignore if */
       if (!factory) {
         return;
       }
@@ -8713,7 +8870,7 @@
 
   var filterRE$1 = /[^|]\|[^|]/;
 
-  function dataAPI(Vue) {
+  function dataAPI (Vue) {
     /**
      * Get the value from an expression on this vm.
      *
@@ -8722,10 +8879,10 @@
      * @return {*}
      */
 
-    Vue.prototype.$get = function(exp, asStatement) {
+    Vue.prototype.$get = function (exp, asStatement) {
       var res = parseExpression(exp);
       if (res) {
-        if (asStatement && !isSimplePath(exp)) {
+        if (asStatement) {
           var self = this;
           return function statementHandler() {
             self.$arguments = toArray(arguments);
@@ -8750,7 +8907,7 @@
      * @param {*} val
      */
 
-    Vue.prototype.$set = function(exp, val) {
+    Vue.prototype.$set = function (exp, val) {
       var res = parseExpression(exp, true);
       if (res && res.set) {
         res.set.call(this, this, val);
@@ -8763,7 +8920,7 @@
      * @param {String} key
      */
 
-    Vue.prototype.$delete = function(key) {
+    Vue.prototype.$delete = function (key) {
       del(this._data, key);
     };
 
@@ -8779,7 +8936,7 @@
      * @return {Function} - unwatchFn
      */
 
-    Vue.prototype.$watch = function(expOrFn, cb, options) {
+    Vue.prototype.$watch = function (expOrFn, cb, options) {
       var vm = this;
       var parsed;
       if (typeof expOrFn === 'string') {
@@ -8808,7 +8965,7 @@
      * @return {String}
      */
 
-    Vue.prototype.$eval = function(text, asStatement) {
+    Vue.prototype.$eval = function (text, asStatement) {
       // check for filters.
       if (filterRE$1.test(text)) {
         var dir = parseDirective(text);
@@ -8830,14 +8987,14 @@
      * @return {String}
      */
 
-    Vue.prototype.$interpolate = function(text) {
+    Vue.prototype.$interpolate = function (text) {
       var tokens = parseText(text);
       var vm = this;
       if (tokens) {
         if (tokens.length === 1) {
           return vm.$eval(tokens[0].value) + '';
         } else {
-          return tokens.map(function(token) {
+          return tokens.map(function (token) {
             return token.tag ? vm.$eval(token.value) : token.value;
           }).join('');
         }
@@ -8854,7 +9011,7 @@
      * @param {String} [path]
      */
 
-    Vue.prototype.$log = function(path) {
+    Vue.prototype.$log = function (path) {
       var data = path ? getPath(this._data, path) : this._data;
       if (data) {
         data = clean(data);
@@ -8887,7 +9044,7 @@
     }
   }
 
-  function domAPI(Vue) {
+  function domAPI (Vue) {
     /**
      * Convenience on-instance nextTick. The callback is
      * auto-bound to the instance, and this avoids component
@@ -8896,7 +9053,7 @@
      * @param {Function} fn
      */
 
-    Vue.prototype.$nextTick = function(fn) {
+    Vue.prototype.$nextTick = function (fn) {
       nextTick(fn, this);
     };
 
@@ -8908,7 +9065,7 @@
      * @param {Boolean} [withTransition] - defaults to true
      */
 
-    Vue.prototype.$appendTo = function(target, cb, withTransition) {
+    Vue.prototype.$appendTo = function (target, cb, withTransition) {
       return insert(this, target, cb, withTransition, append, appendWithTransition);
     };
 
@@ -8920,7 +9077,7 @@
      * @param {Boolean} [withTransition] - defaults to true
      */
 
-    Vue.prototype.$prependTo = function(target, cb, withTransition) {
+    Vue.prototype.$prependTo = function (target, cb, withTransition) {
       target = query(target);
       if (target.hasChildNodes()) {
         this.$before(target.firstChild, cb, withTransition);
@@ -8938,7 +9095,7 @@
      * @param {Boolean} [withTransition] - defaults to true
      */
 
-    Vue.prototype.$before = function(target, cb, withTransition) {
+    Vue.prototype.$before = function (target, cb, withTransition) {
       return insert(this, target, cb, withTransition, beforeWithCb, beforeWithTransition);
     };
 
@@ -8950,7 +9107,7 @@
      * @param {Boolean} [withTransition] - defaults to true
      */
 
-    Vue.prototype.$after = function(target, cb, withTransition) {
+    Vue.prototype.$after = function (target, cb, withTransition) {
       target = query(target);
       if (target.nextSibling) {
         this.$before(target.nextSibling, cb, withTransition);
@@ -8967,7 +9124,7 @@
      * @param {Boolean} [withTransition] - defaults to true
      */
 
-    Vue.prototype.$remove = function(cb, withTransition) {
+    Vue.prototype.$remove = function (cb, withTransition) {
       if (!this.$el.parentNode) {
         return cb && cb();
       }
@@ -9007,7 +9164,7 @@
       var op = withTransition === false || targetIsDetached ? op1 : op2;
       var shouldCallHook = !targetIsDetached && !vm._isAttached && !inDoc(vm.$el);
       if (vm._isFragment) {
-        mapNodeRange(vm._fragmentStart, vm._fragmentEnd, function(node) {
+        mapNodeRange(vm._fragmentStart, vm._fragmentEnd, function (node) {
           op(node, target, vm);
         });
         cb && cb();
@@ -9072,7 +9229,7 @@
     }
   }
 
-  function eventsAPI(Vue) {
+  function eventsAPI (Vue) {
     /**
      * Listen on the given `event` with `fn`.
      *
@@ -9080,7 +9237,7 @@
      * @param {Function} fn
      */
 
-    Vue.prototype.$on = function(event, fn) {
+    Vue.prototype.$on = function (event, fn) {
       (this._events[event] || (this._events[event] = [])).push(fn);
       modifyListenerCount(this, event, 1);
       return this;
@@ -9094,9 +9251,8 @@
      * @param {Function} fn
      */
 
-    Vue.prototype.$once = function(event, fn) {
+    Vue.prototype.$once = function (event, fn) {
       var self = this;
-
       function on() {
         self.$off(event, on);
         fn.apply(this, arguments);
@@ -9114,7 +9270,7 @@
      * @param {Function} fn
      */
 
-    Vue.prototype.$off = function(event, fn) {
+    Vue.prototype.$off = function (event, fn) {
       var cbs;
       // all
       if (!arguments.length) {
@@ -9160,7 +9316,7 @@
      * @return {Boolean} shouldPropagate
      */
 
-    Vue.prototype.$emit = function(event) {
+    Vue.prototype.$emit = function (event) {
       var isSource = typeof event === 'string';
       event = isSource ? event : event.name;
       var cbs = this._events[event];
@@ -9171,7 +9327,7 @@
         // in #2102: for an inline component listener like <comp @test="doThis">,
         // the propagation handling is somewhat broken. Therefore we
         // need to treat these inline callbacks differently.
-        var hasParentCbs = isSource && cbs.some(function(cb) {
+        var hasParentCbs = isSource && cbs.some(function (cb) {
           return cb._fromParent;
         });
         if (hasParentCbs) {
@@ -9196,7 +9352,7 @@
      * @param {...*} additional arguments
      */
 
-    Vue.prototype.$broadcast = function(event) {
+    Vue.prototype.$broadcast = function (event) {
       var isSource = typeof event === 'string';
       event = isSource ? event : event.name;
       // if no child has registered for this event,
@@ -9207,10 +9363,7 @@
       if (isSource) {
         // use object event to indicate non-source emit
         // on children
-        args[0] = {
-          name: event,
-          source: this
-        };
+        args[0] = { name: event, source: this };
       }
       for (var i = 0, l = children.length; i < l; i++) {
         var child = children[i];
@@ -9229,17 +9382,14 @@
      * @param {...*} additional arguments
      */
 
-    Vue.prototype.$dispatch = function(event) {
+    Vue.prototype.$dispatch = function (event) {
       var shouldPropagate = this.$emit.apply(this, arguments);
       if (!shouldPropagate) return;
       var parent = this.$parent;
       var args = toArray(arguments);
       // use object event to indicate non-source emit
       // on parents
-      args[0] = {
-        name: event,
-        source: this
-      };
+      args[0] = { name: event, source: this };
       while (parent) {
         shouldPropagate = parent.$emit.apply(parent, args);
         parent = shouldPropagate ? parent.$parent : null;
@@ -9258,7 +9408,6 @@
      */
 
     var hookRE = /^hook:/;
-
     function modifyListenerCount(vm, event, count) {
       var parent = vm.$parent;
       // hooks do not get broadcasted so no need
@@ -9271,7 +9420,7 @@
     }
   }
 
-  function lifecycleAPI(Vue) {
+  function lifecycleAPI (Vue) {
     /**
      * Set instance target element and kick off the compilation
      * process. The passed in `el` can be a selector string, an
@@ -9282,9 +9431,9 @@
      * @public
      */
 
-    Vue.prototype.$mount = function(el) {
+    Vue.prototype.$mount = function (el) {
       if (this._isCompiled) {
-        'development' !== 'production' && warn('$mount() should be called only once.');
+        'development' !== 'production' && warn('$mount() should be called only once.', this);
         return;
       }
       el = query(el);
@@ -9320,7 +9469,7 @@
      * @param {Boolean} deferCleanup
      */
 
-    Vue.prototype.$destroy = function(remove, deferCleanup) {
+    Vue.prototype.$destroy = function (remove, deferCleanup) {
       this._destroy(remove, deferCleanup);
     };
 
@@ -9335,7 +9484,7 @@
      * @return {Function}
      */
 
-    Vue.prototype.$compile = function(el, host, scope, frag) {
+    Vue.prototype.$compile = function (el, host, scope, frag) {
       return compile(el, this.$options, true)(this, el, host, scope, frag);
     };
   }
@@ -9443,10 +9592,7 @@
     },
 
     insert: function insert(id) {
-      var partial = resolveAsset(this.vm.$options, 'partials', id);
-      if ('development' !== 'production') {
-        assertAsset(partial, 'partial', id);
-      }
+      var partial = resolveAsset(this.vm.$options, 'partials', id, true);
       if (partial) {
         this.factory = new FragmentFactory(this.vm, partial);
         vIf.insert.call(this);
@@ -9502,9 +9648,7 @@
     // because why not
     var n = delimiter === 'in' ? 3 : 2;
     // extract and flatten keys
-    var keys = toArray(arguments, n).reduce(function(prev, cur) {
-      return prev.concat(cur);
-    }, []);
+    var keys = Array.prototype.concat.apply([], toArray(arguments, n));
     var res = [];
     var item, key, val, j;
     for (var i = 0, l = arr.length; i < l; i++) {
@@ -9529,26 +9673,58 @@
   /**
    * Filter filter for arrays
    *
-   * @param {String} sortKey
-   * @param {String} reverse
+   * @param {String|Array<String>|Function} ...sortKeys
+   * @param {Number} [order]
    */
 
-  function orderBy(arr, sortKey, reverse) {
+  function orderBy(arr) {
+    var comparator = null;
+    var sortKeys = undefined;
     arr = convertArray(arr);
-    if (!sortKey) {
-      return arr;
+
+    // determine order (last argument)
+    var args = toArray(arguments, 1);
+    var order = args[args.length - 1];
+    if (typeof order === 'number') {
+      order = order < 0 ? -1 : 1;
+      args = args.length > 1 ? args.slice(0, -1) : args;
+    } else {
+      order = 1;
     }
-    var order = reverse && reverse < 0 ? -1 : 1;
-    // sort on a copy to avoid mutating original array
-    return arr.slice().sort(function(a, b) {
-      if (sortKey !== '$key') {
-        if (isObject(a) && '$value' in a) a = a.$value;
-        if (isObject(b) && '$value' in b) b = b.$value;
+
+    // determine sortKeys & comparator
+    var firstArg = args[0];
+    if (!firstArg) {
+      return arr;
+    } else if (typeof firstArg === 'function') {
+      // custom comparator
+      comparator = function (a, b) {
+        return firstArg(a, b) * order;
+      };
+    } else {
+      // string keys. flatten first
+      sortKeys = Array.prototype.concat.apply([], args);
+      comparator = function (a, b, i) {
+        i = i || 0;
+        return i >= sortKeys.length - 1 ? baseCompare(a, b, i) : baseCompare(a, b, i) || comparator(a, b, i + 1);
+      };
+    }
+
+    function baseCompare(a, b, sortKeyIndex) {
+      var sortKey = sortKeys[sortKeyIndex];
+      if (sortKey) {
+        if (sortKey !== '$key') {
+          if (isObject(a) && '$value' in a) a = a.$value;
+          if (isObject(b) && '$value' in b) b = b.$value;
+        }
+        a = isObject(a) ? getPath(a, sortKey) : a;
+        b = isObject(b) ? getPath(b, sortKey) : b;
       }
-      a = isObject(a) ? getPath(a, sortKey) : a;
-      b = isObject(b) ? getPath(b, sortKey) : b;
       return a === b ? 0 : a > b ? order : -order;
-    });
+    }
+
+    // sort on a copy to avoid mutating original array
+    return arr.slice().sort(comparator);
   }
 
   /**
@@ -9597,7 +9773,7 @@
 
     json: {
       read: function read(value, indent) {
-        return typeof value === 'string' ? value : JSON.stringify(value, null, Number(indent) || 2);
+        return typeof value === 'string' ? value : JSON.stringify(value, null, arguments.length > 1 ? indent : 2);
       },
       write: function write(value) {
         try {
@@ -9638,17 +9814,19 @@
      * 12345 => $12,345.00
      *
      * @param {String} sign
+     * @param {Number} decimals Decimal places
      */
 
-    currency: function currency(value, _currency) {
+    currency: function currency(value, _currency, decimals) {
       value = parseFloat(value);
       if (!isFinite(value) || !value && value !== 0) return '';
       _currency = _currency != null ? _currency : '$';
-      var stringified = Math.abs(value).toFixed(2);
-      var _int = stringified.slice(0, -3);
+      decimals = decimals != null ? decimals : 2;
+      var stringified = Math.abs(value).toFixed(decimals);
+      var _int = decimals ? stringified.slice(0, -1 - decimals) : stringified;
       var i = _int.length % 3;
       var head = i > 0 ? _int.slice(0, i) + (_int.length > 3 ? ',' : '') : '';
-      var _float = stringified.slice(-3);
+      var _float = decimals ? stringified.slice(-1 - decimals) : '';
       var sign = value < 0 ? '-' : '';
       return sign + _currency + head + _int.slice(i).replace(digitsRE, '$1,') + _float;
     },
@@ -9688,7 +9866,7 @@
     }
   };
 
-  function installGlobalAPI(Vue) {
+  function installGlobalAPI (Vue) {
     /**
      * Vue and every constructor that extends Vue has an
      * associated options object, which can be accessed during
@@ -9748,7 +9926,7 @@
      * @param {Object} extendOptions
      */
 
-    Vue.extend = function(extendOptions) {
+    Vue.extend = function (extendOptions) {
       extendOptions = extendOptions || {};
       var Super = this;
       var isFirstExtend = Super.cid === 0;
@@ -9772,7 +9950,7 @@
       Sub.extend = Super.extend;
       // create asset registers, so extended classes
       // can have their private assets too.
-      config._assetTypes.forEach(function(type) {
+      config._assetTypes.forEach(function (type) {
         Sub[type] = Super[type];
       });
       // enable recursive self-lookup
@@ -9807,7 +9985,7 @@
      * @param {Object} plugin
      */
 
-    Vue.use = function(plugin) {
+    Vue.use = function (plugin) {
       /* istanbul ignore if */
       if (plugin.installed) {
         return;
@@ -9829,7 +10007,7 @@
      * options.
      */
 
-    Vue.mixin = function(mixin) {
+    Vue.mixin = function (mixin) {
       Vue.options = mergeOptions(Vue.options, mixin);
     };
 
@@ -9841,8 +10019,8 @@
      * @param {*} definition
      */
 
-    config._assetTypes.forEach(function(type) {
-      Vue[type] = function(id, definition) {
+    config._assetTypes.forEach(function (type) {
+      Vue[type] = function (id, definition) {
         if (!definition) {
           return this.options[type + 's'][id];
         } else {
@@ -9853,7 +10031,9 @@
             }
           }
           if (type === 'component' && isPlainObject(definition)) {
-            definition.name = id;
+            if (!definition.name) {
+              definition.name = id;
+            }
             definition = Vue.extend(definition);
           }
           this.options[type + 's'][id] = definition;
@@ -9868,17 +10048,19 @@
 
   installGlobalAPI(Vue);
 
-  Vue.version = '1.0.20';
+  Vue.version = '1.0.25';
 
   // devtools global hook
   /* istanbul ignore next */
-  if (config.devtools) {
-    if (devtools) {
-      devtools.emit('init', Vue);
-    } else if ('development' !== 'production' && inBrowser && /Chrome\/\d+/.test(window.navigator.userAgent)) {
-      console.log('Download the Vue Devtools for a better development experience:\n' + 'https://github.com/vuejs/vue-devtools');
+  setTimeout(function () {
+    if (config.devtools) {
+      if (devtools) {
+        devtools.emit('init', Vue);
+      } else if ('development' !== 'production' && inBrowser && /Chrome\/\d+/.test(window.navigator.userAgent)) {
+        console.log('Download the Vue Devtools for a better development experience:\n' + 'https://github.com/vuejs/vue-devtools');
+      }
     }
-  }
+  }, 0);
 
   return Vue;
 

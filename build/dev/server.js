@@ -2,6 +2,7 @@ var fs = require('fs')
 var express = require('express')
 var webpack = require('webpack')
 var ora = require('ora')
+var fsextra = require('fs-extra')
 
 //https://github.com/ampedandwired/html-webpack-plugin
 var HtmlWebpackPlugin = require('html-webpack-plugin')
@@ -13,26 +14,18 @@ var webpacHotMiddleware = require('webpack-hot-middleware')
 //https://www.npmjs.com/package/write-file-webpack-plugin
 var WriteFilePlugin = require('write-file-webpack-plugin');
 
-
-var config = require('../config')
+var config = require('../../config')
 var port = process.env.PORT || config.dev.port
 var app = express()
 
+fsextra.removeSync(config.build.assetsRoot)
+fsextra.mkdirSync(config.build.assetsRoot)
 
-var spinner = ora('Begin to pack , Please wait for\n')
-spinner.start()
-
-setTimeout(function() {
-    spinner.stop()
-}, 2000)
-
-
-//配置dev
 var entry = {
     app: config.build.entry
 }
 Object.keys(entry).forEach(function(name) {
-    entry[name] = ['./build/dev-client'].concat(entry[name])
+    entry[name] = ['./build/dev/client'].concat(entry[name])
 })
 
 var webpackConfig = {
@@ -42,7 +35,7 @@ var webpackConfig = {
         publicPath: config.build.assetsPublicPath,
         filename: 'app.js'
     },
-    // devtool: '#eval-source-map',
+    devtool: '#eval-source-map',
     module: {
         loaders: [{
             test: /\.js$/,

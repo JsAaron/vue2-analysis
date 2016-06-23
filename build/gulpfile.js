@@ -27,8 +27,8 @@ gulp.task('server', function() {
         server: root,
         index: 'index.html',
         port: 3000,
-      //  logLevel: "debug",
-      //  logPrefix: "Aaron",
+        //  logLevel: "debug",
+        //  logPrefix: "Aaron",
         open: browserTest,
         files: [root + "/build.js", root + "/index.html"] //监控变化
     });
@@ -39,9 +39,6 @@ function logError(e) {
     console.log(e)
 }
 
-//============
-// rollup部分
-//============
 
 
 var banner =
@@ -105,11 +102,6 @@ gulp.task('rollup', ['rollup-pack', 'server'], function() {
     })
 })
 
-
-
-//==================
-//  webpack部分
-//==================
 
 /**
  * webpack打包es6

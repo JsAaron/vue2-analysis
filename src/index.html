@@ -3,26 +3,31 @@
 
 <head>
     <meta charset="utf-8">
-    <title>列表渲染</title>
+    <title>数据观察</title>
 </head>
 
 <body>
 
-    <div id="example-1">
-        <li v-for="item in items">
-            {{ item.message }} {{$index}} {{name}}
-        </li>
+    <div id="app">
+        {{ message }}
     </div>
+
+    <button>点击改变数据</button>
+
+    <script type="text/javascript">
+        window.onload = function() {
+            var vm = new XXT({
+                el: '#app',
+                data: {
+                    message: 'Hello Vue.js!'
+                }
+            })
+            document.addEventListener('click', function() {
+                vm.message = 'Aaron'
+            }, false)
+
+            console.log(vm)
+        }
+    </script>
+
 </body>
-
-</html>
-
-<script type="text/javascript">
-
-    // var example1 = new Ue({
-    //     el: '#example-1',
-    //     data: {
-    //         name: 'Aaron'
-    //     }
-    // })
-</script>
