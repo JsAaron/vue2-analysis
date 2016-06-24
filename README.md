@@ -1,31 +1,31 @@
-# Vue源码分析 1.0.25
+# Vue source code analysis 1.0.25
 
 > 
-> 基于es6重写了部分 [vuejs](http://vuejs.org) 源码进行分析
+> Based on es6 rewrite the parts [vuejs] (http://vuejs.org) source is analyzed
 > 
-> 同步博客源码分析
+> Synchronous blog source code analysis
 > 
 
-###安装
+###Installation
 
 * npm install
 
-###运行
+###Run
 
 * npm run dev
 * http://localhost:8888
 
 ****
-### 分析
+### Analysis
 
-#####基础设施
+#####Technical facilities
 
 * demo-数据观察
 * demo-缓存
 * demo-异步更新队列
 
 
-#####功能分解
+#####Functional decomposition
 
 * demo-列表渲染
 * demo-指令解析
