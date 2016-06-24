@@ -1,7 +1,7 @@
 # Vue源码分析 1.0.25
 
 > 
-> 基于es6重写了部分vue源码进行分析 [vuejs]( http://vuejs.org) 
+> 基于es6重写了部分 [vuejs](http://vuejs.org) 源码进行分析
 > 
 > 同步博客源码分析
 > 
