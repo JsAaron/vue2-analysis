@@ -2,7 +2,7 @@ var path = require('path')
 
 module.exports = {
     dev: {
-        port: 8000,
+        port: 3000,
         index: path.resolve(__dirname, 'temp/index.html'),
         assetsRoot: path.resolve(__dirname, 'temp'),
         assetsPublicPath: '/',

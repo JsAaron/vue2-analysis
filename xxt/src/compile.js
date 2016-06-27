@@ -7,10 +7,16 @@ let compileElement = (el, options) => {
     let hasAttrs = el.hasAttributes()
 }
 
+
 /**
  * Parse text string into an array of tokens
  */
 let parseText = (text) => {
+    console.log(text)
+    let match
+    while (match = /\{\{((?:.|\n)+?)\}\}/g.exec(text)) {
+        console.log(match)
+    }
 
 }
 
@@ -19,6 +25,11 @@ let parseText = (text) => {
  */
 let compileTextNode = (node, options) => {
     console.log(node.wholeText)
+console.log(123)
+    //Parse textNode string 
+    let tokens = parseText(node.wholeText);
+
+    //  \{\{ ((?:.|\n)+?)\ }\}/g
 }
 
 /**
