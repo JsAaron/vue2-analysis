@@ -1,3 +1,10 @@
+import {
+    compile
+} from './compile'
+import {
+    observe
+} from './observe'
+
 let hasOwnProperty = Object.prototype.hasOwnProperty
 
 /**
@@ -17,6 +24,7 @@ let hasOwn = (obj, key) => {
  * 有策略函数遵循相同的签名
  */
 let strats = Object.create(null);
+
 
 /**
  * 递归合并两个数据对象在一起
@@ -64,48 +72,6 @@ strats.data = (parentVal, childVal, vm) => {
     }
 }
 
-/**
- * Compile the directives on an element and return a linker
- */
-let compileDirectives = (attrs, options) => {
-    let i = attrs.length;
-    let dirs = [];
-    let attr, name, value
-    while (i--) {
-        attr = attrs[i]
-        name = attr.name
-        value = attr.value
-
-        //normal directives
-        console.log(name)
-    }
-}
-
-let linkAndCapture = () => {
-
-}
-
-/**
- * Compile the root element of an instance
- * 1. attrs on context container (context scope)
- */
-let compileRoot = (el, options) => {
-    let replacerLinkFn
-
-    //just compile as a normal element
-    replacerLinkFn = compileDirectives(el.attributes, options)
-
-    //rootLinkFn
-    return (vm, el) => {
-
-        // link self
-        let selfDirs = linkAndCapture(() => {
-            if (replacerLinkFn) replacerLinkFn(vm, el);
-        }, vm)
-
-    }
-}
-
 
 /**
  * 查询一个元素选择器
@@ -120,113 +86,6 @@ let query = (el) => {
     return el;
 }
 
-
-/**
- * 定义个对象属性
- * @param {Object} obj
- * @param {String} key
- * @param {*} val
- * @param {Boolean} [enumerable]
- */
-let def = (obj, key, val, enumerable) => {
-    Object.defineProperty(obj, key, {
-        value: val,
-        enumerable: !!enumerable,
-        writable: true,
-        configurable: true
-    });
-}
-
-
-
-let uid = 0;
-
-/**
- * dep是一种观察可以被多个指令订阅它
- */
-class Dep {
-    constructor() {
-        this.id = uid++;
-        this.subs = [];
-    }
-}
-
-
-/**
- * Define a reactive property on an Object
- */
-let defineReactive = (obj, key, val) => {
-    Object.defineProperty(obj, key, {
-        enumerable: true,
-        configurable: true,
-        get: () => {
-
-        },
-        set: (newVal) => {
-
-        }
-    })
-}
-
-
-/**
- * 建立数据观察
- * 观察者类连接到每个观察对象。
- * 一旦连接
- * 观察者转换目标对象的属性键到getter / setter收集依赖和分派更新
- */
-class Observer {
-    constructor(value) {
-        this.value = value
-        this.dep = new Dep();
-        def(value, '__ob__', this);
-        this.walk(value);
-    }
-
-    /**
-     * 通过each方法把每一个属性转化成getter/getter
-     * 只有当值是对象的时候才能被调用
-     */
-    walk(obj) {
-        let keys = Object.keys(obj);
-        for (let i = 0, l = keys.length; i < l; i++) {
-            this.convert(keys[i], obj[keys[i]]);
-        }
-    }
-
-    /**
-     * 转化一个属性变成getter/setter
-     * 当属性存取或者改变的时候，我们能触发这个事件
-     */
-    convert(key, val) {
-        defineReactive(this.value, key, val);
-    }
-
-    /**
-     * 增加一个所有者的vm
-     */
-    addVm(vm) {
-        (this.vms || (this.vms = [])).push(vm)
-    }
-}
-
-
-/**
- * 试图给一个值去创建一个观察实例
- * 成功，返回一个新的观察
- * 或者值已经存在了观察
- */
-let observe = (value, vm) => {
-    if (!value || typeof value !== 'object') {
-        return;
-    }
-    let ob
-    ob = new Observer(value)
-    if (ob && vm) {
-        ob.addVm(vm)
-    }
-    return ob
-}
 
 /**
  * 合并2个参数对象变成一个新的
@@ -339,14 +198,16 @@ class XXT {
     _compile(el) {
         let options = this.$options
 
-        // rootLinker is a compile linker
-        // return a linker function
-        let rootLinker = compileRoot(el, options)
+        //compile node
+        let contentUnlinkFn = compile(el, options)(this, el)
 
-        //must sure to link root with prop scope
-        let rootUnlinkFn = rootLinker(this, el)
     }
 }
+
+XXT.options = {
+    test: 1
+}
+
 
 
 
