@@ -105,10 +105,6 @@ app.use(devMiddleware)
 // compilation error display
 app.use(hotMiddleware)
 
-app.use('/lib', express.static('src/lib'));
-app.use('/css', express.static('src/css'));
-app.use('/images', express.static('src/images'));
-app.use('/content', express.static('src/content'));
 
 module.exports = app.listen(port, (err) => {
     if (err) {
