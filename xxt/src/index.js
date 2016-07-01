@@ -117,7 +117,7 @@ class XXT {
         let options = this.$options
 
         //compile node
-        let contentUnlinkFn = compile(el, options)
+        let contentUnlinkFn = compile(el, options)(this, el)
 
     }
 }

@@ -164,9 +164,13 @@ let compileNode = (node, options) => {
 
 
 let makeChildLinkFn = (linkFns) => {
-    return childLinkFn()[
-
-    ]
+    return function childLinkFn(vm, nodes) {
+        var node, nodeLinkFn, childrenLinkFn;
+        // for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
+        //     // node = nodes[n]
+        //     console.log(linkFns)
+        // }
+    }
 }
 
 
@@ -187,15 +191,37 @@ let compileNodeList = (nodeList, options) => {
     return linkFns.length ? makeChildLinkFn(linkFns) : null;
 }
 
+/**
+ * Apply a linker to a vm/element pair and capture the
+ * directives created during the process.
+ *
+ * @param {Function} linker
+ * @param {Vue} vm
+ */
+
+let linkAndCapture = (linker, vm) => {
+    var originalDirCount = vm._directives.length;
+    linker();
+    // var dirs = vm._directives.slice(originalDirCount);
+    // dirs.sort(directiveComparator);
+    // for (var i = 0, l = dirs.length; i < l; i++) {
+    //     dirs[i]._bind();
+    // }
+    // return dirs;
+}
+
 
 export function compile(el, options) {
     //link function for the node itself
     let nodeLinkFn = compileNode(el, options);
     //link function for the node childNodes
-    let childNodes = el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null
+    let childLinkFn = el.hasChildNodes() ? compileNodeList(el.childNodes, options) : null
 
-
-    return function compositeLinkFn() {
-
+    return function compositeLinkFn(vm, el) {
+        let childNodes = toArray(el.childNodes)
+        let dirs = linkAndCapture(function() {
+            if (nodeLinkFn) nodeLinkFn(vm, el)
+            if (childLinkFn) childLinkFn(vm, childNodes)
+        }, vm)
     }
 }
