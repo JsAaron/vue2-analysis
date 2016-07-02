@@ -12,8 +12,7 @@
 #####Run
 
 * npm run dev
-* http://localhost:8888
-
+* http://localhost:8000
 #####Directory
 
 * Observed data
