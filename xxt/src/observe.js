@@ -1,3 +1,10 @@
+var isArray = Array.isArray
+
+var hasProto = ('__proto__' in {})
+var arrayProto = Array.prototype;
+var arrayMethods = Object.create(arrayProto)
+
+
 /**
  * 定义个对象属性
  * @param {Object} obj
@@ -14,6 +21,14 @@ let def = (obj, key, val, enumerable) => {
     });
 }
 
+;
+['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'].forEach(function(method) {
+    // cache original method
+    var original = arrayProto[method];
+    def(arrayMethods, method, function mutator() {
+        console.log(method)
+    });
+});
 
 
 let uid = 0;
@@ -33,6 +48,10 @@ class Dep {
  * Define a reactive property on an Object
  */
 let defineReactive = (obj, key, val) => {
+
+
+    var childOb = observe(val);
+
     Object.defineProperty(obj, key, {
         enumerable: true,
         configurable: true,
@@ -43,6 +62,13 @@ let defineReactive = (obj, key, val) => {
 
         }
     })
+}
+
+
+function protoAugment(target, src) {
+    /* eslint-disable no-proto */
+    target.__proto__ = src;
+    /* eslint-enable no-proto */
 }
 
 
@@ -57,7 +83,18 @@ class Observer {
         this.value = value
         this.dep = new Dep();
         def(value, '__ob__', this);
-        this.walk(value);
+        if (isArray(value)) {
+            protoAugment(value, arrayMethods)
+            this.observeArray(value)
+        } else {
+            this.walk(value)
+        }
+    }
+
+    observeArray(items) {
+        for (var i = 0, l = items.length; i < l; i++) {
+            observe(items[i]);
+        }
     }
 
     /**
