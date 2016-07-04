@@ -9,12 +9,14 @@
 #####Installation
 * npm install
 
+
 #####Run
 A basic demo
 * npm run dev
 * http://localhost:8000
-#####Directory
 
+
+#####Directory
 * Observed data
 * Cache
 * Asynchronous update queue
