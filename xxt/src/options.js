@@ -37,6 +37,22 @@ let mergeData = (to, from) => {
 }
 
 
+/**
+ * Mix properties into target object.
+ *
+ * @param {Object} to
+ * @param {Object} from
+ */
+
+function extend(to, from) {
+    var keys = Object.keys(from);
+    var i = keys.length;
+    while (i--) {
+        to[keys[i]] = from[keys[i]];
+    }
+    return to;
+}
+
 
 /**
  * El
@@ -66,6 +82,19 @@ strats.data = (parentVal, childVal, vm) => {
         }
     }
 }
+
+/**
+ * Other object hashes.
+ */
+
+strats.props = strats.methods = strats.computed = function(parentVal, childVal) {
+    if (!childVal) return parentVal;
+    if (!parentVal) return childVal;
+    var ret = Object.create(null);
+    extend(ret, parentVal);
+    extend(ret, childVal);
+    return ret;
+};
 
 
 /**

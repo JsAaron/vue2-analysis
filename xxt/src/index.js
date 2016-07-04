@@ -23,6 +23,14 @@ let query = (el) => {
 }
 
 
+function bind(fn, ctx) {
+    return function(a) {
+        var l = arguments.length;
+        return l ? l > 1 ? fn.apply(ctx, arguments) : fn.call(ctx, a) : fn.call(ctx);
+    };
+}
+
+
 /**
  * constructor class
  */
@@ -55,6 +63,7 @@ class XXT {
      */
     _initState() {
         this._initProps()
+        this._initMethods()
         this._initData()
     }
 
@@ -65,6 +74,15 @@ class XXT {
         let options = this.$options
         let el = options.el
         options.el = query(el)
+    }
+
+    _initMethods() {
+        var methods = this.$options.methods;
+        if (methods) {
+            for (var key in methods) {
+                this[key] = bind(methods[key], this);
+            }
+        }
     }
 
     /**
@@ -123,7 +141,11 @@ class XXT {
 }
 
 XXT.options = {
-    test: 1
+    directives: {
+        bind: {
+
+        }
+    }
 }
 
 
