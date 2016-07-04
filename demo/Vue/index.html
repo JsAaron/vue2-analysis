@@ -12,20 +12,34 @@
 
 <div id="app">
     {{ message }}
+    <ul>
+        <li>{{ message }}</li>
+        <li v-for="item in items">
+            {{ item.message }}
+        </li>
+    </ul>
+    <button v-on:click="greet">按钮</button>
 </div>
 
-<button>点击改变数据</button>
 
 <script type="text/javascript">
     var vm = new Vue({
         el: '#app',
         data: {
-            message: 'Hello Vue.js!'
+            message: 'Hello Vue.js!',
+            items: [{
+                message: 'Foo'
+            }, {
+                message: 'Bar'
+            }]
+        },
+        // 在 `methods` 对象中定义方法
+        methods: {
+            greet: function(event) {
+                this.message = '改变数据'
+            }
         }
     })
-    document.addEventListener('click',function(){
-        vm.message = 'Aaron'
-    },false)
 </script>
 
 </html>

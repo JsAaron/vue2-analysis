@@ -118,7 +118,9 @@ let processTextToken = (token, options) => {
 }
 
 let makeTextNodeLinkFn = (tokens, frag) => {
-    return function textNodeLinkFn() {
+    return function textNodeLinkFn(vm, el) {
+      var fragClone = frag.cloneNode(true)
+      
 
     }
 }
@@ -166,10 +168,19 @@ let compileNode = (node, options) => {
 let makeChildLinkFn = (linkFns) => {
     return function childLinkFn(vm, nodes) {
         var node, nodeLinkFn, childrenLinkFn;
-        // for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
-        //     // node = nodes[n]
-        //     console.log(linkFns)
-        // }
+        for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
+            node = nodes[n];
+            nodeLinkFn = linkFns[i++];
+            childrenLinkFn = linkFns[i++];
+            // cache childNodes before linking parent, fix #657
+            var childNodes = toArray(node.childNodes);
+            if (nodeLinkFn) {
+                nodeLinkFn(vm, node);
+            }
+            if (childrenLinkFn) {
+                // childrenLinkFn(vm, childNodes, host, scope, frag);
+            }
+        }
     }
 }
 
@@ -200,14 +211,14 @@ let compileNodeList = (nodeList, options) => {
  */
 
 let linkAndCapture = (linker, vm) => {
-    var originalDirCount = vm._directives.length;
-    linker();
-    // var dirs = vm._directives.slice(originalDirCount);
-    // dirs.sort(directiveComparator);
-    // for (var i = 0, l = dirs.length; i < l; i++) {
-    //     dirs[i]._bind();
-    // }
-    // return dirs;
+    var originalDirCount = vm._directives.length
+    linker()
+        // var dirs = vm._directives.slice(originalDirCount);
+        // dirs.sort(directiveComparator);
+        // for (var i = 0, l = dirs.length; i < l; i++) {
+        //     dirs[i]._bind();
+        // }
+        // return dirs;
 }
 
 
