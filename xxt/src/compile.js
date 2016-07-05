@@ -119,8 +119,8 @@ let processTextToken = (token, options) => {
 
 let makeTextNodeLinkFn = (tokens, frag) => {
     return function textNodeLinkFn(vm, el) {
-      var fragClone = frag.cloneNode(true)
-      
+        var fragClone = frag.cloneNode(true)
+
 
     }
 }
@@ -147,22 +147,7 @@ let compileTextNode = (node, options) => {
     return makeTextNodeLinkFn(tokens, frag, options)
 }
 
-/**
- * Complie node and return a nodeLinkFn based on the node type
- */
-let compileNode = (node, options) => {
-    let type = node.nodeType
 
-    //If be the element node
-    if (type === 1 && !isScript(node)) {
-        return compileElement(node, options)
-    } else if (type === 3 && node.data.trim()) {
-        //if be the text node and remove the blank space
-        return compileTextNode(node, options)
-    } else {
-        return null
-    }
-}
 
 
 let makeChildLinkFn = (linkFns) => {
@@ -186,6 +171,23 @@ let makeChildLinkFn = (linkFns) => {
 
 
 /**
+ * Complie node and return a nodeLinkFn based on the node type
+ */
+let compileNode = (node, options) => {
+    let type = node.nodeType
+        //If be the element node
+    if (type === 1 && !isScript(node)) {
+        return compileElement(node, options)
+    } else if (type === 3 && node.data.trim()) {
+        //if be the text node and remove the blank space
+        return compileTextNode(node, options)
+    } else {
+        return null
+    }
+}
+
+
+/**
  *  Compile a node list and return a childLinkFn.
  */
 let compileNodeList = (nodeList, options) => {
@@ -201,6 +203,7 @@ let compileNodeList = (nodeList, options) => {
     }
     return linkFns.length ? makeChildLinkFn(linkFns) : null;
 }
+
 
 /**
  * Apply a linker to a vm/element pair and capture the

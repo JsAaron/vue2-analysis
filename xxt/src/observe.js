@@ -49,7 +49,6 @@ class Dep {
  */
 let defineReactive = (obj, key, val) => {
 
-
     var childOb = observe(val);
 
     Object.defineProperty(obj, key, {
