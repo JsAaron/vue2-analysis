@@ -42,6 +42,20 @@ let compileDirectives = (attrs, options) => {
 }
 
 
+function checkTerminalDirectives(el, attrs, options) {
+    var attr, name, value, modifiers, matched, dirName, rawName, arg, def, termDef;
+    for (var i = 0, j = attrs.length; i < j; i++) {
+        attr = attrs[i];
+        name = attr.name.replace(/\.[^\.]+/g, '');
+        if (matched = name.match(/^v-([^:]+)(?:$|:(.*)$)/)) {
+
+        }
+    }
+
+}
+
+
+
 /**
  * Compile an element and retrun a nodeLinkFn 
  */
@@ -50,7 +64,17 @@ let compileElement = (el, options) => {
     //The element has an attribute node
     let hasAttrs = el.hasAttributes()
     let attrs = hasAttrs && toArray(el.attributes)
-    let linkFn = compileDirectives(attrs, options)
+
+    let linkFn
+
+    //check terminal directives(if & for)
+    if (hasAttrs) {
+        linkFn = checkTerminalDirectives(el, attrs, options);
+    }
+
+    if (linkFn) {
+        linkFn = compileDirectives(attrs, options)
+    }
 
     return linkFn
 }

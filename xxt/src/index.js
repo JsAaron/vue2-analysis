@@ -144,6 +144,9 @@ XXT.options = {
     directives: {
         bind: {
 
+        },
+        for: {
+
         }
     }
 }

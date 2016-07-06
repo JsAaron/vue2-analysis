@@ -96,6 +96,12 @@ strats.props = strats.methods = strats.computed = function(parentVal, childVal) 
     return ret;
 };
 
+function mergeAssets(parentVal, childVal) {
+    var res = Object.create(parentVal || null);
+    return childVal ? extend(res, guardArrayAssets(childVal)) : res;
+}
+
+strats.directives = mergeAssets
 
 /**
  * 合并2个参数对象变成一个新的
@@ -103,13 +109,17 @@ strats.props = strats.methods = strats.computed = function(parentVal, childVal) 
  */
 export function mergeOptions(parent, child, vm) {
     let options = {}
+    let key
     let mergeField = (key) => {
         let strat = strats[key]
         options[key] = strat(parent[key], child[key], vm, key);
     }
-    for (let key in child) {
+    for (key in parent) {
+        mergeField(key)
+    }
+    for (key in child) {
         if (!hasOwn(parent, key)) {
-            mergeField(key);
+            mergeField(key)
         }
     }
     return options
