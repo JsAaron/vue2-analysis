@@ -146,7 +146,7 @@ XXT.options = {
 
         },
         for: {
-
+            terminal: true
         }
     }
 }

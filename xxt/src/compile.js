@@ -6,6 +6,13 @@ let dirAttrRE = /^v-([^:]+)(?:$|:(.*)$)/
 let tagRE = new RegExp(/\{\{\{((?:.|\n)+?)\}\}\}|\{\{((?:.|\n)+?)\}\}/g)
 let htmlRE = new RegExp(/^\{\{\{((?:.|\n)+?)\}\}\}$/)
 
+import text from './directives/text'
+
+// must export plain object
+var directives = {
+    text: text
+};
+
 /**
  * Convert an Array-like object to a real Array.
  *
@@ -42,13 +49,29 @@ let compileDirectives = (attrs, options) => {
 }
 
 
+
+function resolveAsset(options, type, id, warnMissing) {
+    /* istanbul ignore if */
+    if (typeof id !== 'string') {
+        return;
+    }
+    var assets = options[type];
+    var camelizedId;
+    var res = assets[id]
+    return res;
+}
+
+
 function checkTerminalDirectives(el, attrs, options) {
     var attr, name, value, modifiers, matched, dirName, rawName, arg, def, termDef;
     for (var i = 0, j = attrs.length; i < j; i++) {
         attr = attrs[i];
         name = attr.name.replace(/\.[^\.]+/g, '');
         if (matched = name.match(/^v-([^:]+)(?:$|:(.*)$)/)) {
-
+            def = resolveAsset(options, 'directives', matched[1])
+            if (def && def.terminal){
+                
+            }
         }
     }
 
@@ -127,16 +150,30 @@ let parseText = (text) => {
     return tokens
 }
 
+
+function parseDirective(str) {
+    var dir = {}
+    dir.expression = str.trim();
+    return dir
+}
+
+
 /**
  * Process a single text token
  */
 let processTextToken = (token, options) => {
-    let el = document.createTextNode(' ')
-    token.descriptor = {
-        name: 'text',
-        def: null,
-        expression: token.value,
-        filters: null
+    var el
+    el = document.createTextNode(' ');
+    setTokenType('text');
+
+    function setTokenType(type) {
+        if (token.descriptor) return;
+        var parsed = parseDirective(token.value);
+        token.descriptor = {
+            name: type,
+            def: directives[type],
+            expression: parsed.expression
+        };
     }
     return el
 }
@@ -167,7 +204,7 @@ let compileTextNode = (node, options) => {
         el = token.tag ? processTextToken(token, options) : document.createTextNode(token.value);
         frag.appendChild(el);
     }
-
+    // console.log(token)
     return makeTextNodeLinkFn(tokens, frag, options)
 }
 
@@ -175,11 +212,12 @@ let compileTextNode = (node, options) => {
 
 
 let makeChildLinkFn = (linkFns) => {
+    // console.log(linkFns)
     return function childLinkFn(vm, nodes) {
         var node, nodeLinkFn, childrenLinkFn;
         for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
             node = nodes[n];
-            nodeLinkFn = linkFns[i++];
+            nodeLinkFn = linkFns[i++]
             childrenLinkFn = linkFns[i++];
             // cache childNodes before linking parent, fix #657
             var childNodes = toArray(node.childNodes);
