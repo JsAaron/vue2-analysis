@@ -6,7 +6,7 @@
 > Synchronous blog source code analysis
 > 
 
-#####Installation
+#####Install
 * npm install
 
 
