@@ -11,7 +11,7 @@
 
 
 #####Run
-A basic demo
+A basic demo,Using XXT named simulation framework implementations
 * npm run dev
 * http://localhost:8000
 
