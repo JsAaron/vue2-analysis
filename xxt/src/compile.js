@@ -7,10 +7,11 @@ let tagRE = new RegExp(/\{\{\{((?:.|\n)+?)\}\}\}|\{\{((?:.|\n)+?)\}\}/g)
 let htmlRE = new RegExp(/^\{\{\{((?:.|\n)+?)\}\}\}$/)
 
 import text from './directives/text'
-
+import on from './directives/on'
 // must export plain object
 var directives = {
-    text: text
+    text: text,
+    on: on
 };
 
 /**
@@ -32,6 +33,12 @@ let toArray = (list, start) => {
 }
 
 
+function makeNodeLinkFn(directives) {
+    return function nodeLinkFn(vm, el, host, scope, frag) {
+
+    };
+}
+
 let compileDirectives = (attrs, options) => {
     var i = attrs.length;
     var dirs = [];
@@ -40,12 +47,45 @@ let compileDirectives = (attrs, options) => {
         attr = attrs[i];
         name = rawName = attr.name;
         value = rawValue = attr.value
+
+
+        if (/^v-on:|^@/.test(name)) {
+            arg = name.replace(/^v-on:|^@/, '');
+            pushDir('on', directives.on);
+        } else {
+
             // normal directives
-        if (matched = name.match(dirAttrRE)) {
-            dirName = matched[1];
-            arg = matched[2];
+            if (matched = name.match(dirAttrRE)) {
+                dirName = matched[1];
+                arg = matched[2];
+            }
         }
     }
+
+    /**
+     * Push a directive.
+     *
+     * @param {String} dirName
+     * @param {Object|Function} def
+     * @param {Array} [interpTokens]
+     */
+
+    function pushDir(dirName, def, interpTokens) {
+        var parsed = parseDirective(value);
+        dirs.push({
+            name: dirName,
+            attr: rawName,
+            raw: rawValue,
+            def: def,
+            arg: arg,
+            expression: parsed && parsed.expression
+        })
+    }
+
+    if (dirs.length) {
+        return makeNodeLinkFn(dirs);
+    }
+
 }
 
 
@@ -61,6 +101,23 @@ function resolveAsset(options, type, id, warnMissing) {
     return res;
 }
 
+function makeTerminalNodeLinkFn(el, dirName, value, options, def, rawName, arg) {
+    var parsed = parseDirective(value);
+    var descriptor = {
+        name: dirName,
+        arg: arg,
+        expression: parsed.expression,
+        raw: value,
+        attr: rawName,
+        def: def
+    };
+    var fn = function terminalNodeLinkFn(vm, el, host, scope, frag) {
+
+    };
+    fn.terminal = true;
+    return fn;
+}
+
 
 function checkTerminalDirectives(el, attrs, options) {
     var attr, name, value, modifiers, matched, dirName, rawName, arg, def, termDef;
@@ -69,12 +126,18 @@ function checkTerminalDirectives(el, attrs, options) {
         name = attr.name.replace(/\.[^\.]+/g, '');
         if (matched = name.match(/^v-([^:]+)(?:$|:(.*)$)/)) {
             def = resolveAsset(options, 'directives', matched[1])
-            if (def && def.terminal){
-                
+            if (def && def.terminal) {
+                termDef = def
+                rawName = attr.name
+                value = attr.value;
+                dirName = matched[1];
+                arg = matched[2];
             }
         }
     }
-
+    if (termDef) {
+        return makeTerminalNodeLinkFn(el, dirName, value, options, termDef, rawName, arg);
+    }
 }
 
 
@@ -95,7 +158,7 @@ let compileElement = (el, options) => {
         linkFn = checkTerminalDirectives(el, attrs, options);
     }
 
-    if (linkFn) {
+    if (!linkFn) {
         linkFn = compileDirectives(attrs, options)
     }
 
@@ -258,9 +321,9 @@ let compileNodeList = (nodeList, options) => {
     for (let i = 0, l = nodeList.length; i < l; i++) {
         node = nodeList[i]
         nodeLinkFn = compileNode(node, options);
-        if (node.hasChildNodes()) {
-            childLinkFn = compileNodeList(node.childNodes, options)
-        }
+
+        childLinkFn = !(nodeLinkFn && nodeLinkFn.terminal) && node.tagName !== 'SCRIPT' && node.hasChildNodes() ? compileNodeList(node.childNodes, options) : null
+
         linkFns.push(nodeLinkFn, childLinkFn)
     }
     return linkFns.length ? makeChildLinkFn(linkFns) : null;
