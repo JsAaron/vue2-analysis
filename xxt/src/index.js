@@ -46,6 +46,7 @@ class XXT {
 
         //all directives
         this._directives = []
+        this._watchers = []
 
         //initalize data observation and scope inheritance
         this._initState()

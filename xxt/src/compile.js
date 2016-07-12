@@ -367,7 +367,6 @@ let linkAndCapture = (linker, vm) => {
     linker()
     var dirs = vm._directives.slice(originalDirCount);
     dirs.sort(directiveComparator);
-
     for (var i = 0, l = dirs.length; i < l; i++) {
         dirs[i]._bind();
     }
