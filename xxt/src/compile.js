@@ -8,13 +8,7 @@ let htmlRE = new RegExp(/^\{\{\{((?:.|\n)+?)\}\}\}$/)
 
 var DEFAULT_PRIORITY = 1000;
 
-import text from './directives/text'
-import on from './directives/on'
-// must export plain object
-var directives = {
-    text: text,
-    on: on
-};
+import directives from './directives/index'
 
 /**
  * Convert an Array-like object to a real Array.
@@ -301,7 +295,7 @@ let makeChildLinkFn = (linkFns) => {
     // console.log(linkFns)
     return function childLinkFn(vm, nodes) {
         var node, nodeLinkFn, childrenLinkFn;
-        console.log(linkFns)
+        // console.log(linkFns)
         for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
             node = nodes[n];
             nodeLinkFn = linkFns[i++]
@@ -373,6 +367,7 @@ let linkAndCapture = (linker, vm) => {
     linker()
     var dirs = vm._directives.slice(originalDirCount);
     dirs.sort(directiveComparator);
+
     for (var i = 0, l = dirs.length; i < l; i++) {
         dirs[i]._bind();
     }

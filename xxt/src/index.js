@@ -10,16 +10,9 @@ import {
 import {
     Directive
 } from './directive'
-import {
-    directives
-} from './directives/index'
+import directives from './directives/index'
 
 
-/**
- * Query an element selector
- * @param {String|Element} el
- * @return {Element}
- */
 let query = (el) => {
     if (typeof el === 'string') {
         let selector = el;
@@ -151,18 +144,7 @@ class XXT {
 }
 
 XXT.options = {
-    directives: {
-        bind: {
-            priority: 700
-        },
-        for: {
-            priority: 2200,
-            terminal: true
-        }
-    }
+    directives
 }
-
-
-
 
 window.XXT = XXT
