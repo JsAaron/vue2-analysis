@@ -6,6 +6,8 @@ let dirAttrRE = /^v-([^:]+)(?:$|:(.*)$)/
 let tagRE = new RegExp(/\{\{\{((?:.|\n)+?)\}\}\}|\{\{((?:.|\n)+?)\}\}/g)
 let htmlRE = new RegExp(/^\{\{\{((?:.|\n)+?)\}\}\}$/)
 
+var DEFAULT_PRIORITY = 1000;
+
 import text from './directives/text'
 import on from './directives/on'
 // must export plain object
@@ -35,8 +37,11 @@ let toArray = (list, start) => {
 
 function makeNodeLinkFn(directives) {
     return function nodeLinkFn(vm, el, host, scope, frag) {
-
-    };
+        var i = directives.length;
+        while (i--) {
+            vm._bindDir(directives[i], el)
+        }
+    }
 }
 
 let compileDirectives = (attrs, options) => {
@@ -112,7 +117,7 @@ function makeTerminalNodeLinkFn(el, dirName, value, options, def, rawName, arg) 
         def: def
     };
     var fn = function terminalNodeLinkFn(vm, el, host, scope, frag) {
-
+        vm._bindDir(descriptor, el)
     };
     fn.terminal = true;
     return fn;
@@ -241,11 +246,29 @@ let processTextToken = (token, options) => {
     return el
 }
 
+
+function replace(target, el) {
+    var parent = target.parentNode;
+    if (parent) {
+        parent.replaceChild(el, target);
+    }
+}
+
+
 let makeTextNodeLinkFn = (tokens, frag) => {
     return function textNodeLinkFn(vm, el) {
-        var fragClone = frag.cloneNode(true)
-
-
+        var fragClone = frag.cloneNode(true);
+        var childNodes = toArray(fragClone.childNodes);
+        var token, value, node;
+        for (var i = 0, l = tokens.length; i < l; i++) {
+            token = tokens[i];
+            value = token.value;
+            if (token.tag) {
+                node = childNodes[i];
+                vm._bindDir(token.descriptor, node);
+            }
+        }
+        replace(el, fragClone);
     }
 }
 
@@ -278,17 +301,17 @@ let makeChildLinkFn = (linkFns) => {
     // console.log(linkFns)
     return function childLinkFn(vm, nodes) {
         var node, nodeLinkFn, childrenLinkFn;
+        console.log(linkFns)
         for (var i = 0, n = 0, l = linkFns.length; i < l; n++) {
             node = nodes[n];
             nodeLinkFn = linkFns[i++]
             childrenLinkFn = linkFns[i++];
-            // cache childNodes before linking parent, fix #657
             var childNodes = toArray(node.childNodes);
             if (nodeLinkFn) {
                 nodeLinkFn(vm, node);
             }
             if (childrenLinkFn) {
-                // childrenLinkFn(vm, childNodes, host, scope, frag);
+                childrenLinkFn(vm, childNodes)
             }
         }
     }
@@ -330,6 +353,13 @@ let compileNodeList = (nodeList, options) => {
 }
 
 
+
+function directiveComparator(a, b) {
+    a = a.descriptor.def.priority || DEFAULT_PRIORITY;
+    b = b.descriptor.def.priority || DEFAULT_PRIORITY;
+    return a > b ? -1 : a === b ? 0 : 1;
+}
+
 /**
  * Apply a linker to a vm/element pair and capture the
  * directives created during the process.
@@ -341,12 +371,12 @@ let compileNodeList = (nodeList, options) => {
 let linkAndCapture = (linker, vm) => {
     var originalDirCount = vm._directives.length
     linker()
-        // var dirs = vm._directives.slice(originalDirCount);
-        // dirs.sort(directiveComparator);
-        // for (var i = 0, l = dirs.length; i < l; i++) {
-        //     dirs[i]._bind();
-        // }
-        // return dirs;
+    var dirs = vm._directives.slice(originalDirCount);
+    dirs.sort(directiveComparator);
+    for (var i = 0, l = dirs.length; i < l; i++) {
+        dirs[i]._bind();
+    }
+    // return dirs;
 }
 
 
@@ -358,6 +388,7 @@ export function compile(el, options) {
 
     return function compositeLinkFn(vm, el) {
         let childNodes = toArray(el.childNodes)
+        console.log(1)
         let dirs = linkAndCapture(function() {
             if (nodeLinkFn) nodeLinkFn(vm, el)
             if (childLinkFn) childLinkFn(vm, childNodes)

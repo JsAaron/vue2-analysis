@@ -7,6 +7,12 @@ import {
 import {
     mergeOptions
 } from './options'
+import {
+    Directive
+} from './directive'
+import {
+    directives
+} from './directives/index'
 
 
 /**
@@ -46,7 +52,7 @@ class XXT {
         this._data = {}
 
         //all directives
-        this._directives = {}
+        this._directives = []
 
         //initalize data observation and scope inheritance
         this._initState()
@@ -138,14 +144,19 @@ class XXT {
         let contentUnlinkFn = compile(el, options)(this, el)
 
     }
+
+    _bindDir(descriptor, node) {
+        this._directives.push(new Directive(descriptor, this, node))
+    }
 }
 
 XXT.options = {
     directives: {
         bind: {
-
+            priority: 700
         },
         for: {
+            priority: 2200,
             terminal: true
         }
     }
