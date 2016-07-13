@@ -9,5 +9,8 @@ module.exports = {
         productionSourceMap: true,
         src: './xxt/',
         entry: './xxt/src/index.js'
+    },
+    build: {
+        root: 'demo'
     }
 }

@@ -4,7 +4,8 @@ const babel = require('rollup-plugin-babel')
 const replace = require('rollup-plugin-replace')
     // const multiEntry = require('rollup-plugin-multi-entry')
 
-const root = 'demo'
+const config = require('../config')
+const root = config.build.root
 
 let banner =
     '/*!\n' +
