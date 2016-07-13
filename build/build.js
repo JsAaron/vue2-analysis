@@ -1,10 +1,10 @@
 const fs = require('fs')
 const rollup = require('rollup')
-var babel = require('rollup-plugin-babel')
-var replace = require('rollup-plugin-replace')
+const babel = require('rollup-plugin-babel')
+const replace = require('rollup-plugin-replace')
+    // const multiEntry = require('rollup-plugin-multi-entry')
 
-const entry = 'xxt/src/index.js'
-const dest = 'xxt'
+const root = 'demo'
 
 let banner =
     '/*!\n' +
@@ -12,7 +12,6 @@ let banner =
     ' * (c) ' + new Date().getFullYear() + ' Aaron\n' +
     ' * https://github.com/JsAaron/vue-analysis\n' +
     ' */'
-
 
 let write = (dest, code) => {
     return new Promise(function(resolve, reject) {
@@ -33,22 +32,45 @@ let blue = (str) => {
 }
 
 
-rollup.rollup({
-    entry: entry,
-    plugins: [
-        replace({
-            'process.env.NODE_ENV': "'development'"
-        }),
-        babel({
-            "presets": ["es2015-rollup"]
+function startRollup(dir) {
+
+    var entry = root + '/' + dir + '/src/index.js'
+    var build = root + '/' + dir + '/build.js'
+
+    fs.stat(entry, function(err, stats) {
+        if (err) {
+            console.log('error：' + entry);
+        } else {
+            rollup.rollup({
+                entry: entry,
+                plugins: [
+                    replace({
+                        'process.env.NODE_ENV': "'development'"
+                    }),
+                    babel({
+                        "presets": ["es2015-rollup"]
+                    })
+                ]
+            }).then((bundle) => {
+                return write(build, bundle.generate({
+                    format: 'cjs',
+                    banner: banner,
+                    moduleName: 'build'
+                }).code)
+            }).catch((err) => {
+                console.log(err)
+            })
+        }
+    })
+
+}
+
+fs.readdir(root, function(err, files) {
+    if (err) {
+        console.log('read dir error');
+    } else {
+        files.forEach(function(dir) {
+            startRollup(dir)
         })
-    ]
-}).then((bundle) => {
-    return write(dest + '/build.js', bundle.generate({
-        format: 'cjs',
-        banner: banner,
-        moduleName: 'build'
-    }).code)
-}).catch((err) => {
-    console.log(err)
-})
+    }
+});
