@@ -10,10 +10,14 @@
 * npm install
 
 
-#####Run
+#####Dev
 A basic demo,Using XXT named simulation framework implementations
 * npm run dev
 * http://localhost:8000
+
+#####Build
+All the analysis code files in the demo directory, the source file is es6 code, so it must pass a rollup, compiled by naming the build a key
+* npm run build
 
 
 #####Directory
