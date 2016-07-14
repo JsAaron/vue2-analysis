@@ -13,6 +13,7 @@ const webpacHotMiddleware = require('webpack-hot-middleware')
 
 //https://www.npmjs.com/package/write-file-webpack-plugin
 const WriteFilePlugin = require('write-file-webpack-plugin');
+const portoccupied = require('../occupied')
 
 const config = require('../../config')
 const port = process.env.PORT || config.dev.port
@@ -106,10 +107,13 @@ app.use(devMiddleware)
 app.use(hotMiddleware)
 
 
-module.exports = app.listen(port, (err) => {
-    if (err) {
-        console.log(err)
-        return
-    }
-    console.log('Listening at http://localhost:' + port + '\n')
+
+portoccupied(port, () => {
+    app.listen(port, (err) => {
+        if (err) {
+            console.log(err)
+            return
+        }
+        console.log('Listening at http://localhost:' + port + '\n')
+    })
 })
