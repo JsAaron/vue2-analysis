@@ -6,6 +6,8 @@ import {
     _Set as Set
 } from './util/index'
 
+let uid = 0
+
 function makeGetterFn(body) {
     try {
         /* eslint-disable no-new-func */
@@ -34,6 +36,8 @@ export function Watcher(vm, expOrFn, cb) {
     vm._watchers.push(this);
     this.expression = expOrFn;
     this.cb = cb;
+
+    this.id = ++uid // uid for batching
 
     this.newDeps = []
     this.newDepIds = new Set()
@@ -111,7 +115,69 @@ Watcher.prototype.addDep = function(dep) {
 };
 
 
-Watcher.prototype.update = function(shallow) {
-    this.queued = true;
-    pushWatcher(this);
+
+/**
+ * Prepare for dependency collection.
+ */
+
+Watcher.prototype.beforeGet = function() {
+    Dep.target = this
+}
+
+/**
+ * Add a dependency to this directive.
+ *
+ * @param {Dep} dep
+ */
+
+Watcher.prototype.addDep = function(dep) {
+    var id = dep.id
+    if (!this.newDepIds.has(id)) {
+        this.newDepIds.add(id)
+        this.newDeps.push(dep)
+        if (!this.depIds.has(id)) {
+            dep.addSub(this)
+        }
+    }
+}
+
+/**
+ * Clean up for dependency collection.
+ */
+
+Watcher.prototype.afterGet = function() {
+    Dep.target = null
+    var i = this.deps.length
+    while (i--) {
+        var dep = this.deps[i]
+        if (!this.newDepIds.has(dep.id)) {
+            dep.removeSub(this)
+        }
+    }
+    var tmp = this.depIds
+    this.depIds = this.newDepIds
+    this.newDepIds = tmp
+    this.newDepIds.clear()
+    tmp = this.deps
+    this.deps = this.newDeps
+    this.newDeps = tmp
+    this.newDeps.length = 0
+}
+
+/**
+ * Depend on all deps collected by this watcher.
+ */
+
+Watcher.prototype.depend = function() {
+    var i = this.deps.length
+    while (i--) {
+        this.deps[i].depend()
+    }
+}
+
+
+Watcher.prototype.update = function (shallow) {
+    this.queued = true
+    pushWatcher(this)
+  
 }
