@@ -31,6 +31,7 @@ Directive.prototype._bind = function() {
     var name = this.name;
     var descriptor = this.descriptor;
     var def = descriptor.def;
+
     extend(this, def);
 
     if (this.bind) {
@@ -42,9 +43,13 @@ Directive.prototype._bind = function() {
             dir.update(val, oldVal);
         }
     }
-    
+
     var watcher = new Watcher(this.vm, this.expression, this._update)
 
     this._watcher = watcher
+
+    if (this.update) {
+        this.update(watcher.value);
+    }
 
 }

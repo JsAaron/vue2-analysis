@@ -24,23 +24,24 @@
     <script type="text/javascript">
         window.onload = function() {
             var vm = new XXT({
-                el: '#app',
-                data: {
-                    message: 'Hello Vue.js!'
-                        // items: [{
-                        //     message: 'Foo'
-                        // }, {
-                        //     message: 'Bar'
-                        // }]
-                },
-                // 在 `methods` 对象中定义方法
-                methods: {
-                    greet: function(event) {
-                        this.message = '改变数据'
+                    el: '#app',
+                    data: {
+                        message: 'Hello Vue.js!'
+                            // items: [{
+                            //     message: 'Foo'
+                            // }, {
+                            //     message: 'Bar'
+                            // }]
+                    },
+                    // 在 `methods` 对象中定义方法
+                    methods: {
+                        greet: function(event) {
+                            console.log(this)
+                            this.message = '改变数据'
+                        }
                     }
-                }
-            })
-            console.log('\n\n', vm)
+                })
+                // console.log('\n\n', vm)
 
         }
     </script>

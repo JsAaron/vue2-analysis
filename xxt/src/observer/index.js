@@ -1,3 +1,5 @@
+import Dep from './dep'
+
 var isArray = Array.isArray
 
 var hasProto = ('__proto__' in {})
@@ -31,34 +33,30 @@ let def = (obj, key, val, enumerable) => {
 });
 
 
-let uid = 0;
-
-/**
- * dep是一种观察可以被多个指令订阅它
- */
-class Dep {
-    constructor() {
-        this.id = uid++;
-        this.subs = [];
-    }
-}
-
 
 /**
  * Define a reactive property on an Object
  */
 let defineReactive = (obj, key, val) => {
+    var dep = new Dep();
 
     var childOb = observe(val);
 
     Object.defineProperty(obj, key, {
         enumerable: true,
         configurable: true,
-        get: () => {
-
+        get() {
+            if (Dep.target) {
+                dep.depend()
+            }
+            return val
         },
-        set: (newVal) => {
-
+        set(newVal) {
+            if (newVal === val) {
+                return;
+            }
+            val = newVal
+            dep.notify()
         }
     })
 }

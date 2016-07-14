@@ -35,7 +35,7 @@ const webpackConfig = {
         publicPath: config.dev.assetsPublicPath,
         filename: 'app.js'
     },
-    devtool: '#eval-source-map',
+    devtool: '#cheap-source-map',
     module: {
         loaders: [{
             test: /\.js$/,

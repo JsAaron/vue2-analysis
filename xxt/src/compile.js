@@ -370,7 +370,19 @@ let linkAndCapture = (linker, vm) => {
     for (var i = 0, l = dirs.length; i < l; i++) {
         dirs[i]._bind();
     }
-    // return dirs;
+    return dirs;
+}
+
+function makeUnlinkFn(vm, dirs, context, contextDirs) {
+    function unlink(destroying) {
+        teardownDirs(vm, dirs, destroying);
+        if (context && contextDirs) {
+            teardownDirs(context, contextDirs);
+        }
+    }
+    // expose linked directives
+    unlink.dirs = dirs;
+    return unlink;
 }
 
 
@@ -382,10 +394,10 @@ export function compile(el, options) {
 
     return function compositeLinkFn(vm, el) {
         let childNodes = toArray(el.childNodes)
-        console.log(1)
         let dirs = linkAndCapture(function() {
             if (nodeLinkFn) nodeLinkFn(vm, el)
             if (childLinkFn) childLinkFn(vm, childNodes)
         }, vm)
+        return makeUnlinkFn(vm, dirs);
     }
 }

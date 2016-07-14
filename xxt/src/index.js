@@ -3,7 +3,7 @@ import {
 } from './compile'
 import {
     observe
-} from './observe'
+} from './observer/index'
 import {
     mergeOptions
 } from './options'
@@ -136,7 +136,9 @@ class XXT {
 
         //compile node
         let contentUnlinkFn = compile(el, options)(this, el)
-
+        if (options.replace) {
+            replace(original, el);
+        }
     }
 
     _bindDir(descriptor, node) {
