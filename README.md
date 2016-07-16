@@ -34,6 +34,7 @@ All the analysis code files in the demo directory, the source file is es6 code, 
 
 
 ###Directory
+> *  基本模拟 [插值表达式与事件机制](https://github.com/JsAaron/vue-analysis/tree/master/demo/%E5%9F%BA%E6%9C%AC%E6%A8%A1%E6%8B%9F)
 > *  Observed data
 > *  Cache
 > *  Asynchronous update queue
