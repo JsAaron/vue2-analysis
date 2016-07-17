@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>getter/setter计算属性</title>
+</head>
+
+<body>
+    <script type="text/javascript" src="build.js"></script>
+</body>
+<div id="app">
+    <a>{{ fullName }}</a>
+    <button>点击</button>
+</div>
+<script type="text/javascript">
+var vm = new Ue({
+    el: '#app',
+    data: {
+        firstName: 'Foo',
+        lastName: 'Bar',
+        fullName: 'aaaa'
+    },
+    computed: {
+        fullName: {
+            // Object.defineProperty(this, key, def);
+            // get:makeComputedGetter
+            // set:bind(set)
+            // 
+            get: function() {
+                return this.firstName + ' ' + this.lastName
+            },
+            set: function(newValue) {
+                var names = newValue.split(' ')
+                this.firstName = names[0]
+                this.lastName = names[names.length - 1]
+            }
+        }
+    }
+})
+
+document.addEventListener('click', function() {
+    vm.fullName = 'John Doe'
+    console.log(vm.fullName)
+}, false)
+</script>
+
+</html>

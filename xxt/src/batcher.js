@@ -1,5 +1,5 @@
 import {
-    nextTick,
+    nextTick
 } from './util/index'
 
 

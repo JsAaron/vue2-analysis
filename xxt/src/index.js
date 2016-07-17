@@ -65,6 +65,7 @@ class XXT {
         this._initProps()
         this._initMethods()
         this._initData()
+        this._initComputed()
     }
 
     /**
@@ -102,6 +103,29 @@ class XXT {
         }
 
         observe(data, this);
+    }
+
+
+    _initComputed() {
+        var computed = this.$options.computed;
+        if (computed) {
+            console.log(computed)
+                // for (var key in computed) {
+                //     var userDef = computed[key];
+                //     var def = {
+                //         enumerable: true,
+                //         configurable: true
+                //     };
+                //     if (typeof userDef === 'function') {
+                //         def.get = makeComputedGetter(userDef, this);
+                //         def.set = noop;
+                //     } else {
+                //         def.get = userDef.get ? userDef.cache !== false ? makeComputedGetter(userDef.get, this) : bind(userDef.get, this) : noop;
+                //         def.set = userDef.set ? bind(userDef.set, this) : noop;
+                //     }
+                //     Object.defineProperty(this, key, def);
+                // }
+        }
     }
 
     /**

@@ -10,12 +10,10 @@
 <body>
 
     <div id="app">
-        {{ message }}
+        {{ a }}
         <ul>
-            <li>{{ message }}</li>
-            <!--<li v-for="item in items">
-                {{ item.message }}
-            </li>-->
+            <li>{{ a }}</li>
+            <li> {{ b }} </li>
         </ul>
         <button v-on:click="greet">按钮</button>
     </div>
@@ -24,24 +22,24 @@
     <script type="text/javascript">
         window.onload = function() {
             var vm = new XXT({
-                    el: '#app',
-                    data: {
-                        message: 'Hello Vue.js!'
-                            // items: [{
-                            //     message: 'Foo'
-                            // }, {
-                            //     message: 'Bar'
-                            // }]
-                    },
-                    // 在 `methods` 对象中定义方法
-                    methods: {
-                        greet: function(event) {
-                            // console.log(this)
-                            this.message = '改变数据'
-                        }
+                el: '#app',
+                data: {
+                    a: 1
+                },
+                computed: {
+                    // 一个计算属性的 getter
+                    b: function() {
+                        // `this` 指向 vm 实例
+                        return this.a + 1
                     }
-                })
-                // console.log('\n\n', vm)
+                },
+                methods: {
+                    greet: function(event) {
+                        this.a = 5
+                    }
+                }
+            })
+
 
         }
     </script>
