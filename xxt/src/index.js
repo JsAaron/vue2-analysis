@@ -11,6 +11,10 @@ import {
     Directive
 } from './directive'
 import directives from './directives/index'
+import {
+    Watcher
+}
+from './watcher'
 
 
 let query = (el) => {
@@ -29,6 +33,15 @@ function bind(fn, ctx) {
     };
 }
 
+
+function makeComputedGetter(getter, owner) {
+    var watcher = new Watcher(owner, getter, null, {
+        lazy: true
+    });
+    return function computedGetter() {
+
+    }
+}
 
 /**
  * constructor class
@@ -109,22 +122,20 @@ class XXT {
     _initComputed() {
         var computed = this.$options.computed;
         if (computed) {
-            console.log(computed)
-                // for (var key in computed) {
-                //     var userDef = computed[key];
-                //     var def = {
-                //         enumerable: true,
-                //         configurable: true
-                //     };
-                //     if (typeof userDef === 'function') {
-                //         def.get = makeComputedGetter(userDef, this);
-                //         def.set = noop;
-                //     } else {
-                //         def.get = userDef.get ? userDef.cache !== false ? makeComputedGetter(userDef.get, this) : bind(userDef.get, this) : noop;
-                //         def.set = userDef.set ? bind(userDef.set, this) : noop;
-                //     }
-                //     Object.defineProperty(this, key, def);
-                // }
+            for (var key in computed) {
+                var userDef = computed[key];
+                var def = {
+                    enumerable: true,
+                    configurable: true
+                };
+                if (typeof userDef === 'function') {
+                    def.get = makeComputedGetter(userDef, this);
+                    def.set = function() {};
+                } else {
+
+                }
+                Object.defineProperty(this, key, def);
+            }
         }
     }
 

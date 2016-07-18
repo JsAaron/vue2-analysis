@@ -30,8 +30,20 @@ function parseExpression(exp, needSet) {
     return res;
 }
 
+function extend(to, from) {
+    var keys = Object.keys(from);
+    var i = keys.length;
+    while (i--) {
+        to[keys[i]] = from[keys[i]];
+    }
+    return to;
+}
 
-export function Watcher(vm, expOrFn, cb) {
+export function Watcher(vm, expOrFn, cb, options) {
+
+    if (options) {
+        extend(this, options);
+    }
 
     var isFn = typeof expOrFn === 'function';
     this.vm = vm;
@@ -49,14 +61,15 @@ export function Watcher(vm, expOrFn, cb) {
     this.depIds = new Set()
 
     if (isFn) {
-
+        this.getter = expOrFn;
+        this.setter = undefined;
     } else {
         var res = parseExpression(expOrFn)
         this.getter = res.get
         this.setter = res.set
     }
 
-    this.value = this.get();
+    this.value = this.lazy ? undefined : this.get();
 }
 
 
