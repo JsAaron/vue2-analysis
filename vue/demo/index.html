@@ -1,0 +1,69 @@
+1234567891011121314151617181920212223242526272829303132333435363738394041424344
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>案例调试</title>
+</head>
+
+<body>
+    <script type="text/javascript" src="vue.js"></script>
+</body>
+<div id="app"> {{ a }}
+    <ul>
+        <li>{{ a }}</li>
+        <li> {{ b }} </li>
+    </ul> <button v-on:click="greet">按钮</button></div>
+<script type="text/javascript">
+    var vm = new Vue({
+                el: '#app',
+                data: {
+                    a: 1
+                },
+                computed: { // 一个计算属性的 getter            b: function() {                // `this` 指向 vm 实例                return this.a + 1            }        },        methods: {            greet: function(event) {                this.a = 5            }        }    })
+</script>
+
+</html>
+
+<head>
+    <meta charset="utf-8">
+    <title>案例调试</title>
+</head>
+
+<body>
+    <script type="text/javascript" src="vue.js"></script>
+</body>
+
+<div id="app">
+    {{ a }}
+    <ul>
+        <li>{{ a }}</li>
+        <li> {{ b }} </li>
+    </ul>
+    <button v-on:click="greet">按钮</button>
+</div>
+
+
+<script type="text/javascript">
+    var vm = new Vue({
+        el: '#app',
+        data: {
+            a: 1
+        },
+        computed: {
+            // 一个计算属性的 getter
+            b: function() {
+                // `this` 指向 vm 实例
+                return this.a + 1
+            }
+        },
+        methods: {
+            greet: function(event) {
+                this.a = 5
+            }
+        }
+    })
+</script>
+
+</html>
