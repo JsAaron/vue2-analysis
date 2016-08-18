@@ -31,8 +31,6 @@ All the analysis code files in the demo directory, the source file is es6 code, 
 
 
 ###Directory
-
-
 - 基本模拟：[插值表达式与事件机制](https://github.com/JsAaron/vue-analysis/tree/master/demo/%E5%9F%BA%E6%9C%AC%E6%A8%A1%E6%8B%9F)
 - 数据观察：[defineProperty机制](https://github.com/JsAaron/vue-analysis/tree/master/demo/%E6%95%B0%E6%8D%AE%E8%A7%82%E5%AF%9F)
 - 缓存：[Cache](https://github.com/JsAaron/vue-analysis/tree/master/demo/%E7%BC%93%E5%AD%98)
