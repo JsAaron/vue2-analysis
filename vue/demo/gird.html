@@ -71,16 +71,16 @@
     <script type="text/x-template" id="grid-template">
         <table>
             <thead>
-                <tr>
-                    <th v-for="key in columns" 
-                    :class="{active:sortKey==key}">
-                        {{key}}
-                        <span></span>
-                    </th>
-                </tr>
+              <tr>
+                <th v-for="key in columns"
+                  @click="sortBy(key)">
+                  {{key | capitalize}}
+                </th>
+              </tr>
             </thead>
             <tbody>
-                <tr v-for="entry in data">
+                <tr v-for="entry in data 
+                    | orderBy sortKey sortOrders[sortKey]">
                     <td v-for="key in columns">
                         {{entry[key]}}
                     </td>
@@ -110,6 +110,12 @@
             return {
                 sortKey: '',
                 sortOrders: sortOrders
+            }
+        },
+        methods: {
+            sortBy: function(key) {
+                this.sortKey = key
+                this.sortOrders[key] = this.sortOrders[key] * -1
             }
         }
     })
