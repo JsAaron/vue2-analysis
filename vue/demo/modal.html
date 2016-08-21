@@ -70,7 +70,7 @@
 
 <body>
     <script type="x/template" id="modal-template">
-        <div class="modal-mask" v-show="show">
+        <div class="modal-mask" v-show="show" :transition="switch">
             <div class="modal-wrapper">
                 <div class="modal-container">
 
@@ -115,6 +115,11 @@ Vue.component('modal', {
             required: true,
             twoWay: true
         }
+    },
+    data:function(){
+    	return {
+    		switch:'modal'
+    	}
     }
 })
 
