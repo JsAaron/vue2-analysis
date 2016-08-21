@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>tree-view</title>
+    <style>
+    body {
+        font-family: Menlo, Consolas, monospace;
+        color: #444;
+    }
+    
+    .item {
+        cursor: pointer;
+    }
+    
+    .bold {
+        font-weight: bold;
+    }
+    
+    ul {
+        padding-left: 1em;
+        line-height: 1.5em;
+        list-style-type: dot;
+    }
+    </style>
+    <script src="vue.js"></script>
+</head>
+
+<body>
+    <script type="text/x-template" id="item-template">
+    	<li>
+    		<div 
+    		 @click="toggle">
+    			My Tree
+    			<span>[{{open ? '-' : '+'}}]</span>
+    		</div>
+    		<ul v-show="open">	
+    			<item>
+    				1
+    			</item>
+    		</ul>
+    	</li>
+    </script>
+    <ul id="demo">
+        <item class="item" :model="treeData"></item>
+    </ul>
+</body>
+<script type="text/javascript">
+var data = {
+    name: 'My Tree',
+    children: [{
+        name: 'hello'
+    }, {
+        name: 'wat'
+    }, {
+        name: 'child folder',
+        children: [{
+            name: 'child folder',
+            children: [{
+                name: 'hello'
+            }, {
+                name: 'wat'
+            }]
+        }, {
+            name: 'hello'
+        }, {
+            name: 'wat'
+        }, {
+            name: 'child folder',
+            children: [{
+                name: 'hello'
+            }, {
+                name: 'wat'
+            }]
+        }]
+    }]
+}
+
+Vue.component('item', {
+	template:'#item-template',
+	replace:true,
+	props:{
+		model:Object
+	},
+	data:function(){
+		return {
+			open: false
+		}
+	},
+	computed:{
+		isFolder:function(){
+	      return this.model.children &&
+        	this.model.children.length
+		}
+	},
+	methods:{
+		toggle:function(){
+	      if (this.isFolder) {
+	        this.open = !this.open
+	      }
+		}
+	}
+
+})
+
+var demo = new Vue({
+    el: '#demo',
+    data: {
+        treeData: data
+    }
+})
+</script>
+
+</html>

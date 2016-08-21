@@ -75,11 +75,15 @@
                 <th v-for="key in columns"
                   @click="sortBy(key)">
                   {{key | capitalize}}
+                  <span class="arrow"
+                    :class="sortOrders[key] > 0 ? 'asc' : 'dsc'">
+                  </span>
                 </th>
               </tr>
             </thead>
             <tbody>
                 <tr v-for="entry in data 
+                    | filterBy filterKey
                     | orderBy sortKey sortOrders[sortKey]">
                     <td v-for="key in columns">
                         {{entry[key]}}
@@ -92,7 +96,10 @@
         <form id="search">m Search
             <input v-model="searchQuery">
         </form>
-        <demo-grid :columns="gridColumns" :data="gridData">
+        <demo-grid 
+         :columns="gridColumns" 
+         :data="gridData"
+         :filter-key="searchQuery">
         </demo-grid>
     </div>
     <script type="text/javascript">
@@ -100,7 +107,8 @@
         template: '#grid-template',
         props: {
             columns: Array,
-            data: Array
+            data: Array,
+            filterKey:String
         },
         data: function() {
             var sortOrders = {}
@@ -124,6 +132,7 @@
     var app = new Vue({
         el: '#demo',
         data: {
+            searchQuery: '',
             gridColumns: ['name', 'power'],
             gridData: [{
                 name: 'Chuck Norris',
