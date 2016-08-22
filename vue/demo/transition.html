@@ -1,0 +1,72 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>案例调试</title>
+    <style type="text/css">
+    /* 必需 */
+    
+    .expand-transition {
+        transition: all 2s ease;
+        height: 30px;
+        padding: 10px;
+        background-color: #eee;
+        overflow: hidden;
+    }
+    /* .expand-enter 定义进入的开始状态 */
+    /* .expand-leave 定义离开的结束状态 */
+    
+    .expand-enter,
+    .expand-leave {
+        height: 0;
+        padding: 0 50px;
+        /*opacity: 1;*/
+    }
+    </style>
+</head>
+
+<body>
+    <script type="text/javascript" src="vue.js"></script>
+    <script type="text/javascript" src="jquery.js"></script>
+</body>
+<div id="demo">
+    <div v-if="show" :transition="transitionName">hello</div>
+    <button @click="show=true">click</button>
+</div>
+<script type="text/javascript">
+Vue.transition('fade', {
+    css: false,
+    enter: function(el, done) {
+        // 元素已被插入 DOM
+        // 在动画结束后调用 done
+        $(el)
+            .css('opacity', 0)
+            .animate({
+                opacity: 1
+            }, 1000, done)
+    },
+    enterCancelled: function(el) {
+        $(el).stop()
+    },
+    leave: function(el, done) {
+        // 与 enter 相同
+        $(el).animate({
+            opacity: 0
+        }, 1000, done)
+    },
+    leaveCancelled: function(el) {
+        $(el).stop()
+    }
+})
+
+// 创建根实例
+var aap = new Vue({
+    el: '#demo',
+    data: {
+        show: false,
+        transitionName: 'fade'
+    }
+})
+</script>
+
+</html>

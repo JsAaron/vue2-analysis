@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>elastic-header</title>
+    <style>
+    h1 {
+        font-weight: 300;
+        font-size: 1.8em;
+        margin-top: 0;
+    }
+    
+    a {
+        color: #fff;
+    }
+    
+    .draggable-header-view {
+        background-color: #fff;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
+        width: 320px;
+        height: 560px;
+        overflow: hidden;
+        margin: 30px auto;
+        position: relative;
+        font-family: 'Roboto', Helvetica, Arial, sans-serif;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 300;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+    
+    .draggable-header-view .bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 0;
+    }
+    
+    .draggable-header-view .header,
+    .draggable-header-view .content {
+        position: relative;
+        z-index: 1;
+        padding: 30px;
+        box-sizing: border-box;
+    }
+    
+    .draggable-header-view .header {
+        height: 160px;
+    }
+    
+    .draggable-header-view .content {
+        color: #333;
+        line-height: 1.5em;
+    }
+    </style>
+    <script src="vue.js"></script>
+</head>
+
+<body>
+    <script type="x/template" id="header-view-template">
+        <div class="draggable-header-view" @mousedown="startDrag" @touchstart="startDrag" @touchmove="onDrag" @mouseup="stopDrag" @touchend="stopDrag" @mouseleave="stopDrag">
+            <svg class="bg" width="320" height="560">
+                <path :d="headerPath" fill="#3F51B5"></path>
+            </svg>
+            <div class="header">
+                <slot name="header"></slot>
+            </div>
+            <div class="content">
+                <slot name="content"></slot>
+            </div>
+        </div>
+    </script>
+    <draggable-header-view>
+        <slot slot="header">
+            <h1>Elastic Draggable SVG Header</h1>
+            <p>with <a href="http://vuejs.org">Vue.js</a> + <a href="http://dynamicsjs.com">dynamics.js</a></p>
+        </slot>
+        <slot slot="content">
+            <p>Note this is just an effect demo - there are of course many additional details if you want to use this in production, e.g. handling responsive sizes, reload threshold and content scrolling. Those are out of scope for this quick little hack. However, the idea is that you can hide them as internal details of a Vue.js component and expose a simple Web-Component-like interface.</p>
+        </slot>
+    </draggable-header-view>
+</body>
+<script type="text/javascript">
+Vue.component('draggable-header-view', {
+    template: '#header-view-template',
+    replace: true,
+    methods: {
+        startDrag: function(e) {
+            console.log(event)
+        },
+        onDrag: function(e) {
+
+        },
+        stopDrag: function() {
+
+        }
+    }
+})
+
+
+new Vue({
+    el: 'body'
+})
+</script>
+
+</html>
