@@ -13,6 +13,16 @@
             <input class="new-todo" autofocus autocomplete="off" placeholder="What needs to be done?" v-model="newTodo" >
         </header>
 
+        <section class="main">
+            <ul class="todo-list">
+                <li class="todo" v-for="todo in filteredTodos">
+                    <div class="view">
+                        <input type="checkbox" class="toggle">
+                        <label>123</label>
+                    </div>
+                </li>
+            </ul>
+        </section>
 
 
     </section>

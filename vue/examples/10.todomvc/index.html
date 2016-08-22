@@ -18,6 +18,7 @@
             <h1>todos</h1>
             <input class="new-todo" autofocus autocomplete="off" placeholder="What needs to be done?" v-model="newTodo" @keyup.enter="addTodo">
         </header>
+
         <section class="main" v-show="todos.length" v-cloak>
             <input class="toggle-all" type="checkbox" v-model="allDone">
             <ul class="todo-list">
@@ -31,6 +32,7 @@
                 </li>
             </ul>
         </section>
+
         <footer class="footer" v-show="todos.length" v-cloak>
             <span class="todo-count">
 					<strong v-text="remaining"></strong> {{remaining | pluralize 'item'}} left
