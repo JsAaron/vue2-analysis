@@ -10,20 +10,30 @@
 <body>
     <section class="todoapp">
         <header class="header">
-            <input class="new-todo" autofocus autocomplete="off" placeholder="What needs to be done?" v-model="newTodo" >
+            <input class="new-todo"
+                autofocus autocomplete="off"
+                placeholder="What needs to be done?"
+                v-model="newTodo"
+                @keyup.enter="addTodo">
         </header>
 
         <section class="main">
             <ul class="todo-list">
-                <li class="todo" v-for="todo in filteredTodos">
+                <li class="todo" v-for="todo in filteredTodos" :class="{completed:todo.completed}">
                     <div class="view">
-                        <input type="checkbox" class="toggle">
-                        <label>123</label>
+                        <input type="checkbox" class="toggle" v-model="todo.completed">
+                        <label>{{todo.title}}</label>
+                        <button class="destroy" @click="removeTodo(todo)"></button>
                     </div>
                 </li>
             </ul>
         </section>
 
+        <footer class="footer">
+            <span class="todo-count">
+                 123
+            </span>
+        </footer>
 
     </section>
     <!-- end testing/bench -->
