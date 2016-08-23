@@ -10,13 +10,8 @@
 <body>
     <section class="todoapp">
         <header class="header">
-            <input class="new-todo"
-                autofocus autocomplete="off"
-                placeholder="What needs to be done?"
-                v-model="newTodo"
-                @keyup.enter="addTodo">
+            <input class="new-todo" autofocus autocomplete="off" placeholder="What needs to be done?" v-model="newTodo" @keyup.enter="addTodo">
         </header>
-
         <section class="main">
             <ul class="todo-list">
                 <li class="todo" v-for="todo in filteredTodos" :class="{completed:todo.completed}">
@@ -28,16 +23,20 @@
                 </li>
             </ul>
         </section>
-
         <footer class="footer">
             <span class="todo-count">
-                 123
+                <strong v-text="remaining"></strong>
             </span>
+            <ul class="filters">
+                <li><a href="#/all">All</a></li>
+                <li><a href="#/active">Active</a></li>
+                <li><a href="#/completed" :class="{selected: visibility == 'completed'}">Completed</a></li>
+            </ul>
         </footer>
-
     </section>
     <!-- end testing/bench -->
     <script src="../vue.js"></script>
+    <script src="./director.js"></script>
     <script type="text/javascript" src="app.js"></script>
 </body>
 
