@@ -10,10 +10,7 @@
 
 ##Integrated case
 vue的一个综合案例,多个demo组合,vue-router + vue-load + vuex
-``` python
 * [v-cli-project](https://github.com/JsAaron/v-cli-project)
-```
-
 
 
 ##Install
