@@ -8,6 +8,11 @@
 > Synchronous blog source code analysis
 > 
 
+###Integrated case
+ vue的一个综合案例,多个demo组合,vue-router + vue-load + vuex
+[v-cli-project](https://github.com/JsAaron/v-cli-project)
+
+
 ##Install
 ``` python
 * npm install
@@ -26,13 +31,6 @@ A basic demo,Using XXT named simulation framework implementations
 All the analysis code files in the demo directory, the source file is es6 code, so it must pass a rollup, compiled by naming the build a key
 ``` python
 * npm run build
-```
-
-###Demo
-、、、
-* vue的一个综合案例,多个demo组合
-* vue-router + vue-load + vuex
-* https://github.com/JsAaron/v-cli-project
 ```
 
 
