@@ -28,6 +28,12 @@ All the analysis code files in the demo directory, the source file is es6 code, 
 * npm run build
 ```
 
+###Demo
+、、、
+* vue的一个综合案例,多个demo组合
+* vue-router + vue-load + vuex
+* https://github.com/JsAaron/v-cli-project
+```
 
 
 ###Directory
