@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vue.js github example</title>
+    <script src="../vue.js"></script>
+</head>
+
+<body>
+    <div id="app-7">
+        <div v-bind:id="dynamicId">{{ number + 1}}</div>
+        <button v-bind:disabled="someDynamicCondition">Button</button>
+        <span v-once>This will never change: {{ msg | filterA }}</span>
+        <ol>
+            <!-- 现在我们为每个todo-item提供待办项对象    -->
+            <!-- 待办项对象是变量，即其内容可以是动态的 -->
+            <todo-item v-for="item in groceryList" v-bind:todo="item"></todo-item>
+        </ol>
+    </div>
+    <script type="text/javascript">
+    Vue.component('todo-item', {
+        props: ['todo'],
+        template: '<li>{{ todo.text }}</li>'
+    })
+    var app7 = new Vue({
+            el: '#app-7',
+            data: {
+                number: 1,
+                dynamicId: 'test',
+                someDynamicCondition: true,
+                msg: '我只是测试',
+                groceryList: [{
+                    text: '蔬菜'
+                }, {
+                    text: '奶酪'
+                }, {
+                    text: '随便其他什么人吃的东西'
+                }]
+            },
+            filters: {
+                filterA: function(value) {
+                    return value + 'filters'
+                }
+            }
+        })
+        // app7.msg =1234
+    </script>
+</body>
+
+</html>
