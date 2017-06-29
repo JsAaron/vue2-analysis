@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Vue.js github example</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <script src="../vue.js"></script>
+</head>
+
+<body>
+  <div id="example">
+    <p>Original message: "{{ message }}"</p>
+    <p>Computed reversed message: "{{ reversedMessage }}"</p>
+    <p>Computed reversed message222: "{{ asdfv() }}"</p>
+  </div>
+  <div id="demo">{{ fullName }}</div>
+  <script type="text/javascript">
+    var vm = new Vue({
+      el: '#example',
+      data: {
+        message: 'Hello'
+      },
+      computed: {
+        // a computed getter
+        reversedMessage: function () {
+          // `this` points to the vm instance
+          return this.message.split('').reverse().join('')
+        }
+      },
+      methods: {
+        asdfv: function () {
+          return this.message.split('').reverse().join('')
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>
