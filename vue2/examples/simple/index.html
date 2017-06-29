@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vue.js github example</title>
+    <script src="../vue.js"></script>
+</head>
+
+<body>
+    <div id="app-2">
+        <span v-bind:title="message">{{message}}</span>
+    </div>
+    <div id="app-3">
+        <p v-if="seen">现在你看到我了</p>
+    </div>
+    <div id="app-4">
+        <ol>
+            <li v-for="todo in todos">
+                {{ todo.text }}
+            </li>
+        </ol>
+    </div>
+    <div id="app-5">
+        <p>{{ message }}</p>
+        <button v-on:click="reverseMessage">逆转消息</button>
+    </div>
+    <script type="text/javascript">
+    var app2 = new Vue({
+        el: '#app-2',
+        data: {
+            message: '页面加载'
+        }
+    })
+    var app3 = new Vue({
+        el: '#app-3',
+        data: {
+            seen: true
+        }
+    })
+    var app4 = new Vue({
+        el: '#app-4',
+        data: {
+            todos: [{
+                text: '学习 JavaScript'
+            }, {
+                text: '学习 Vue'
+            }, {
+                text: '整个牛项目'
+            }]
+        }
+    })
+    app4.todos.push({
+        text: '新项目'
+    })
+    var app5 = new Vue({
+        el: '#app-5',
+        data: {
+            message: 'Hello Vue.js!'
+        },
+        methods: {
+            reverseMessage: function() {
+                this.message = this.message.split('').reverse().join('')
+            }
+        }
+    })
+    </script>
+</body>
+
+</html>
