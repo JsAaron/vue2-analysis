@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vue.js github example</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script src="../vue.js"></script>
+</head>
+
+<body>
+    <div id="example">
+        <div class="static" v-bind:class="classObject"> </div>
+        <div v-bind:class="[activeClass, errorClass]"></div>
+        <template v-if="ok">
+            <h1>Title</h1>
+            <p>Paragraph 1</p>
+            <p>Paragraph 2</p>
+        </template>
+        <h1 v-else>No</h1>
+    </div>
+    <script type="text/javascript">
+    var vm = new Vue({
+        el: '#example',
+        data: {
+            ok: true,
+            activeClass: 'active',
+            errorClass: 'text-danger',
+            classObject: {
+                active: true,
+                'text-danger': true
+            }
+        }
+    })
+    </script>
+</body>
+
+</html>
