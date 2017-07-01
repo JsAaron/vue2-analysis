@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Vue.js grid component example</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../../dist/vue.min.js"></script>
+</head>
+
+<body>
+    <!-- component template -->
+    <script type="text/x-template" id="grid-template">
+    </script>
+    <!-- demo root element -->
+    <div id="demo">
+        <form id="search">
+            Search
+            <input name="query" v-model="searchQuery">
+        </form>
+        <table>
+            <thead>
+                <tr>
+                    <th class="">
+                        Name
+                        <span class="arrow asc"></span></th>
+                    <th class="">
+                        Power
+                        <span class="arrow asc"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        Chuck Norris
+                    </td>
+                    <td>
+                        Infinity
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Bruce Lee
+                    </td>
+                    <td>
+                        9000
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Jackie Chan
+                    </td>
+                    <td>
+                        7000
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Jet Li
+                    </td>
+                    <td>
+                        8000
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+    </script>
+</body>
+
+</html>
