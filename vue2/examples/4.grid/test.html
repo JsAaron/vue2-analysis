@@ -6,67 +6,75 @@
     <title>Vue.js grid component example</title>
     <link rel="stylesheet" href="style.css">
     <!-- Delete ".min" for console warnings in development -->
-    <script src="../../dist/vue.min.js"></script>
+    <script src="../vue.js"></script>
 </head>
 
 <body>
     <!-- component template -->
     <script type="text/x-template" id="grid-template">
+        <table>
+            <thead>
+                <tr>
+                    <th v-for="key in title">{{key}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="key in filteredData">
+                    <th>{{key.name}}</th>
+                    <th>{{key.power}}</th>
+                </tr>
+            </tbody>
+        </table>
     </script>
     <!-- demo root element -->
     <div id="demo">
         <form id="search">
             Search
-            <input name="query" v-model="searchQuery">
+            <input name="query">
         </form>
-        <table>
-            <thead>
-                <tr>
-                    <th class="">
-                        Name
-                        <span class="arrow asc"></span></th>
-                    <th class="">
-                        Power
-                        <span class="arrow asc"></span></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        Chuck Norris
-                    </td>
-                    <td>
-                        Infinity
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        Bruce Lee
-                    </td>
-                    <td>
-                        9000
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        Jackie Chan
-                    </td>
-                    <td>
-                        7000
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        Jet Li
-                    </td>
-                    <td>
-                        8000
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <demo-grid  @increment="incrementTotal" aaa="1" :list="gridData" :title="gridColumns"></demo-grid>
     </div>
     <script>
+    Vue.component('demo-grid', {
+        template: '#grid-template',
+        props: {
+            list: Array,
+            aaa: String,
+            title: Array
+        },
+        computed: {
+            filteredData: function() {
+                this.$emit('increment','3333')
+                return this.list
+            }
+        }
+    })
+
+    var demo = new Vue({
+        el: '#demo',
+        data: {
+            gridColumns: ['name', 'power'],
+            gridData: [{
+                name: 'Chuck Norris',
+                power: Infinity
+            }, {
+                name: 'Bruce Lee',
+                power: 9000
+            }, {
+                name: 'Jackie Chan',
+                power: 7000
+            }, {
+                name: 'Jet Li',
+                power: 8000
+            }]
+        },
+        methods: {
+            incrementTotal: function(data) {
+                console.log(data)
+            }
+        }
+
+    })
     </script>
 </body>
 
