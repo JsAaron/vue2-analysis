@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Vue.js grid component example</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../vue.js"></script>
+</head>
+
+<body>
+
+    <script type="text/x-template" id="grid-template">
+
+    </script>
+
+    <div id="demo">
+        <form id="search">
+            Search
+            <input name="query">
+        </form>
+        <demo-grid :data="gridData" :name="gridColumns"></demo-grid>
+    </div>
+
+    <script type="text/javascript">
+    Vue.component('demo-grid', {
+        template: '#grid-template',
+        props: {
+            data: Array,
+            name: Array
+        },
+        data: function() {
+            return {
+
+            }
+        }
+    })
+
+    var demo = new Vue({
+        el: '#demo',
+        data: {
+            searchQuery: '',
+            gridColumns: ['name', 'power'],
+            gridData: [{
+                name: 'Chuck Norris',
+                power: Infinity
+            }, {
+                name: 'Bruce Lee',
+                power: 9000
+            }, {
+                name: 'Jackie Chan',
+                power: 7000
+            }, {
+                name: 'Jet Li',
+                power: 8000
+            }]
+        }
+    })
+    </script>
+</body>
+
+</html>
