@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Vue.js SVG graph example</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../vue.js"></script>
+    <!-- <script src="https://unpkg.com/marky/dist/marky.min.js"></script> -->
+</head>
+
+<body>
+    <!-- template for the polygraph component. -->
+    <script type="text/x-template" id="polygraph-template">
+        <g>
+            <polygon :points="points"></polygon>
+            <circle cx="100" cy="100" r="80"></circle>
+        </g>
+    </script>
+    <div id="demo">
+        <!-- Use the component -->
+        <svg width="200" height="200">
+            <polygraph :stats="stats"></polygraph>
+        </svg>
+        <axis-label v-for="(stat, index) in stats" :stat="stat" :index="index" :total="stats.length">
+        </axis-label>
+    </div>
+    <script type="text/javascript">
+    Vue.component('polygraph', {
+        el: '#polygraph-template',
+        props: {
+            stats: Array
+        },
+        components: {
+            'axis-label': {
+                template: '#axis-label-template',
+                props: {
+                    stat: Object,
+                    index: Number,
+                    total: Number
+                },
+                computed: {
+                    // point: function() {
+                    //     return valueToPoint(+this.stat.value + 10,
+                    //         this.index,
+                    //         this.total
+                    //     )
+                    // }
+                }
+            }
+        }
+    })
+
+    var app = new Vue({
+        el: '#demo',
+        data: {
+            stats: [{
+                label: 'A',
+                value: 100
+            }, {
+                label: 'B',
+                value: 100
+            }, {
+                label: 'C',
+                value: 100
+            }, {
+                label: 'D',
+                value: 100
+            }, {
+                label: 'E',
+                value: 100
+            }, {
+                label: 'F',
+                value: 100
+            }]
+        }
+    })
+    </script>
+</body>
+
+</html>
