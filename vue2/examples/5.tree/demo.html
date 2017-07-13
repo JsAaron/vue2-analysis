@@ -2,113 +2,113 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>Vue.js tree view example</title>
-    <style>
-    body {
-        font-family: Menlo, Consolas, monospace;
-        color: #444;
-    }
-    
-    .item {
-        cursor: pointer;
-    }
-    
-    .bold {
-        font-weight: bold;
-    }
-    
-    ul {
-        padding-left: 1em;
-        line-height: 1.5em;
-        list-style-type: dot;
-    }
-    </style>
+  <meta charset="utf-8">
+  <title>Vue.js tree view example</title>
+  <style>
+  body {
+    font-family: Menlo, Consolas, monospace;
+    color: #444;
+  }
+  
+  .item {
+    cursor: pointer;
+  }
+  
+  .bold {
+    font-weight: bold;
+  }
+  
+  ul {
+    padding-left: 1em;
+    line-height: 1.5em;
+    list-style-type: dot;
+  }
+  </style>
 </head>
 
 <body>
-    <!--
+  <!--
     1 递归了item的模板
  -->
-    <script src="../vue.js"></script>
-    <script type="text/x-template" id="item-template">
-        <div>
-           <div :class="{bold: isFolder}">
-           {{model.name}}
-           <span v-if="isFolder">[{{open ? '-' : '+'}}]</span>
-           </div>
-            <ul v-show="open">
-                <!-- 递归模板，每个模板中有自己的li，然后自己递归，这个设计非常好 -->
-                <item class="item" v-for="model in model.children" :model="model"></item>
-                <li class="add" @click="addChild">+</li>
-            </ul>
-        </div>
-    </script>
-    <!-- the demo root element -->
-    <ul id="demo">
-        <item class="item" :model="treeData"></item>
-    </ul>
-    <script>
-    Vue.component('item', {
-        template: '#item-template',
-        props: {
-            model: Object
-        },
-        data: function() {
-            return {
-                open: true
-            }
-        },
-        computed: {
-            isFolder: function() {
-                return this.model.children &&
-                    this.model.children.length
-            }
-        },
-        methods: {
-            addChild: function() {
-                console.log(this.model.children)
-            }
-        }
+  <script src="../vue.js"></script>
+  <script type="text/x-template" id="item-template">
+    <div>
+      <div :class="{bold: isFolder}">
+        {{model.name}}
+        <span v-if="isFolder">[{{open ? '-' : '+'}}]</span>
+      </div>
+      <ul v-show="open">
+        <!-- 递归模板，每个模板中有自己的li，然后自己递归，这个设计非常好 -->
+        <item class="item" v-for="model in model.children" :model="model"></item>
+        <li class="add" @click="addChild">+</li>
+      </ul>
+    </div>
+  </script>
+  <!-- the demo root element -->
+  <ul id="demo">
+    <item class="item" :model="treeData"></item>
+  </ul>
+  <script>
+  Vue.component('item', {
+    template: '#item-template',
+    props: {
+      model: Object
+    },
+    data: function() {
+      return {
+        open: true
+      }
+    },
+    computed: {
+      isFolder: function() {
+        return this.model.children &&
+          this.model.children.length
+      }
+    },
+    methods: {
+      addChild: function() {
+        console.log(this.model.children)
+      }
+    }
 
 
-    })
+  })
 
-    var demo = new Vue({
-        el: '#demo',
-        data: {
-            treeData: {
-                name: 'My Tree',
-                children: [{
-                    name: 'hello'
-                }, {
-                    name: 'wat'
-                }, {
-                    name: 'child folder',
-                    children: [{
-                        name: 'child folder',
-                        children: [{
-                            name: 'hello'
-                        }, {
-                            name: 'wat'
-                        }]
-                    }, {
-                        name: 'hello'
-                    }, {
-                        name: 'wat'
-                    }, {
-                        name: 'child folder',
-                        children: [{
-                            name: 'hello'
-                        }, {
-                            name: 'wat'
-                        }]
-                    }]
-                }]
-            }
-        }
-    })
-    </script>
+  var demo = new Vue({
+    el: '#demo',
+    data: {
+      treeData: {
+        name: 'My Tree',
+        children: [{
+          name: 'hello'
+        }, {
+          name: 'wat'
+        }, {
+          name: 'child folder',
+          children: [{
+            name: 'child folder',
+            children: [{
+              name: 'hello'
+            }, {
+              name: 'wat'
+            }]
+          }, {
+            name: 'hello'
+          }, {
+            name: 'wat'
+          }, {
+            name: 'child folder',
+            children: [{
+              name: 'hello'
+            }, {
+              name: 'wat'
+            }]
+          }]
+        }]
+      }
+    }
+  })
+  </script>
 </body>
 
 </html>

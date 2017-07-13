@@ -6,13 +6,10 @@
   <title>Vue.js grid component example</title>
   <link rel="stylesheet" href="style.css">
   <!-- Delete ".min" for console warnings in development -->
-  <script src="../vue.js"></script>
+  <script src="vue.js"></script>
 </head>
 
 <body>
-  <!--
-
-    -->
   <script type="text/x-template" id="grid-template">
     <table v-if="filteredData.length">
       <thead>
@@ -43,6 +40,8 @@
     </demo-grid>
   </div>
   <script>
+  Vue.config.productionTip = false
+
   Vue.component('demo-grid', {
     template: '#grid-template',
     props: {
