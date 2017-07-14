@@ -5,7 +5,7 @@ import { initGlobalAPI } from './global-api/index'
 initGlobalAPI(Mue)
 
  
-  console.dir(Mue)
+  // console.dir(Mue)
 window.Mue = Mue
 
 
