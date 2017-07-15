@@ -2,83 +2,83 @@
 <html>
 
 <head>
-    <title>Vue.js github commits example</title>
-    <style>
-    #demo {
-        font-family: 'Helvetica', Arial, sans-serif;
-    }
-    
-    a {
-        text-decoration: none;
-        color: #f66;
-    }
-    
-    li {
-        line-height: 1.5em;
-        margin-bottom: 20px;
-    }
-    
-    .author,
-    .date {
-        font-weight: bold;
-    }
-    </style>
-    <script src="../vue.js"></script>
+  <title>Vue.js github commits example</title>
+  <style>
+  #demo {
+    font-family: 'Helvetica', Arial, sans-serif;
+  }
+  
+  a {
+    text-decoration: none;
+    color: #f66;
+  }
+  
+  li {
+    line-height: 1.5em;
+    margin-bottom: 20px;
+  }
+  
+  .author,
+  .date {
+    font-weight: bold;
+  }
+  </style>
+  <script src="../vue.js"></script>
 </head>
 
 <body>
-    <div id="demo">
-        <template v-for="branch in branches">
-            <input type="radio" :id="branch" :value="branch" v-model="currentBranch">
-            <label :for="branch">{{ branch }}</label>
-        </template>
-        <ul>
-            <li v-for="record in commits">
-                <a :href="record.html_url" target="_blank" class="commit">{{ record.sha.slice(0, 7) }}</a> - <span class="message">{{ record.commit.message | truncate }}</span>
-            </li>
-        </ul>
-    </div>
-    <script>
-    var apiURL = 'https://api.github.com/repos/vuejs/vue/commits?per_page=3&sha='
-    var app = new Vue({
-        el: '#demo',
-        data: {
-            branches: ['master', 'dev'],
-            currentBranch: 'master',
-            commits: null
-        },
+  <div id="demo">
+    <template v-for="branch in branches">
+      <input type="radio" :id="branch" :value="branch" v-model="currentBranch">
+      <label :for="branch">{{ branch }}</label>
+    </template>
+    <ul>
+      <li v-for="record in commits">
+        <a :href="record.html_url" target="_blank" class="commit">{{ record.sha.slice(0, 7) }}</a> - <span class="message">{{ record.commit.message | truncate }}</span>
+      </li>
+    </ul>
+  </div>
+  <script>
+  var apiURL = 'https://api.github.com/repos/vuejs/vue/commits?per_page=3&sha='
+  var app = new Vue({
+    el: '#demo',
+    data: {
+      branches: ['master', 'dev'],
+      currentBranch: 'master',
+      commits: null
+    },
 
-        created: function() {
-            this.fetchData()
-        },
+    created: function() {
+      this.fetchData()
+    },
 
-        watch: {
-            currentBranch: function() {
-              this.fetchData()
-            }
-        },
+    watch: {
+      currentBranch: function() {
+        this.fetchData()
+      }
+    },
 
-        filters: {
-            truncate: function(v) {
-                var newline = v.indexOf('\n')
-                return newline > 0 ? v.slice(0, newline) : v
-            }
-        },
+    filters: {
+      truncate: function(v) {
+        var newline = v.indexOf('\n')
+        return newline > 0 ? v.slice(0, newline) : v
+      }
+    },
 
-        methods: {
-            fetchData: function() {
-                var xhr = new XMLHttpRequest()
-                var self = this
-                xhr.open('GET', apiURL + self.currentBranch)
-                xhr.onload = function() {
-                    self.commits = JSON.parse(xhr.responseText)
-                    console.log(self.commits[0].html_url)
-                }
-                xhr.send()
-            }
+    methods: {
+      fetchData: function() {
+        var xhr = new XMLHttpRequest()
+        var self = this
+        xhr.open('GET', apiURL + self.currentBranch)
+        xhr.onload = function() {
+          self.commits = JSON.parse(xhr.responseText)
+          console.log(self.commits[0].html_url)
         }
-    })
-    </script>
+        xhr.send()
+      }
+    }
+  })
+  </script>
 </body>
 
 </html>

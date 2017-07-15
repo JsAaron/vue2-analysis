@@ -53,16 +53,16 @@ Mue.component('demo-grid', {
 })
 
 // bootstrap the demo
-// var demo = new Mue({
-//   el: '#demo',
-//   data: {
-//     searchQuery: '',
-//     gridColumns: ['name', 'power'],
-//     gridData: [
-//       { name: 'Chuck Norris', power: Infinity },
-//       { name: 'Bruce Lee', power: 9000 },
-//       { name: 'Jackie Chan', power: 7000 },
-//       { name: 'Jet Li', power: 8000 }
-//     ]
-//   }
-// })
+var demo = new Mue({
+  el: '#demo',
+  data: {
+    searchQuery: '',
+    gridColumns: ['name', 'power'],
+    gridData: [
+      { name: 'Chuck Norris', power: Infinity },
+      { name: 'Bruce Lee', power: 9000 },
+      { name: 'Jackie Chan', power: 7000 },
+      { name: 'Jet Li', power: 8000 }
+    ]
+  }
+})

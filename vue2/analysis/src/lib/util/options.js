@@ -16,12 +16,12 @@ const strats = Object.create(null)
 /**
  * Default strategy.
  */
-var defaultStrat = function (parentVal, childVal) {
+var defaultStrat = function(parentVal, childVal) {
   return childVal === undefined ? parentVal : childVal
 };
 
 
-strats.el = strats.propsData = function (parent, child, vm, key) {
+strats.el = strats.propsData = function(parent, child, vm, key) {
   if (!vm) {
     console.log(
       "option \"" + key + "\" can only be used during instance " +
@@ -34,45 +34,10 @@ strats.el = strats.propsData = function (parent, child, vm, key) {
 /**
  * Data
  */
-strats.data = function (parentVal, childVal, vm) {
-  if (!vm) {
-    // in a Vue.extend merge, both should be functions
-    if (!childVal) {
-      return parentVal
-    }
-    if (typeof childVal !== 'function') {
-      "development" !== 'production' && warn(
-        'The "data" option should be a function ' +
-        'that returns a per-instance value in component ' +
-        'definitions.',
-        vm
-      );
-      return parentVal
-    }
-    if (!parentVal) {
-      return childVal
-    }
-    // when parentVal & childVal are both present,
-    // we need to return a function that returns the
-    // merged result of both functions... no need to
-    // check if parentVal is a function here because
-    // it has to be a function to pass previous merges.
-    return function mergedDataFn() {
-      return mergeData(
-        childVal.call(this),
-        parentVal.call(this)
-      )
-    }
-  } else if (parentVal || childVal) {
+strats.data = function(parentVal, childVal, vm) {
+  if (parentVal || childVal) {
     return function mergedInstanceDataFn() {
-      // instance merge
-      var instanceData = typeof childVal === 'function' ? childVal.call(vm) : childVal;
-      var defaultData = typeof parentVal === 'function' ? parentVal.call(vm) : undefined;
-      if (instanceData) {
-        return mergeData(instanceData, defaultData)
-      } else {
-        return defaultData
-      }
+
     }
   }
 };
@@ -89,7 +54,7 @@ function mergeAssets(parentVal, childVal) {
   var res = Object.create(parentVal || null);
   return childVal ? extend(res, childVal) : res
 }
-ASSET_TYPES.forEach(function (type) {
+ASSET_TYPES.forEach(function(type) {
   strats[type + 's'] = mergeAssets;
 });
 
@@ -99,11 +64,13 @@ ASSET_TYPES.forEach(function (type) {
  */
 strats.props =
   strats.methods =
-  strats.computed = function (parentVal, childVal) {
+  strats.computed = function(parentVal, childVal) {
     if (!childVal) {
-      return Object.create(parentVal || null) }
+      return Object.create(parentVal || null)
+    }
     if (!parentVal) {
-      return childVal }
+      return childVal
+    }
     var ret = Object.create(null);
     extend(ret, parentVal);
     extend(ret, childVal);
@@ -152,6 +119,7 @@ function normalizeProps(options) {
  * @return {[type]}        [description]
  */
 export function mergeOptions(parent, child, vm) {
+
   /*统一组件中props的格式，为对象*/
   normalizeProps(child);
 
@@ -167,7 +135,15 @@ export function mergeOptions(parent, child, vm) {
     }
   }
 
-  /*如果能找到对应的匹配，则用匹配覆盖，否则默认的原始数据*/
+  /*如果能找到对应的匹配，则用匹配覆盖，否则默认的原始数据
+    components
+    directives
+    filters
+    如果能找到对应的解析器，解析器就是创建一个新对象，继承对应的components/directives/filters
+    如果有child则混入，返回一个新的对象
+
+    默认
+  */
   function mergeField(key) {
     var strat = strats[key] || defaultStrat;
     options[key] = strat(parent[key], child[key], vm, key);

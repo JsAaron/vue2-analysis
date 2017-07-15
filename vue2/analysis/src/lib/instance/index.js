@@ -1,7 +1,9 @@
-function Mue(options) {
-	const a = 1
+import { initMixin } from './init'
 
-	console.log(a)
+function Mue(options) {
+  this._init(options)
 }
+
+initMixin(Mue)
 
 export default Mue
