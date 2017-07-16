@@ -1,5 +1,6 @@
 import { extend, mergeOptions } from '../util/index'
 import { initLifecycle, callHook } from './lifecycle'
+import { initState } from './state'
 // import { initProxy } from './proxy'
 
 let uid = 0
@@ -20,6 +21,8 @@ export function initMixin(Mue) {
 
 
     initLifecycle(vm)
+
+    initState(vm)
 
     console.log(vm)
   }

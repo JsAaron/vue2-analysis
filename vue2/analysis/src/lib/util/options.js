@@ -37,7 +37,12 @@ strats.el = strats.propsData = function(parent, child, vm, key) {
 strats.data = function(parentVal, childVal, vm) {
   if (parentVal || childVal) {
     return function mergedInstanceDataFn() {
+      //如果data是函数，那么就是组件，是需要执行的，组件的data是函数
+      var instanceData = typeof childVal === 'function'
+        ? childVal.call(vm)
+        : childVal;
 
+      return instanceData
     }
   }
 };
