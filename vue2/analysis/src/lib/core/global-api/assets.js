@@ -1,5 +1,5 @@
 /* @flow */
-import { ASSET_TYPES } from '../shared/constants'
+import { ASSET_TYPES } from 'shared/constants'
 import { isPlainObject } from '../util/index'
 
 export function initAssetRegisters(Mue) {

@@ -1,6 +1,6 @@
 import {
   ASSET_TYPES
-} from '../shared/constants'
+} from 'shared/constants'
 
 import {
   extend,
@@ -9,7 +9,7 @@ import {
   capitalize,
   isBuiltInTag,
   isPlainObject
-} from '../shared/util'
+} from 'shared/util'
 
 const strats = Object.create(null)
 

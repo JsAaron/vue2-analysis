@@ -1,4 +1,4 @@
-import { ASSET_TYPES } from '../shared/constants'
+import { ASSET_TYPES } from 'shared/constants'
 import { initExtend } from './extend'
 import { initAssetRegisters } from './assets'
 import {

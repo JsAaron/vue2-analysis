@@ -10,7 +10,7 @@ const common = {
   //index入口
   index: './src/index.html',
   //执行入口
-  entry: './src/lib/index.js'
+  entry: './src/lib/core/index.js'
 }
 
 module.exports = {

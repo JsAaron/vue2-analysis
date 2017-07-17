@@ -1,6 +1,6 @@
 /* @flow */
 
-import { ASSET_TYPES } from '../shared/constants'
+import { ASSET_TYPES } from 'shared/constants'
 import { extend, mergeOptions } from '../util/index'
 
 export function initExtend(Mue) {
