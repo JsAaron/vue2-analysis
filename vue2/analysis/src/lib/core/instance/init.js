@@ -26,49 +26,15 @@ export function initMixin(Mue) {
     /*对数据进行观察 data的参数对象转化成=> vm._data*/
     initState(vm)
 
-
     if (vm.$options.el) {
       vm.$mount(vm.$options.el);
     }
   }
 
-
-  Mue.prototype.$mount = function(el, hydrating) {
-    el = el && query(el);
-    var template = getOuterHTML(el);
-    console.log(template)
-  };
-
-
 }
 
 
 
-
-function query(el) {
-  if (typeof el === 'string') {
-    var selected = document.querySelector(el);
-    if (!selected) {
-      "development" !== 'production' && warn(
-        'Cannot find element: ' + el
-      );
-      return document.createElement('div')
-    }
-    return selected
-  } else {
-    return el
-  }
-}
-
-function getOuterHTML (el) {
-  if (el.outerHTML) {
-    return el.outerHTML
-  } else {
-    var container = document.createElement('div');
-    container.appendChild(el.cloneNode(true));
-    return container.innerHTML
-  }
-}
 
 /**
  * 分解构造器中的参数

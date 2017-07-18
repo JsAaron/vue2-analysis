@@ -4,6 +4,6 @@ import { initGlobalAPI } from './global-api/index'
 
 initGlobalAPI(Mue)
 
+export default Mue
 
-// console.dir(Mue)
-window.Mue = Mue
+
