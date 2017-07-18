@@ -1,34 +1,28 @@
 const fs = require('fs')
+const path = require('path')
 const http = require('http');
+const _ = require("underscore");
+const utils = require('../utils')
+const fsextra = require('fs-extra')
 const express = require('express')
 const webpack = require('webpack')
-const path = require('path')
-const _ = require("underscore");
-const fsextra = require('fs-extra')
-const cp = require('child_process');
-const utils = require('../utils')
+const killOccupied = require('../kill.occupied')
 
 //https://github.com/webpack/webpack-dev-middleware#usage
 const webpackDevMiddleware = require("webpack-dev-middleware");
 const webpacHotMiddleware = require('webpack-hot-middleware')
-const killOccupied = require('../kill.occupied')
 
 
 const app = express()
-const config = require('../../config')
-const port = process.env.PORT || config.dev.port
+const getConfig = require('../config')
+const config = getConfig('web-full-dev')
 
-const devConfig = _.extend(config.dev.conf, {
-  rollup: config.dev.conf.distDir + 'rollup.js'
-})
+const port = config.port
 
-
-const webpackConfig = require('./webpack.dev.conf')
-
-fsextra.removeSync(devConfig.assetsRoot)
-
+//清理编译目录
+fsextra.removeSync(config.assetsRoot)
+const webpackConfig = require('./webpack.dev')(config)
 const compiler = webpack(webpackConfig)
-
 const devMiddleware = webpackDevMiddleware(compiler, {
   //The path where to bind the middleware to the server.
   //In most cases this equals the webpack configuration option output.publicPath
@@ -75,8 +69,6 @@ app.use(hotMiddleware)
 app.use('/lib', express.static('src/lib'));
 app.use('/css', express.static('src/css'));
 app.use('/js', express.static('src/js'));
-
-
 
 
 killOccupied(port, () => {
