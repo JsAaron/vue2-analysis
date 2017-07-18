@@ -3,7 +3,7 @@
   "version": "1.0.0-csp",
   "description": "A es6-magazine project",
   "scripts": {
-    "dev": "node build/dev/index.js"
+    "dev": "node build/webpack/index.js"
   },
   "repository": {
     "type": "git",

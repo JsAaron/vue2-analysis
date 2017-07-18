@@ -1,5 +1,5 @@
 export function createCompileToFunctionFn(compile) {
-  const cache = = Object.create(null);
+  const cache = Object.create(null);
   return function compileToFunctions(template, options, vm) {
 
     var compiled = compile(template, options);

@@ -13,9 +13,9 @@ const resolve = (p) => {
 const builds = {
   'web-full-dev': {
     port: 8080,
-    entry: resolve('src/lib/platforms/entry-runtime-with-compiler.js'), //入口
-    index: resolve('src/index.html'), //html模板
-    filename: 'app',
+    entry: resolve('src/platforms/entry-runtime-with-compiler.js'), //入口
+    index: resolve('demo/index.html'), //html模板
+    filename: 'mue',
     assetsRoot: resolve('temp'), //临时编译文件
     assetsPublicPath: '/'
   }

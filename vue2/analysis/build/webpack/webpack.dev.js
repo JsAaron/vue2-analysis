@@ -29,7 +29,7 @@ module.exports = function(config) {
   }
 
   //刷新
-  baseWebpackConfig.entry = ['./build/dev/client'].concat(baseWebpackConfig.entry)
+  baseWebpackConfig.entry = ['./build/webpack/client'].concat(baseWebpackConfig.entry)
 
   return merge(baseWebpackConfig, {
     devtool: 'cheap-source-map',
@@ -41,7 +41,7 @@ module.exports = function(config) {
 
       new HtmlWebpackPlugin({
         filename: './index.html',
-        template: './src/index.html',
+        template: config.index,
         inject: true
       }),
 

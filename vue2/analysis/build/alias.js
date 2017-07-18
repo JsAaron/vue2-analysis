@@ -1,8 +1,8 @@
 const path = require('path')
 
 module.exports = {
-  core: path.resolve(__dirname, '../src/lib/core'),
-  compiler: path.resolve(__dirname, '../src/lib/compiler'),
-  shared: path.resolve(__dirname, '../src/lib/shared'),
-  platforms: path.resolve(__dirname, '../src/lib/platforms')
+  core: path.resolve(__dirname, '../src/core'),
+  compiler: path.resolve(__dirname, '../src/compiler'),
+  shared: path.resolve(__dirname, '../src/shared'),
+  platforms: path.resolve(__dirname, '../src/platforms')
 }
