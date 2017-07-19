@@ -1,5 +1,3 @@
-
-
 import { createCompileToFunctionFn } from './to-function'
 
 
@@ -14,9 +12,28 @@ export function createCompilerCreator(baseCompile) {
 
   return function createCompiler(baseOptions) {
 
-
+    /**
+     * 真正的编译方法
+     */
     function compile(template, options) {
-      const compiled = function(){}
+
+      var finalOptions = Object.create(baseOptions)
+      var errors = [];
+      var tips = [];
+      finalOptions.warn = function(msg, tip) {
+        (tip ? tips : errors).push(msg)
+      };
+
+      if (options) {
+        for (var key in options) {
+          if (key !== 'modules' && key !== 'directives') {
+            finalOptions[key] = options[key];
+          }
+        }
+      }
+
+      var compiled = baseCompile(template, finalOptions)
+
       return compiled
     }
 

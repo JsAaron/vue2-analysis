@@ -66,9 +66,10 @@ app.use(devMiddleware)
 // compilation error display
 app.use(hotMiddleware)
 
-app.use('/lib', express.static('src/lib'));
-app.use('/css', express.static('src/css'));
-app.use('/js', express.static('src/js'));
+app.use('/lib', express.static('demo/lib'));
+app.use('/css', express.static('demo/css'));
+app.use('/js', express.static('demo/js'));
+app.use('/skin', express.static('demo/skin'));
 
 
 killOccupied(port, () => {
