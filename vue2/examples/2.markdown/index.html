@@ -12,6 +12,7 @@
 
 <body>
   <div id="editor">
+    <p>{{answer}}</p>
     <textarea :value="input" @input="update"></textarea>
     <div v-html="compiledMarkdown"></div>
   </div>
@@ -19,11 +20,14 @@
   new Vue({
     el: '#editor',
     data: {
-      input: '# hello'
+      input: '# hello',
+      answer: ''
     },
-    // watch: {
-
-    // },
+    watch: {
+      input: function(value) {
+        this.answer = value
+      }
+    },
     computed: {
       compiledMarkdown: function() {
         return '<strong>' + this.input + '</strong>'
