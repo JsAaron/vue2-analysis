@@ -21,6 +21,11 @@
       data: {
         input: '# hello'
       },
+      watch: {
+        input: function() {
+          console.log(111)
+        }
+      },
       computed: {
         compiledMarkdown: function() {
           return marked(this.input, { sanitize: true })

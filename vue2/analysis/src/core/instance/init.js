@@ -27,7 +27,7 @@ export function initMixin(Mue) {
     initState(vm)
 
     if (vm.$options.el) {
-      vm.$mount(vm.$options.el);
+      // vm.$mount(vm.$options.el);
     }
   }
 

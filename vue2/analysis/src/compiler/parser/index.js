@@ -71,7 +71,7 @@ function processAttrs(el) {
       ///^:|^v-bind:/采用2种放方式绑定的属性
       if (bindRE.test(name)) {
         name = name.replace(bindRE, '');
-        console.log(name)
+        // console.log(name)
       }
     } else {
       addAttr(el, name, JSON.stringify(value));
