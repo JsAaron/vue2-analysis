@@ -42,7 +42,7 @@ module.exports = function(config) {
       new HtmlWebpackPlugin({
         filename: './index.html',
         template: config.index,
-        inject: true
+        inject: 'head'
       }),
 
       new WriteFilePlugin()

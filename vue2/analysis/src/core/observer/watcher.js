@@ -4,6 +4,7 @@ import {
   parsePath
 } from '../util/index'
 
+import Dep, { pushTarget, popTarget } from './dep'
 
 var uid = 0;
 
@@ -51,27 +52,29 @@ export default function Watcher(vm, expOrFn, cb, options) {
 };
 
 /**
- * Evaluate the getter, and re-collect dependencies.
+ * 执行getter方法，并且收集依赖
  */
 Watcher.prototype.get = function get() {
-  // pushTarget(this);
-  // var value;
-  // var vm = this.vm;
-  // if (this.user) {
-  //   try {
-  //     value = this.getter.call(vm, vm);
-  //   } catch (e) {
-  //     handleError(e, vm, ("getter for watcher \"" + (this.expression) + "\""));
-  //   }
-  // } else {
-  //   value = this.getter.call(vm, vm);
-  // }
-  // // "touch" every property so they are all tracked as
-  // // dependencies for deep watching
-  // if (this.deep) {
-  //   traverse(value);
-  // }
-  // popTarget();
-  // this.cleanupDeps();
-  // return value
+  pushTarget(this);
+  var value;
+  var vm = this.vm;
+  value = this.getter.call(vm, vm);
 };
+
+/**
+ * wather-get => _data => 
+ * @param {[type]} dep [description]
+ */
+Watcher.prototype.addDep = function addDep (dep) {
+  var id = dep.id;
+  if (!this.newDepIds.has(id)) {
+    this.newDepIds.add(id);
+    this.newDeps.push(dep);
+    if (!this.depIds.has(id)) {
+      dep.addSub(this);
+    }
+  }
+};
+
+
+

@@ -47,7 +47,7 @@ Observer.prototype.walk = function walk(obj) {
 /**
  * 观察数据合集
  */
-Observer.prototype.observeArray = function observeArray (items) {
+Observer.prototype.observeArray = function observeArray(items) {
   for (var i = 0, l = items.length; i < l; i++) {
     //继续递归分解
     observe(items[i]);
@@ -124,7 +124,12 @@ export function defineReactive(obj, key, val, customSetter) {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter() {
-      console.log(11)
+      var value = val;
+      //在获取这个值的时候，如果有watcher的依赖
+      if (Dep.target) {
+        dep.depend();
+      }
+
     },
     set: function reactiveSetter(newVal) {
       console.log(11)
