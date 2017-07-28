@@ -17,7 +17,7 @@ Install
 -------------
 
 Dev
-A basic demo,Using XXT named simulation framework implementations
+A basic demo,Using Mue named simulation framework implementations
 ``` python
 * npm run dev
 * http://localhost:8080
