@@ -13,6 +13,14 @@ Dep.prototype.depend = function depend () {
 };
 
 
+/**
+ * 把对应的watcher对象加入到属性的dep中
+ * 那么以为这属性更新对应的dep中的watcher就要跟着更新
+ */
+Dep.prototype.addSub = function addSub (sub) {
+  this.subs.push(sub);
+};
+
 
 /**
  * 评估target

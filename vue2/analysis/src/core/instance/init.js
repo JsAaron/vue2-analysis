@@ -23,11 +23,17 @@ export function initMixin(Mue) {
 
     initLifecycle(vm)
 
-    /*对数据进行观察 data的参数对象转化成=> vm._data*/
+    /**
+     * 初始化各种数据的状态
+     * 1.data 对象生成监控函数与对应的dep对象
+     * 2.watch 对象 生成对应的watcher对应，并与数据data的dep产生依赖关系
+     * 3.computed 对象，生成watcher对象，但是不执行，反正一个闭包
+     * 4.methods 对象，生成闭包，先不执行
+     */
     initState(vm)
 
     if (vm.$options.el) {
-      // vm.$mount(vm.$options.el);
+      vm.$mount(vm.$options.el);
     }
   }
 

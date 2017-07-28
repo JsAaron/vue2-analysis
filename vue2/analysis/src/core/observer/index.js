@@ -126,10 +126,11 @@ export function defineReactive(obj, key, val, customSetter) {
     get: function reactiveGetter() {
       var value = val;
       //在获取这个值的时候，如果有watcher的依赖
+      //把watcher对象加入到data中的dep对象中
       if (Dep.target) {
         dep.depend();
       }
-
+      return value
     },
     set: function reactiveSetter(newVal) {
       console.log(11)

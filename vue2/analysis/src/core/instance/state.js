@@ -20,18 +20,30 @@ export function initState(vm) {
     initMethods(vm, opts.methods);
   }
 
+  //建立data数据的观察对象
+  //数据会循环
+  //新的观察对象保存在vm._data中
   if (opts.data) {
     initData(vm)
   }
 
+  // wathter后，不执行get
+  // wather对象保存在vm._computedWatchers中
+  // 然后生成vm是实例观察对象
+  // 计算属性的执行，是需要依赖data属性的所以这里
+  // 返回一个观察的闭关观察函数，而不是马上执行
   if (opts.computed) {
     initComputed(vm, opts.computed)
   }
 
+  //执行Watcher的get
+  //找到依赖关系
+  //需要在初始化形成依赖关系
+  //在data中的dep要保存对应的watcher函数
+  //如果data对应的数据一旦更新，那么watcher函数也必须要更新
   if (opts.watch) {
     initWatch(vm, opts.watch)
   }
-
 }
 
 
@@ -76,6 +88,7 @@ function initComputed(vm, computed) {
 
 
 function defineComputed(target, key, userDef) {
+  //计算属性是函数类型，就是get的处理
   if (typeof userDef === 'function') {
     sharedPropertyDefinition.get = createComputedGetter(key);
     sharedPropertyDefinition.set = noop;
