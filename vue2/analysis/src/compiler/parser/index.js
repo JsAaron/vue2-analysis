@@ -1,8 +1,5 @@
 import { parseHTML } from './html-parser'
-
-import {
-  addAttr
-} from '../helpers'
+import { addAttr } from '../helpers'
 
 export const dirRE = /^v-|^@|^:/
 

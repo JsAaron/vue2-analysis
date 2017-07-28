@@ -9,6 +9,7 @@ Mue.prototype.$mount = function(el, hydrating) {
   var options = this.$options
   var template = getOuterHTML(el);
 
+  //把模板的html结构编译成函数
   var ref = compileToFunctions(template, {
     shouldDecodeNewlines: false,
     delimiters: ''
