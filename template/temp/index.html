@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Vue.js markdown editor example</title>
+  <link rel="stylesheet" href="css/style.css">
+<script type="text/javascript" src="/mue.js"></script></head>
+
+<body>
+  <div id="editor">
+    <p>{{answer}}</p>
+    <textarea :value="input" @input="update"></textarea>
+    <div v-html="compiledMarkdown"></div>
+  </div>
+  <script>
+  new Mue({
+    el: '#editor',
+    data: {
+      input: '# hello',
+      answer: ''
+    },
+    watch: {
+      input: function(value) {
+        this.answer = value
+      }
+    },
+    computed: {
+      compiledMarkdown: function() {
+        return '<strong>' + this.input + '</strong>'
+      }
+    },
+    methods: {
+      update: function(e) {
+        this.input = e.target.value
+      }
+    }
+  })
+  </script>
+</body>
+
+</html>

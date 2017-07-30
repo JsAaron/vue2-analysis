@@ -1,23 +1,20 @@
 
 
-Vue2 source code analysis
-
+vue.js 源码分析 版本2.24
 
 > 
-> Based on es6 rewrite the parts [vuejs] (http://vuejs.org) source is analyzed
-> 
-> Synchronous blog source code analysis
+> 从零开始模拟重写的vue2, 环境用的webpack
 > 
 
 
-Install
-``` python
+
+安装
+``` 
 * npm install
 ```
 -------------
 
-Dev
-A basic demo,Using Mue named simulation framework implementations
+调试环境
 ``` python
 * npm run dev
 * http://localhost:8080
