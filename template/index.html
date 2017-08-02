@@ -10,6 +10,7 @@
 <body>
   <div id="editor">
     <p>{{answer}}</p>
+    <p>{{test}}</p>
     <textarea :value="input" @input="update"></textarea>
     <div v-html="compiledMarkdown"></div>
   </div>
@@ -18,7 +19,8 @@
     el: '#editor',
     data: {
       input: '# hello',
-      answer: ''
+      answer: '',
+      test:''
     },
     watch: {
       input: function(value) {
@@ -33,6 +35,7 @@
     methods: {
       update: function(e) {
         this.input = e.target.value
+        this.test = this.input
       }
     }
   })
