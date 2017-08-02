@@ -17,7 +17,7 @@
     <div v-html="compiledMarkdown"></div>
   </div>
   <script>
-  new Vue({
+ var app = new Vue({
     el: '#editor',
     data: {
       input: '# hello',
@@ -35,10 +35,12 @@
     },
     methods: {
       update: function(e) {
+        console.log(2)
         this.input = e.target.value
       }
     }
   })
+ console.log(app)
   </script>
 </body>
 
