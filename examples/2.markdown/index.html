@@ -8,6 +8,11 @@
   <!-- <script src="https://unpkg.com/lodash@4.16.0"></script> -->
   <!-- Delete ".min" for console warnings in development -->
   <script src="../vue.js"></script>
+  <style type="text/css">
+    #editor{
+      margin-top: 200px;
+    }
+  </style>
 </head>
 
 <body>
@@ -17,11 +22,11 @@
     <div v-html="compiledMarkdown"></div>
   </div>
   <script>
- var app = new Vue({
+  var app = new Vue({
     el: '#editor',
     data: {
       input: '# hello',
-      answer: ''
+      answer: '撒旦法'
     },
     watch: {
       input: function(value) {
@@ -40,7 +45,7 @@
       }
     }
   })
- console.log(app)
+  console.log(app)
   </script>
 </body>
 
