@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "92ae04aab4ce40db0335"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "77f55f765c5ecc070046"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -2050,7 +2050,7 @@ function addAttr(el, name, value) {
 
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+	value: true
 });
 exports.createCompiler = undefined;
 
@@ -2062,15 +2062,15 @@ var _createCompiler = __webpack_require__(11);
  * compileToFunctions => compile => baseCompile
  */
 function baseCompile(template, options) {
-  //生成语法解析树
-  var ast = (0, _index.parse)(template.trim(), options);
-  // optimize(ast, options)
-  // const code = generate(ast, options)
-  // return {
-  //   ast,
-  //   render: code.render,
-  //   staticRenderFns: code.staticRenderFns
-  // }
+	//生成语法解析树
+	var ast = (0, _index.parse)(template.trim(), options);
+	// optimize(ast, options)
+	// const code = generate(ast, options)
+	// return {
+	//   ast,
+	//   render: code.render,
+	//   staticRenderFns: code.staticRenderFns
+	// }
 }
 
 var createCompiler = exports.createCompiler = (0, _createCompiler.createCompilerCreator)(baseCompile);

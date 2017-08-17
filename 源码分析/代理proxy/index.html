@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+</head>
+
+<body>
+  <script type="text/javascript">
+  // (function() {
+  //   with(this) {
+  //     return _c('div', {
+  //       attrs: {
+  //         "id": "demo"
+  //       }
+  //     }, [_c('form', {
+  //       attrs: {
+  //         "id": "search"
+  //       }
+  //     }, [_v("\n      Search\n      "), _c('input', {
+  //       directives: [{
+  //         name: "model",
+  //         rawName: "v-model",
+  //         value: (searchQuery),
+  //         expression: "searchQuery"
+  //       }],
+  //       attrs: {
+  //         "name": "query"
+  //       },
+  //       domProps: {
+  //         "value": (searchQuery)
+  //       },
+  //       on: {
+  //         "input": function($event) {
+  //           if ($event.target.composing) return;
+  //           searchQuery = $event.target.value
+  //         }
+  //       }
+  //     })]), _v(" "), _c('demo-grid', {
+  //       attrs: {
+  //         "data": gridData,
+  //         "columns": gridColumns,
+  //         "filter-key": searchQuery
+  //       }
+  //     })], 1)
+  //   }
+  // })
+
+  function render() {
+    with(this) {
+      console.log(this)
+      // return _c('div', { attrs: { "id": "demo" } }
+    }
+  }
+
+  function T() {
+    var vm = this
+    var hasHandler = {
+      has: function has(target, key) {
+        console.log(123)
+        // var has = key in target;
+        // var isAllowed = allowedGlobals(key) || key.charAt(0) === '_';
+        // if (!has && !isAllowed) {
+        //   warnNonPresent(target, key);
+        // }
+        // return has || !isAllowed
+      }
+    }
+    vm._renderProxy = new Proxy(vm, hasHandler);
+
+    var vnode = render.call(vm._renderProxy)
+
+  }
+  new T()
+  </script>
+</body>
+
+</html>
